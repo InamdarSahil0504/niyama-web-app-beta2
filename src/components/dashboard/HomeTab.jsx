@@ -7,26 +7,20 @@ import {
   trackEvent, getTodayString,
 } from '../../config'
 
-// ─── Default custom habits per spec ──────────────────────────────────────────
 const DEFAULT_CUSTOM_1 = { key: 'custom_1', label: 'Stretching or yoga (15+ min)', points: 50, icon: '🤸' }
-const DEFAULT_CUSTOM_2 = { key: 'custom_2', label: 'Gratitude journaling',          points: 50, icon: '📓' }
+const DEFAULT_CUSTOM_2 = { key: 'custom_2', label: 'Gratitude journaling', points: 50, icon: '📓' }
 
-// ─── Confetti ─────────────────────────────────────────────────────────────────
 function Confetti() {
-  const colors = ['#5A8A78','#D4735F','#7CB9A8','#E8907A','#4A7C65','#C9973A','#F4D03F','#85C1E9']
+  const colors = ['#5A8A78', '#D4735F', '#7CB9A8', '#E8907A', '#4A7C65', '#C9973A', '#F4D03F', '#85C1E9']
   return (
-    <div style={{ position:'fixed', top:0, left:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:9999, overflow:'hidden' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
       {Array.from({ length: 40 }, (_, i) => (
         <div key={i} style={{
-          position: 'absolute',
-          left: `${Math.random()*100}%`,
-          top: `-${Math.random()*20}px`,
-          width: `${Math.random()*8+6}px`,
-          height: `${Math.random()*8+6}px`,
-          background: colors[Math.floor(Math.random()*colors.length)],
-          borderRadius: Math.random()>0.5 ? '50%' : '2px',
-          animation: `confetti-fall ${Math.random()*2+2}s linear ${Math.random()}s forwards`,
-          opacity: 0,
+          position: 'absolute', left: `${Math.random() * 100}%`, top: `-${Math.random() * 20}px`,
+          width: `${Math.random() * 8 + 6}px`, height: `${Math.random() * 8 + 6}px`,
+          background: colors[Math.floor(Math.random() * colors.length)],
+          borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+          animation: `confetti-fall ${Math.random() * 2 + 2}s linear ${Math.random()}s forwards`, opacity: 0,
         }} />
       ))}
     </div>
@@ -42,91 +36,91 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
     return state
   }
 
-  const [habitState, setHabitState]               = useState(buildHabitState)
-  const [stepCount, setStepCount]                 = useState(0)
-  const [saving, setSaving]                       = useState(false)
-  const [showCelebration, setShowCelebration]     = useState(false)
+  const [habitState, setHabitState] = useState(buildHabitState)
+  const [stepCount, setStepCount] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
   const [lastTotalCompleted, setLastTotalCompleted] = useState(0)
 
   useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
   const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-  const tierConfig    = TIER_CONFIG[effectiveTier]
-  const customSlots   = tierConfig?.custom_habit_slots || 0
+  const tierConfig = TIER_CONFIG[effectiveTier]
+  const customSlots = tierConfig?.custom_habit_slots || 0
 
-  // ── Build library habits ───────────────────────────────────────────────────
-  const libraryKeys = userHabits
-    ? [userHabits.library_habit_1, userHabits.library_habit_2, userHabits.library_habit_3, userHabits.library_habit_4].filter(Boolean)
-    : ['sunlight', 'hydration', 'meditation', 'no_late_food']
+  // ── Build habit lists from user_habits rows ────────────────────────────────
+  // user_habits is now one row per habit with habit_type + habit_key + slot_index
+  const libraryRows = userHabits?.filter(h => h.habit_type === 'library' && h.is_active) || []
+  const customRows = userHabits?.filter(h => h.habit_type === 'custom' && h.is_active) || []
 
-  const libraryHabits = libraryKeys
-    .map(k => LIBRARY_HABITS.find(h => h.key === k))
-    .filter(Boolean)
+  const libraryHabits = libraryRows.length > 0
+    ? libraryRows.map(row => {
+      const lib = LIBRARY_HABITS.find(h => h.key === row.habit_key)
+      return lib || { key: row.habit_key, label: row.habit_label, points: 50, icon: row.habit_icon || '📌' }
+    })
+    : ['sunlight', 'hydration', 'meditation', 'no_late_food'].map(k => LIBRARY_HABITS.find(h => h.key === k)).filter(Boolean)
 
-  // ── Build custom habits ────────────────────────────────────────────────────
-  // Show customs based on tier slots. Fall back to defaults if user hasn't set them yet.
   const customHabits = []
   if (customSlots >= 1) {
-    customHabits.push(
-      userHabits?.custom_habit_1_label
-        ? { key: 'custom_1', label: userHabits.custom_habit_1_label, points: 50, icon: '⭐' }
-        : DEFAULT_CUSTOM_1
-    )
+    if (customRows[0]) {
+      customHabits.push({ key: customRows[0].habit_key || 'custom_1', label: customRows[0].habit_label, points: 50, icon: customRows[0].habit_icon || '⭐' })
+    } else {
+      customHabits.push(DEFAULT_CUSTOM_1)
+    }
   }
   if (customSlots >= 2) {
-    customHabits.push(
-      userHabits?.custom_habit_2_label
-        ? { key: 'custom_2', label: userHabits.custom_habit_2_label, points: 50, icon: '⭐' }
-        : DEFAULT_CUSTOM_2
-    )
+    if (customRows[1]) {
+      customHabits.push({ key: customRows[1].habit_key || 'custom_2', label: customRows[1].habit_label, points: 50, icon: customRows[1].habit_icon || '⭐' })
+    } else {
+      customHabits.push(DEFAULT_CUSTOM_2)
+    }
   }
 
   const totalHabitCount = 3 + libraryHabits.length + customHabits.length
 
   // ── Completion counts ──────────────────────────────────────────────────────
-  const coreCompleted    = CORE_HABITS.filter(h => habitState[h.key]).length
+  const coreCompleted = CORE_HABITS.filter(h => habitState[h.key]).length
   const libraryCompleted = libraryHabits.filter(h => habitState[h.key]).length
-  const customCompleted  = customHabits.filter(h => habitState[h.key]).length
-  const totalCompleted   = coreCompleted + libraryCompleted + customCompleted
-  const daySuccessful    = isDaySuccessful(coreCompleted, totalCompleted)
-  const dayPerfect       = isDayPerfect(totalCompleted)
-  const isSubmitted      = !!todaySummary?.submitted
+  const customCompleted = customHabits.filter(h => habitState[h.key]).length
+  const totalCompleted = coreCompleted + libraryCompleted + customCompleted
+  const daySuccessful = isDaySuccessful(coreCompleted, totalCompleted)
+  const dayPerfect = isDayPerfect(totalCompleted)
+  const isSubmitted = !!todaySummary?.submitted
 
   // ── Live points ────────────────────────────────────────────────────────────
-  const stepsPoints  = calcStepsPoints(stepCount)
-  const wakePoints   = habitState['wake']     ? 100 : 0
-  const phonePoints  = habitState['no_phone'] ? 100 : 0
-  // Steps points only count if user has ticked the steps checkbox
+  const stepsPoints = calcStepsPoints(stepCount)
+  const wakePoints = habitState['wake'] ? 100 : 0
+  const phonePoints = habitState['no_phone'] ? 100 : 0
   const stepsChecked = !!habitState['steps']
-  const corePoints   = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
-  const libPoints    = libraryCompleted * POINTS.library_habit
-  const custPoints   = customCompleted  * POINTS.library_habit
+  const corePoints = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
+  const libPoints = libraryCompleted * POINTS.library_habit
+  const custPoints = customCompleted * POINTS.library_habit
   const successBonus = daySuccessful ? POINTS.successful_day : 0
-  const perfectBonus = dayPerfect    ? POINTS.perfect_day    : 0
-  const todayPoints  = Math.min(corePoints + libPoints + custPoints + successBonus + perfectBonus, POINTS.daily_max)
+  const perfectBonus = dayPerfect ? POINTS.perfect_day : 0
+  const todayPoints = Math.min(corePoints + libPoints + custPoints + successBonus + perfectBonus, POINTS.daily_max)
 
   // ── Reward calculations ────────────────────────────────────────────────────
-  const memberMonths      = getMemberMonths(profile?.created_at)
-  const isFreeTrial       = effectiveTier === 'free_trial'
-  const isFreeExpired     = effectiveTier === 'free_expired'
-  const successfulDays    = profile?.successful_days || 0
-  const isSuccessfulMonth = (profile?.total_days_logged||0) > 0 && successfulDays === (profile?.total_days_logged||0)
-  const isPerfectMonth    = isSuccessfulMonth
-  const isInactive        = (profile?.consecutive_inactive_days||0) >= 5
-  const minDays           = tierConfig?.min_days || 0
-  const isEligible        = minDays > 0 && successfulDays >= minDays && !isInactive
-  const trialMonthsLeft   = Math.max(3 - memberMonths, 0)
+  const memberMonths = getMemberMonths(profile?.created_at)
+  const isFreeTrial = effectiveTier === 'free_trial'
+  const isFreeExpired = effectiveTier === 'free_expired'
+  const successfulDays = profile?.successful_days || 0
+  const isSuccessfulMonth = (profile?.total_days_logged || 0) > 0 && successfulDays === (profile?.total_days_logged || 0)
+  const isPerfectMonth = isSuccessfulMonth
+  const isInactive = (profile?.consecutive_inactive_days || 0) >= 5
+  const minDays = tierConfig?.min_days || 0
+  const isEligible = minDays > 0 && successfulDays >= minDays && !isInactive
+  const trialMonthsLeft = Math.max(3 - memberMonths, 0)
   const reward = isMinor ? '0.00' : calcReward(
-    profile?.monthly_points||0, effectiveTier,
+    profile?.monthly_points || 0, effectiveTier,
     successfulDays, isSuccessfulMonth, isPerfectMonth,
-    profile?.consecutive_inactive_days||0
+    profile?.consecutive_inactive_days || 0
   )
-  const tierCap   = tierConfig?.max_cap || tierConfig?.reward_cap || 0
+  const tierCap = tierConfig?.max_cap || tierConfig?.reward_cap || 0
   const remaining = Math.max(tierCap - parseFloat(reward), 0).toFixed(2)
-  const isFirstTimeUser = (profile?.total_days_logged||0) === 0 && !isSubmitted
+  const isFirstTimeUser = (profile?.total_days_logged || 0) === 0 && !isSubmitted
 
-  // ── Celebration on successful day ─────────────────────────────────────────
+  // ── Celebration ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (daySuccessful && lastTotalCompleted < 5 && !isSubmitted) {
       setShowCelebration(true)
@@ -135,36 +129,36 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
     setLastTotalCompleted(totalCompleted)
   }, [totalCompleted])
 
-  // ── Toggle habit (auto-save) ──────────────────────────────────────────────
+  // ── Toggle habit (auto-save to habit_logs) ────────────────────────────────
   async function toggleHabit(habitKey, checked) {
     if (isSubmitted) return
     setHabitState(prev => ({ ...prev, [habitKey]: checked }))
     try {
-      const existing  = todayLogs?.find(l => l.habit_key === habitKey)
-      const isCore    = CORE_HABITS.find(h => h.key === habitKey)
-      const isCustom  = habitKey.startsWith('custom')
+      const isCore = CORE_HABITS.find(h => h.key === habitKey)
+      const isCustom = habitKey.startsWith('custom')
       const habitType = isCore ? 'core' : isCustom ? 'custom' : 'library'
-      const pts       = checked ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : 50) : 0
+      const pts = checked ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : 50) : 0
+      const habitLabel = isCore
+        ? CORE_HABITS.find(h => h.key === habitKey)?.label
+        : isCustom
+          ? customHabits.find(h => h.key === habitKey)?.label
+          : libraryHabits.find(h => h.key === habitKey)?.label
 
-      if (existing) {
-        await supabase.from('habit_logs')
-          .update({ completed: checked, points_earned: checked ? pts : 0 })
-          .eq('id', existing.id)
-      } else {
-        await supabase.from('habit_logs').insert({
-          user_id: userId, log_date: today,
-          habit_key: habitKey, habit_type: habitType,
-          completed: checked, points_earned: checked ? pts : 0,
-        })
-      }
+      await supabase.from('habit_logs').upsert({
+        user_id: userId,
+        date: today,
+        habit_key: habitKey,
+        habit_type: habitType,
+        habit_label: habitLabel || habitKey,
+        completed: checked,
+        points_earned: checked ? pts : 0,
+      }, { onConflict: 'user_id,date,habit_key' })
     } catch (e) { console.error('Auto-save failed', e) }
   }
 
-  // ── Steps count change — updates display only, checkbox stays user-controlled
+  // ── Steps input ───────────────────────────────────────────────────────────
   function handleStepsInput(val) {
-    const count = parseInt(val) || 0
-    setStepCount(count)
-    // Don't auto-check — user must tick the checkbox themselves
+    setStepCount(parseInt(val) || 0)
   }
 
   // ── Submit day ────────────────────────────────────────────────────────────
@@ -172,68 +166,96 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
     if (isSubmitted || saving) return
     setSaving(true)
     try {
-      const now          = new Date()
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+      const now = new Date()
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+      // Calculate per-type points
+      const corePointsTotal = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
+      const libraryPointsTotal = libraryCompleted * POINTS.library_habit
+      const customPointsTotal = customCompleted * POINTS.library_habit
+      const bonusSuccessful = daySuccessful ? POINTS.successful_day : 0
+      const bonusPerfect = dayPerfect ? POINTS.perfect_day : 0
 
       const summaryPayload = {
-        user_id: userId, summary_date: today,
-        core_completed: coreCompleted, library_completed: libraryCompleted,
-        custom_completed: customCompleted, total_completed: totalCompleted,
-        total_habits: totalHabitCount, day_successful: daySuccessful,
-        perfect_day: dayPerfect, points_earned: todayPoints,
-        submitted: true, submitted_at: now.toISOString(),
+        user_id: userId,
+        date: today,                          // correct column name
+        core_total: CORE_HABITS.length,
+        core_completed: coreCompleted,
+        library_total: libraryHabits.length,
+        library_completed: libraryCompleted,
+        custom_total: customHabits.length,
+        custom_completed: customCompleted,
+        total_habits: totalHabitCount,
+        total_completed: totalCompleted,
+        day_successful: daySuccessful,
+        perfect_day: dayPerfect,
+        points_from_core: corePointsTotal,
+        points_from_library: libraryPointsTotal,
+        points_from_custom: customPointsTotal,
+        bonus_successful_day: bonusSuccessful,
+        bonus_perfect_day: bonusPerfect,
+        total_points: todayPoints,            // correct column name
+        submitted: true,
+        submitted_at: now.toISOString(),
       }
 
+      // Check for existing summary
       const { data: existingSummary } = await supabase
-        .from('daily_summaries').select('id').eq('user_id', userId).eq('summary_date', today).single()
+        .from('daily_summaries').select('id')
+        .eq('user_id', userId).eq('date', today).maybeSingle()
+
       if (existingSummary) {
         await supabase.from('daily_summaries').update(summaryPayload).eq('id', existingSummary.id)
       } else {
         await supabase.from('daily_summaries').insert(summaryPayload)
       }
 
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
+      // Recalculate monthly points
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       const { data: monthSummaries } = await supabase
-        .from('daily_summaries').select('points_earned, day_successful')
-        .eq('user_id', userId).gte('summary_date', monthStart)
+        .from('daily_summaries').select('total_points, day_successful')
+        .eq('user_id', userId).gte('date', monthStart)
 
-      const monthlyPoints     = monthSummaries?.reduce((s,r) => s+(r.points_earned||0), 0) || 0
+      const monthlyPoints = monthSummaries?.reduce((s, r) => s + (r.total_points || 0), 0) || 0
       const successfulDaysNew = monthSummaries?.filter(r => r.day_successful).length || 0
 
-      let newStreak  = streak?.current_streak || 0
-      let newLongest = streak?.longest_streak  || 0
+      // Update streak
+      let newStreak = streak?.current_streak || 0
+      let newLongest = streak?.longest_streak || 0
       if (daySuccessful) { newStreak += 1; if (newStreak > newLongest) newLongest = newStreak }
       else newStreak = 0
-
       await supabase.from('streaks').update({
         current_streak: newStreak, longest_streak: newLongest,
         updated_at: now.toISOString(),
       }).eq('user_id', userId)
 
+      // Update profile
       const { data: allSummaries } = await supabase
         .from('daily_summaries').select('day_successful').eq('user_id', userId)
       const overallSuccessful = allSummaries?.filter(r => r.day_successful).length || 0
-      const totalDaysLogged   = allSummaries?.length || 0
-      const isFirstEver       = totalDaysLogged === 1
+      const totalDaysLogged = allSummaries?.length || 0
+      const isFirstEver = totalDaysLogged === 1
 
       await supabase.from('profiles').update({
-        monthly_points: monthlyPoints, successful_days: successfulDaysNew,
-        consecutive_inactive_days: 0, last_active_date: today,
-        overall_successful_days: overallSuccessful, total_days_logged: totalDaysLogged,
+        monthly_points: monthlyPoints,
+        successful_days: successfulDaysNew,
+        consecutive_inactive_days: 0,
+        last_active_date: today,
+        overall_successful_days: overallSuccessful,
+        total_days_logged: totalDaysLogged,
         ...(isFirstEver && { first_submission_date: today }),
       }).eq('id', userId)
 
+      // Upsert rewards row
       const tierCfg = TIER_CONFIG[effectiveTier]
       if (tierCfg && tierCfg.reward_cap > 0) {
-        const potentialReward   = monthlyPoints / 1000
-        const actualReward      = isEligible ? Math.min(potentialReward, tierCfg.reward_cap) : 0
+        const potentialReward = monthlyPoints / 1000
+        const actualReward = isEligible ? Math.min(potentialReward, tierCfg.reward_cap) : 0
         const pointsLeftOnTable = Math.max(potentialReward - tierCfg.reward_cap, 0)
-        const capUtil           = Math.min(Math.round((potentialReward/tierCfg.reward_cap)*100), 100)
-
+        const capUtil = Math.min(Math.round((potentialReward / tierCfg.reward_cap) * 100), 100)
         const { data: existingReward } = await supabase
           .from('rewards').select('id, manual_override')
-          .eq('user_id', userId).eq('month', currentMonth).single()
-
+          .eq('user_id', userId).eq('month', currentMonth).maybeSingle()
         if (existingReward) {
           if (!existingReward.manual_override) {
             await supabase.from('rewards').update({
@@ -267,12 +289,11 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
     borderRadius: '16px', padding: '20px', marginBottom: '16px',
   }
 
-  // Steps display helpers
   const stepsLabel = stepCount >= 10000 ? `${stepCount.toLocaleString()} steps — 100 pts available`
-    : stepCount >= 7500  ? `${stepCount.toLocaleString()} steps — 75 pts available`
-    : stepCount >= 5000  ? `${stepCount.toLocaleString()} steps — 50 pts available`
-    : stepCount > 0      ? `${stepCount.toLocaleString()} steps — need 5,000 minimum`
-    : 'Enter steps, then tick to log'
+    : stepCount >= 7500 ? `${stepCount.toLocaleString()} steps — 75 pts available`
+      : stepCount >= 5000 ? `${stepCount.toLocaleString()} steps — 50 pts available`
+        : stepCount > 0 ? `${stepCount.toLocaleString()} steps — need 5,000 minimum`
+          : 'Enter steps, then tick to log'
   const stepsColor = stepCount >= 5000 ? 'var(--theme-primary)' : 'var(--theme-text-muted)'
   const availableStepsPoints = calcStepsPoints(stepCount)
 
@@ -280,251 +301,187 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
     <>
       {showCelebration && <Confetti />}
 
-      {/* ── Header ── */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
-          <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--theme-text)' }}>Niyama Life</h1>
-          <p style={{ fontSize:'14px', color:'var(--theme-text-secondary)', marginTop:'2px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama Life</h1>
+          <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginTop: '2px' }}>
             Hey, {profile?.full_name?.split(' ')[0] || 'there'} 👋
           </p>
         </div>
-        <span style={{ background:'var(--theme-primary)', color:'white', fontSize:'12px', fontWeight:'600', padding:'4px 12px', borderRadius:'20px', textTransform:'capitalize' }}>
+        <span style={{ background: 'var(--theme-primary)', color: 'white', fontSize: '12px', fontWeight: '600', padding: '4px 12px', borderRadius: '20px', textTransform: 'capitalize' }}>
           {tierConfig?.label || 'Free'}
         </span>
       </div>
-      <div style={{ textAlign:'center', marginBottom:'24px' }}>
-        <span style={{ background:'#fef3c7', color:'#92400e', fontSize:'12px', fontWeight:'500', padding:'4px 12px', borderRadius:'20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '12px', fontWeight: '500', padding: '4px 12px', borderRadius: '20px' }}>
           Beta testing version
         </span>
       </div>
 
-      {/* ── Banners ── */}
+      {/* Banners */}
       {isFreeTrial && !isFirstTimeUser && (
-        <div style={{ background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px' }}>
-          <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-primary)', marginBottom:'2px' }}>
-            🎁 Free trial — {trialMonthsLeft} month{trialMonthsLeft!==1?'s':''} remaining
+        <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-primary)', marginBottom: '2px' }}>
+            🎁 Free trial — {trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} remaining
           </p>
-          <p style={{ fontSize:'11px', color:'var(--theme-text-secondary)' }}>
-            Earn up to $2.50/mo · Upgrades to Basic after month 3
-          </p>
+          <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>Earn up to $2.50/mo · Upgrades to Basic after month 3</p>
         </div>
       )}
       {isFreeExpired && (
-        <div style={{ background:'#fffbeb', border:'1px solid #fcd34d', borderRadius:'12px', padding:'14px 16px', marginBottom:'16px' }}>
-          <p style={{ fontSize:'13px', fontWeight:'600', color:'#92400e', marginBottom:'4px' }}>Your free reward period has ended</p>
-          <p style={{ fontSize:'12px', color:'#78350f', marginBottom:'10px', lineHeight:'1.5' }}>
-            Upgrade to Basic for $0.99/month to continue earning rewards.
-          </p>
-          <div style={{ background:'var(--theme-primary)', borderRadius:'8px', padding:'8px 12px', display:'flex', justifyContent:'space-between' }}>
-            <span style={{ fontSize:'12px', fontWeight:'500', color:'white' }}>Basic — $0.99/month</span>
-            <span style={{ fontSize:'12px', fontWeight:'700', color:'white' }}>Up to $5.00/mo →</span>
+        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>Your free reward period has ended</p>
+          <p style={{ fontSize: '12px', color: '#78350f', marginBottom: '10px', lineHeight: '1.5' }}>Upgrade to Basic for $0.99/month to continue earning rewards.</p>
+          <div style={{ background: 'var(--theme-primary)', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '12px', fontWeight: '500', color: 'white' }}>Basic — $0.99/month</span>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>Up to $5.00/mo →</span>
           </div>
         </div>
       )}
 
-      {/* ── First time welcome ── */}
+      {/* First time welcome */}
       {isFirstTimeUser && (
-        <div style={{ ...card, background:'var(--theme-primary)', color:'white' }}>
-          <p style={{ fontSize:'22px', marginBottom:'8px' }}>👋</p>
-          <h2 style={{ fontSize:'20px', fontWeight:'700', marginBottom:'8px' }}>
-            Welcome, {profile?.full_name?.split(' ')[0] || 'there'}!
-          </h2>
-          <p style={{ fontSize:'14px', opacity:'0.9', lineHeight:'1.6', marginBottom:'16px' }}>
+        <div style={{ ...card, background: 'var(--theme-primary)', color: 'white' }}>
+          <p style={{ fontSize: '22px', marginBottom: '8px' }}>👋</p>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Welcome, {profile?.full_name?.split(' ')[0] || 'there'}!</h2>
+          <p style={{ fontSize: '14px', opacity: '0.9', lineHeight: '1.6', marginBottom: '16px' }}>
             You're all set. Today is day one of your Niyama journey. Check off your habits below and submit before midnight.
           </p>
-          <div style={{ background:'rgba(255,255,255,0.15)', borderRadius:'10px', padding:'12px' }}>
-            {['Check off each habit you completed today', 'Tap "Submit today" before midnight', 'Come back tomorrow and do it again'].map((s,i) => (
-              <div key={i} style={{ display:'flex', gap:'10px', marginBottom: i<2?'6px':'0' }}>
-                <span style={{ opacity:'0.8', fontSize:'13px' }}>{i+1}.</span>
-                <p style={{ fontSize:'13px', opacity:'0.9' }}>{s}</p>
+          <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px' }}>
+            {['Check off each habit you completed today', 'Tap "Submit today" before midnight', 'Come back tomorrow and do it again'].map((s, i) => (
+              <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < 2 ? '6px' : '0' }}>
+                <span style={{ opacity: '0.8', fontSize: '13px' }}>{i + 1}.</span>
+                <p style={{ fontSize: '13px', opacity: '0.9' }}>{s}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── Streak banner ── */}
+      {/* Streak banner */}
       {!isFirstTimeUser && (
-        <div style={{ ...card, background:'var(--theme-primary)', color:'white', marginBottom:'16px' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+        <div style={{ ...card, background: 'var(--theme-primary)', color: 'white', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{
-                fontSize: (streak?.current_streak||0)>=25?'48px':(streak?.current_streak||0)>=10?'40px':(streak?.current_streak||0)>=5?'34px':'28px',
-                animation: (streak?.current_streak||0)>0?'flame-pulse 1.5s ease-in-out infinite':'none',
-                lineHeight:1,
+                fontSize: (streak?.current_streak || 0) >= 25 ? '48px' : (streak?.current_streak || 0) >= 10 ? '40px' : (streak?.current_streak || 0) >= 5 ? '34px' : '28px',
+                animation: (streak?.current_streak || 0) > 0 ? 'flame-pulse 1.5s ease-in-out infinite' : 'none', lineHeight: 1,
               }}>🔥</span>
               <div>
-                <p style={{ fontSize:'13px', opacity:'0.8', marginBottom:'2px' }}>Current streak</p>
-                <p style={{ fontSize:'32px', fontWeight:'700', lineHeight:1 }}>
-                  {streak?.current_streak||0} <span style={{ fontSize:'16px', opacity:'0.8' }}>days</span>
+                <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '2px' }}>Current streak</p>
+                <p style={{ fontSize: '32px', fontWeight: '700', lineHeight: 1 }}>
+                  {streak?.current_streak || 0} <span style={{ fontSize: '16px', opacity: '0.8' }}>days</span>
                 </p>
               </div>
             </div>
-            <div style={{ textAlign:'right' }}>
-              <p style={{ fontSize:'12px', opacity:'0.7' }}>Longest</p>
-              <p style={{ fontSize:'18px', fontWeight:'700', marginTop:'2px' }}>{streak?.longest_streak||0}</p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '12px', opacity: '0.7' }}>Longest</p>
+              <p style={{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }}>{streak?.longest_streak || 0}</p>
             </div>
           </div>
           <div>
-            <p style={{ fontSize:'11px', opacity:'0.7', marginBottom:'8px' }}>Last 7 days</p>
-            <div style={{ display:'flex', gap:'8px' }}>
-              {Array.from({ length:7 }, (_,i) => {
-                const dayOffset  = 6-i
-                const isToday    = dayOffset === 0
-                const wasSuccess = dayOffset < (streak?.current_streak||0)
+            <p style={{ fontSize: '11px', opacity: '0.7', marginBottom: '8px' }}>Last 7 days</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {Array.from({ length: 7 }, (_, i) => {
+                const dayOffset = 6 - i, isToday = dayOffset === 0, wasSuccess = dayOffset < (streak?.current_streak || 0)
                 return (
-                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                     <div style={{
-                      width:'100%', aspectRatio:'1', borderRadius:'50%',
-                      background: isToday?(daySuccessful?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.3)'):(wasSuccess?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.2)'),
-                      border: isToday?'2px solid rgba(255,255,255,0.8)':'none',
-                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width: '100%', aspectRatio: '1', borderRadius: '50%',
+                      background: isToday ? (daySuccessful ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)') : (wasSuccess ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)'),
+                      border: isToday ? '2px solid rgba(255,255,255,0.8)' : 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      {(wasSuccess||(isToday&&daySuccessful)) && <span style={{ fontSize:'10px' }}>✓</span>}
+                      {(wasSuccess || (isToday && daySuccessful)) && <span style={{ fontSize: '10px' }}>✓</span>}
                     </div>
-                    <p style={{ fontSize:'9px', opacity:'0.7' }}>
-                      {isToday?'Today':['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(new Date().getDay()+6-dayOffset)%7]}
+                    <p style={{ fontSize: '9px', opacity: '0.7' }}>
+                      {isToday ? 'Today' : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(new Date().getDay() + 6 - dayOffset) % 7]}
                     </p>
                   </div>
                 )
               })}
             </div>
           </div>
-          {(streak?.current_streak||0) >= 10 && (
-            <div style={{ marginTop:'12px', background:'rgba(255,255,255,0.15)', borderRadius:'8px', padding:'8px', textAlign:'center' }}>
-              <p style={{ fontSize:'12px', opacity:'0.9' }}>
-                {(streak?.current_streak||0)>=25?'🏆 25 days strong!': `🌟 ${streak?.current_streak} day streak! You're on fire!`}
+          {(streak?.current_streak || 0) >= 10 && (
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', opacity: '0.9' }}>
+                {(streak?.current_streak || 0) >= 25 ? '🏆 25 days strong!' : `🌟 ${streak?.current_streak} day streak! You're on fire!`}
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* ── HABITS CARD (moved above eligibility) ── */}
+      {/* Habits card */}
       <div style={card}>
-        <h2 style={{ fontSize:'17px', fontWeight:'600', color:'var(--theme-text)', marginBottom:'4px' }}>Today's habits</h2>
-        <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginBottom:'4px' }}>
-          {totalCompleted}/{totalHabitCount} completed · {todayPoints} pts
-        </p>
-        <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginBottom:'20px' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '4px' }}>Today's habits</h2>
+        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '4px' }}>{totalCompleted}/{totalHabitCount} completed · {todayPoints} pts</p>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '20px' }}>
           Complete 5 of {totalHabitCount} habits (at least 2 core) for a successful day
         </p>
 
-        {/* ── Core habits ── */}
-        <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-primary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>
-          Core habits
-        </p>
-
-        {/* Health integration notice */}
-        <div style={{ background:'var(--theme-primary-light)', borderRadius:'8px', padding:'10px 12px', marginBottom:'16px', display:'flex', alignItems:'flex-start', gap:'8px' }}>
-          <span style={{ fontSize:'14px', flexShrink:0 }}>🏥</span>
-          <p style={{ fontSize:'11px', color:'var(--theme-primary)', lineHeight:'1.5' }}>
-            Core habits will be <strong>auto-verified via Apple Health / Google Fit</strong> in the native app. For now, log them manually below.
+        {/* Core habits */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Core habits</p>
+        <div style={{ background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <span style={{ fontSize: '14px', flexShrink: 0 }}>🏥</span>
+          <p style={{ fontSize: '11px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
+            Core habits will be <strong>auto-verified via Apple Health / Google Fit</strong> in the native app. Log manually for now.
           </p>
         </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginBottom:'24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          <HabitRow habit={{ key: 'wake', label: 'Wake before 7:30 AM', points: 100, icon: '🌅' }} checked={!!habitState['wake']} disabled={isSubmitted} onToggle={toggleHabit} />
+          <HabitRow habit={{ key: 'no_phone', label: 'No phone after 10:30 PM', points: 100, icon: '📵' }} checked={!!habitState['no_phone']} disabled={isSubmitted} onToggle={toggleHabit} />
 
-          {/* Wake */}
-          <HabitRow
-            habit={{ key:'wake', label:'Wake before 7:30 AM', points:100, icon:'🌅' }}
-            checked={!!habitState['wake']}
-            disabled={isSubmitted}
-            onToggle={toggleHabit}
-          />
-
-          {/* No phone */}
-          <HabitRow
-            habit={{ key:'no_phone', label:'No phone after 10:30 PM', points:100, icon:'📵' }}
-            checked={!!habitState['no_phone']}
-            disabled={isSubmitted}
-            onToggle={toggleHabit}
-          />
-
-          {/* Steps — user enters count then ticks checkbox */}
+          {/* Steps */}
           <div>
-            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-              <div style={{ display:'flex', alignItems:'flex-start', gap:'12px', flex:1 }}>
-                <input
-                  type="checkbox"
-                  checked={!!habitState['steps']}
-                  onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked) }}
-                  disabled={isSubmitted}
-                  style={{ width:'18px', height:'18px', marginTop:'2px', cursor: isSubmitted?'default':'pointer', accentColor:'var(--theme-primary)', flexShrink:0 }}
-                />
-                <div style={{ flex:1 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'6px', marginBottom:'4px' }}>
-                    <span style={{ fontSize:'14px' }}>👟</span>
-                    <span style={{ fontSize:'14px', color: habitState['steps']?'var(--theme-text)':'var(--theme-text-secondary)' }}>
-                      Steps / physical activity
-                    </span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1 }}>
+                <input type="checkbox" checked={!!habitState['steps']} onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked) }} disabled={isSubmitted}
+                  style={{ width: '18px', height: '18px', marginTop: '2px', cursor: isSubmitted ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '14px' }}>👟</span>
+                    <span style={{ fontSize: '14px', color: habitState['steps'] ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>Steps / physical activity</span>
                   </div>
-                  <p style={{ fontSize:'11px', color: stepsColor }}>{stepsLabel}</p>
-
-                  {/* Step tier chips */}
-                  <div style={{ display:'flex', gap:'6px', marginTop:'8px' }}>
-                    {[{label:'5,000',pts:50,min:5000},{label:'7,500',pts:75,min:7500},{label:'10,000',pts:100,min:10000}].map(t => (
-                      <div key={t.min} style={{
-                        padding:'3px 8px', borderRadius:'6px', textAlign:'center',
-                        background: stepCount>=t.min ? 'var(--theme-primary)' : 'var(--theme-primary-light)',
-                        border: `1px solid ${stepCount>=t.min?'var(--theme-primary)':'var(--theme-border)'}`,
-                      }}>
-                        <span style={{ fontSize:'10px', fontWeight:'600', color: stepCount>=t.min?'white':'var(--theme-text-muted)' }}>
-                          {t.label} · +{t.pts}
-                        </span>
+                  <p style={{ fontSize: '11px', color: stepsColor }}>{stepsLabel}</p>
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                    {[{ label: '5,000', pts: 50, min: 5000 }, { label: '7,500', pts: 75, min: 7500 }, { label: '10,000', pts: 100, min: 10000 }].map(t => (
+                      <div key={t.min} style={{ padding: '3px 8px', borderRadius: '6px', background: stepCount >= t.min ? 'var(--theme-primary)' : 'var(--theme-primary-light)', border: `1px solid ${stepCount >= t.min ? 'var(--theme-primary)' : 'var(--theme-border)'}` }}>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: stepCount >= t.min ? 'white' : 'var(--theme-text-muted)' }}>{t.label} · +{t.pts}</span>
                       </div>
                     ))}
                   </div>
-
-                  {/* Steps input */}
                   {!isSubmitted && (
-                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginTop:'10px' }}>
-                      <input
-                        type="number"
-                        placeholder="Enter your step count..."
-                        value={stepCount || ''}
-                        onChange={e => handleStepsInput(e.target.value)}
-                        min="0" max="99999"
-                        style={{
-                          flex:1, padding:'8px 12px',
-                          border:'1px solid var(--theme-border)', borderRadius:'8px',
-                          fontSize:'14px', color:'var(--theme-text)', background:'var(--theme-bg)', outline:'none',
-                        }}
-                      />
-                      <span style={{ fontSize:'12px', color:'var(--theme-text-muted)', whiteSpace:'nowrap' }}>steps</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                      <input type="number" placeholder="Enter your step count..." value={stepCount || ''} onChange={e => handleStepsInput(e.target.value)} min="0" max="99999"
+                        style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--theme-border)', borderRadius: '8px', fontSize: '14px', color: 'var(--theme-text)', background: 'var(--theme-bg)', outline: 'none' }} />
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)', whiteSpace: 'nowrap' }}>steps</span>
                     </div>
                   )}
-                  {isSubmitted && stepCount > 0 && (
-                    <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'6px' }}>
-                      {stepCount.toLocaleString()} steps logged
-                    </p>
-                  )}
+                  {isSubmitted && stepCount > 0 && <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '6px' }}>{stepCount.toLocaleString()} steps logged</p>}
                 </div>
               </div>
-              <span style={{ fontSize:'12px', color:'var(--theme-primary)', fontWeight:'600', flexShrink:0, marginLeft:'8px', marginTop:'2px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px', marginTop: '2px' }}>
                 {availableStepsPoints > 0 ? `+${availableStepsPoints}` : '+0–100'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ── Library habits ── */}
-        <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>
-          Your habits
-        </p>
-        <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginBottom: customHabits.length>0?'24px':'0' }}>
+        {/* Library habits */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Your habits</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: customHabits.length > 0 ? '24px' : '0' }}>
           {libraryHabits.map(habit => (
             <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
           ))}
         </div>
 
-        {/* ── Custom habits (tier-gated) ── */}
+        {/* Custom habits */}
         {customHabits.length > 0 && (
           <>
-            <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>
-              Custom habits
-            </p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Custom habits</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {customHabits.map(habit => (
                 <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
               ))}
@@ -532,159 +489,136 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
           </>
         )}
 
-        {/* ── Points bar ── */}
-        <div style={{ marginTop:'20px', paddingTop:'16px', borderTop:'1px solid var(--theme-border)' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'13px', color:'var(--theme-text-secondary)' }}>Today's points</span>
-            <span style={{ fontSize:'22px', fontWeight:'700', color:'var(--theme-text)' }}>{todayPoints}</span>
+        {/* Points bar */}
+        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--theme-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Today's points</span>
+            <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>{todayPoints}</span>
           </div>
-          <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'8px' }}>
-            <div style={{ background:'var(--theme-primary)', borderRadius:'4px', height:'8px', width:`${(todayPoints/POINTS.daily_max)*100}%`, transition:'width 0.3s' }} />
+          <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
+            <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${(todayPoints / POINTS.daily_max) * 100}%`, transition: 'width 0.3s' }} />
           </div>
-          <div style={{ display:'flex', justifyContent:'space-between', marginTop:'4px' }}>
-            <span style={{ fontSize:'11px', color:'var(--theme-text-muted)' }}>0</span>
-            <span style={{ fontSize:'11px', color:'var(--theme-text-muted)' }}>{POINTS.daily_max} max</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>0</span>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>{POINTS.daily_max} max</span>
           </div>
         </div>
 
-        {/* ── Successful day badge ── */}
+        {/* Successful day badge */}
         {daySuccessful && !isSubmitted && (
-          <div style={{ marginTop:'16px', background:'var(--theme-primary-light)', border:'2px solid var(--theme-primary)', borderRadius:'12px', padding:'14px', textAlign:'center' }}>
-            <p style={{ fontSize:'22px', marginBottom:'4px' }}>{dayPerfect?'🏆':'✅'}</p>
-            <p style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-primary)' }}>
-              {dayPerfect?`Perfect day — all ${totalHabitCount} habits!`:'Successful day — 5+ habits with 2+ core!'}
+          <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', border: '2px solid var(--theme-primary)', borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+            <p style={{ fontSize: '22px', marginBottom: '4px' }}>{dayPerfect ? '🏆' : '✅'}</p>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-primary)' }}>
+              {dayPerfect ? `Perfect day — all ${totalHabitCount} habits!` : 'Successful day — 5+ habits with 2+ core!'}
             </p>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', marginTop:'4px' }}>Submit before midnight to lock it in</p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginTop: '4px' }}>Submit before midnight to lock it in</p>
           </div>
         )}
 
-        {/* ── Submit / submitted ── */}
+        {/* Submit */}
         {isSubmitted ? (
-          <div style={{ marginTop:'16px', background:'var(--theme-primary-light)', borderRadius:'8px', padding:'12px', textAlign:'center' }}>
-            <p style={{ fontSize:'14px', fontWeight:'500', color:'var(--theme-primary)' }}>✓ Submitted for today</p>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'4px' }}>
-              {dayPerfect?'Perfect day! 🏆':daySuccessful?'Successful day! 🎉':'Keep going tomorrow 💪'}
+          <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--theme-primary)' }}>✓ Submitted for today</p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '4px' }}>
+              {dayPerfect ? 'Perfect day! 🏆' : daySuccessful ? 'Successful day! 🎉' : 'Keep going tomorrow 💪'}
             </p>
           </div>
         ) : (
           <>
-            <div style={{ borderLeft:'4px solid var(--theme-primary)', background:'var(--theme-primary-light)', borderRadius:'0 8px 8px 0', padding:'10px 12px', marginTop:'16px' }}>
-              <p style={{ fontSize:'12px', color:'var(--theme-text)', lineHeight:'1.5' }}>
-                ✏️ <strong>Heads up!</strong> Once submitted, today's log is final.
-              </p>
+            <div style={{ borderLeft: '4px solid var(--theme-primary)', background: 'var(--theme-primary-light)', borderRadius: '0 8px 8px 0', padding: '10px 12px', marginTop: '16px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--theme-text)', lineHeight: '1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final.</p>
             </div>
-            <button
-              onClick={submitDay} disabled={saving}
-              style={{ width:'100%', marginTop:'12px', background:'var(--theme-secondary)', color:'white', fontWeight:'600', padding:'14px', borderRadius:'10px', cursor:saving?'not-allowed':'pointer', fontSize:'15px', border:'none', opacity:saving?0.7:1 }}
-            >
-              {saving?'Submitting...':'Submit today'}
+            <button onClick={submitDay} disabled={saving}
+              style={{ width: '100%', marginTop: '12px', background: 'var(--theme-secondary)', color: 'white', fontWeight: '600', padding: '14px', borderRadius: '10px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '15px', border: 'none', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Submitting...' : 'Submit today'}
             </button>
           </>
         )}
       </div>
 
-      {/* ── Reward eligibility (now below habits) ── */}
+      {/* Reward eligibility */}
       <div style={card}>
         {isFreeExpired ? (
           <div>
-            <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', marginBottom:'8px' }}>Reward eligibility</p>
-            <div style={{ background:'#fffbeb', borderRadius:'8px', padding:'10px 12px' }}>
-              <p style={{ fontSize:'12px', color:'#92400e', lineHeight:'1.5' }}>
-                Upgrade to Basic or above to qualify for monthly rewards.
-              </p>
+            <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', marginBottom: '8px' }}>Reward eligibility</p>
+            <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '10px 12px' }}>
+              <p style={{ fontSize: '12px', color: '#92400e', lineHeight: '1.5' }}>Upgrade to Basic or above to qualify for monthly rewards.</p>
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
-              <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)' }}>Progress to reward eligibility</p>
-              <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-primary)' }}>{successfulDays}/{minDays}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Progress to reward eligibility</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-primary)' }}>{successfulDays}/{minDays}</p>
             </div>
-            <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'8px' }}>
-              <div style={{ background:'var(--theme-primary)', borderRadius:'4px', height:'8px', width:`${minDays>0?Math.min(successfulDays/minDays*100,100):0}%`, transition:'width 0.3s' }} />
+            <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
+              <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${minDays > 0 ? Math.min(successfulDays / minDays * 100, 100) : 0}%`, transition: 'width 0.3s' }} />
             </div>
             {isEligible
-              ? <p style={{ fontSize:'12px', color:'var(--theme-primary)', marginTop:'8px' }}>✓ Eligible for rewards this month 🎉</p>
-              : <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'6px' }}>
-                  {minDays-successfulDays} more successful {minDays-successfulDays===1?'day':'days'} needed
-                </p>
+              ? <p style={{ fontSize: '12px', color: 'var(--theme-primary)', marginTop: '8px' }}>✓ Eligible for rewards this month 🎉</p>
+              : <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '6px' }}>{minDays - successfulDays} more successful {minDays - successfulDays === 1 ? 'day' : 'days'} needed</p>
             }
           </div>
         )}
       </div>
 
-      {/* ── Stats grid ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px' }}>
+      {/* Stats grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         {[
-          { label:'Monthly points',     value:profile?.monthly_points||0,         sub:'max 22,500' },
-          { label:'Successful days',    value:successfulDays,                      sub:'this month'  },
-          { label:'Overall successful', value:profile?.overall_successful_days||0, sub:'all time'    },
-          { label:'Days logged',        value:profile?.total_days_logged||0,       sub:'all time'    },
+          { label: 'Monthly points', value: profile?.monthly_points || 0, sub: 'max 22,500' },
+          { label: 'Successful days', value: successfulDays, sub: 'this month' },
+          { label: 'Overall successful', value: profile?.overall_successful_days || 0, sub: 'all time' },
+          { label: 'Days logged', value: profile?.total_days_logged || 0, sub: 'all time' },
         ].map(stat => (
-          <div key={stat.label} style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'16px', padding:'16px' }}>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', marginBottom:'4px' }}>{stat.label}</p>
+          <div key={stat.label} style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '16px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>{stat.label}</p>
             {isFirstTimeUser
-              ? <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', fontStyle:'italic', lineHeight:'1.5' }}>Submit your first day to see this</p>
-              : <>
-                  <p style={{ fontSize:'26px', fontWeight:'700', color:'var(--theme-text)' }}>{stat.value}</p>
-                  <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginTop:'2px' }}>{stat.sub}</p>
-                </>
+              ? <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', fontStyle: 'italic', lineHeight: '1.5' }}>Submit your first day to see this</p>
+              : <><p style={{ fontSize: '26px', fontWeight: '700', color: 'var(--theme-text)' }}>{stat.value}</p><p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '2px' }}>{stat.sub}</p></>
             }
           </div>
         ))}
       </div>
 
-      {/* ── Rewards summary ── */}
+      {/* Rewards summary */}
       <div style={card}>
-        <h2 style={{ fontSize:'17px', fontWeight:'600', color:'var(--theme-text)', marginBottom:'16px' }}>Rewards</h2>
+        <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '16px' }}>Rewards</h2>
         {isFreeExpired ? (
           <div>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'12px' }}>
-              <span style={{ fontSize:'14px', color:'var(--theme-text-secondary)' }}>Points this month</span>
-              <span style={{ fontSize:'16px', fontWeight:'600' }}>{profile?.monthly_points||0}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>Points this month</span>
+              <span style={{ fontSize: '16px', fontWeight: '600' }}>{profile?.monthly_points || 0}</span>
             </div>
-            <div style={{ background:'#fffbeb', border:'1px solid #fcd34d', borderRadius:'12px', padding:'14px' }}>
-              <p style={{ fontSize:'13px', fontWeight:'700', color:'#92400e', marginBottom:'6px' }}>Free trial ended</p>
-              <p style={{ fontSize:'12px', color:'#78350f', lineHeight:'1.6', marginBottom:'10px' }}>
-                {(profile?.monthly_points||0)>0
-                  ?`You would have earned $${((profile?.monthly_points||0)/1000).toFixed(2)} this month. Upgrade to keep earning.`
-                  :'Upgrade to Basic for $0.99/month and start earning rewards.'}
+            <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>Free trial ended</p>
+              <p style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.6', marginBottom: '10px' }}>
+                {(profile?.monthly_points || 0) > 0 ? `You would have earned $${((profile?.monthly_points || 0) / 1000).toFixed(2)} this month. Upgrade to keep earning.` : 'Upgrade to Basic for $0.99/month and start earning rewards.'}
               </p>
-              <div style={{ background:'var(--theme-primary)', borderRadius:'8px', padding:'8px 12px', display:'flex', justifyContent:'space-between' }}>
-                <span style={{ fontSize:'12px', fontWeight:'500', color:'white' }}>Basic — $0.99/month</span>
-                <span style={{ fontSize:'12px', fontWeight:'700', color:'white' }}>Up to $5.00/mo →</span>
+              <div style={{ background: 'var(--theme-primary)', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', fontWeight: '500', color: 'white' }}>Basic — $0.99/month</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>Up to $5.00/mo →</span>
               </div>
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ display:'flex', flexDirection:'column', gap:'12px', marginBottom:'14px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
               {[
-                { label:'Estimated reward', value:`$${reward}`,                                              color:'var(--theme-primary)' },
-                { label:'Reward cap',       value:`$${typeof tierCap==='number'?tierCap.toFixed(2):tierCap}`, color:'var(--theme-text)'    },
-                { label:'Remaining cap',    value:`$${remaining}`,                                           color:'var(--theme-text)'    },
+                { label: 'Estimated reward', value: `$${reward}`, color: 'var(--theme-primary)' },
+                { label: 'Reward cap', value: `$${typeof tierCap === 'number' ? tierCap.toFixed(2) : tierCap}`, color: 'var(--theme-text)' },
+                { label: 'Remaining cap', value: `$${remaining}`, color: 'var(--theme-text)' },
               ].map(item => (
-                <div key={item.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontSize:'14px', color:'var(--theme-text-secondary)' }}>{item.label}</span>
-                  <span style={{ fontSize:'16px', fontWeight:'600', color:item.color }}>{item.value}</span>
+                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>{item.label}</span>
+                  <span style={{ fontSize: '16px', fontWeight: '600', color: item.color }}>{item.value}</span>
                 </div>
               ))}
             </div>
-            {isMinor && (
-              <div style={{ background:'var(--theme-primary-light)', borderRadius:'8px', padding:'10px' }}>
-                <p style={{ fontSize:'13px', textAlign:'center', color:'var(--theme-primary)' }}>Rewards available when you turn 18</p>
-              </div>
-            )}
-            {!isMinor && isInactive && (
-              <div style={{ background:'#fef2f2', borderRadius:'8px', padding:'10px' }}>
-                <p style={{ fontSize:'13px', textAlign:'center', color:'#dc2626' }}>⚠️ Ineligible — 5+ consecutive inactive days</p>
-              </div>
-            )}
+            {isMinor && <div style={{ background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '10px' }}><p style={{ fontSize: '13px', textAlign: 'center', color: 'var(--theme-primary)' }}>Rewards available when you turn 18</p></div>}
+            {!isMinor && isInactive && <div style={{ background: '#fef2f2', borderRadius: '8px', padding: '10px' }}><p style={{ fontSize: '13px', textAlign: 'center', color: '#dc2626' }}>⚠️ Ineligible — 5+ consecutive inactive days</p></div>}
             {!isMinor && isFreeTrial && (
-              <div style={{ background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', borderRadius:'10px', padding:'12px' }}>
-                <p style={{ fontSize:'12px', color:'var(--theme-primary)', lineHeight:'1.6' }}>
-                  🎁 <strong>{trialMonthsLeft} month{trialMonthsLeft!==1?'s':''} left</strong> in your free trial.
-                </p>
+              <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '10px', padding: '12px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.6' }}>🎁 <strong>{trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} left</strong> in your free trial.</p>
               </div>
             )}
           </div>
@@ -694,28 +628,18 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
   )
 }
 
-// ─── Habit row ────────────────────────────────────────────────────────────────
 function HabitRow({ habit, checked, disabled, onToggle }) {
   return (
-    <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:disabled?'default':'pointer' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={e => { if (!disabled) onToggle(habit.key, e.target.checked) }}
-          disabled={disabled}
-          style={{ width:'18px', height:'18px', cursor:disabled?'default':'pointer', accentColor:'var(--theme-primary)', flexShrink:0 }}
-        />
-        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-          <span style={{ fontSize:'14px' }}>{habit.icon}</span>
-          <span style={{ fontSize:'14px', color:checked?'var(--theme-text)':'var(--theme-text-secondary)' }}>
-            {habit.label}
-          </span>
+    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: disabled ? 'default' : 'pointer' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <input type="checkbox" checked={checked} onChange={e => { if (!disabled) onToggle(habit.key, e.target.checked) }} disabled={disabled}
+          style={{ width: '18px', height: '18px', cursor: disabled ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '14px' }}>{habit.icon}</span>
+          <span style={{ fontSize: '14px', color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>{habit.label}</span>
         </div>
       </div>
-      <span style={{ fontSize:'12px', color:'var(--theme-primary)', fontWeight:'600', flexShrink:0, marginLeft:'8px' }}>
-        +{habit.points}
-      </span>
+      <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>+{habit.points}</span>
     </label>
   )
 }

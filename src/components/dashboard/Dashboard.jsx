@@ -109,7 +109,7 @@ export default function Dashboard({ session }) {
         setLoading(false)
         return
       }
-      if (!updatedProfile.tutorial_seen && (updatedProfile.total_days_logged || 0) === 0) {
+      if (!updatedProfile.tutorial_seen) {
         setShowTutorial(true)
       }
       if (updatedProfile.last_acknowledged_version !== CURRENT_VERSION) {
@@ -122,20 +122,20 @@ export default function Dashboard({ session }) {
       .from('streaks').select('*').eq('user_id', userId).single()
     setStreak(streakData)
 
-    // 4. Load habit selection
+    // 4. Load habit selection (one row per habit)
     const { data: userHabitData } = await supabase
-      .from('user_habits').select('*').eq('user_id', userId).single()
-    setUserHabits(userHabitData)
+      .from('user_habits').select('*').eq('user_id', userId).eq('is_active', true)
+    setUserHabits(userHabitData || [])
 
     // 5. Load today's logs
     const { data: logsData } = await supabase
-      .from('habit_logs').select('*').eq('user_id', userId).eq('log_date', today)
+      .from('habit_logs').select('*').eq('user_id', userId).eq('date', today)
     setTodayLogs(logsData || [])
 
     // 6. Load today's summary
     const { data: summaryData } = await supabase
       .from('daily_summaries').select('*')
-      .eq('user_id', userId).eq('summary_date', today).single()
+      .eq('user_id', userId).eq('date', today).maybeSingle()
     setTodaySummary(summaryData)
 
     setLoading(false)

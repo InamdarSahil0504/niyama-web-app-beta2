@@ -1,149 +1,203 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
-import { CORE_HABITS, LIBRARY_HABITS, getTodayString } from '../../config'
+import { CORE_HABITS, LIBRARY_HABITS, TIER_CONFIG, getEffectiveTier, getTodayString } from '../../config'
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getDaysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate()
+}
+function getFirstDayOfMonth(year, month) {
+  return new Date(year, month, 1).getDay()
+}
+function formatMonth(year, month) {
+  return new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' })
+}
 
 export default function AnalyticsTab({ session, profile, streak, userHabits }) {
   const [summaries, setSummaries]   = useState([])
   const [logs, setLogs]             = useState([])
   const [loading, setLoading]       = useState(true)
-  const [period, setPeriod]         = useState('30') // '30' | '90' | 'all'
+  const [period, setPeriod]         = useState('30')
+  const [calMonth, setCalMonth]     = useState(() => {
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  })
 
   const userId = session.user.id
+  const today  = getTodayString()
 
-  useEffect(() => { fetchData() }, [period])
+  // Load ALL data once — period filtering is client-side
+  useEffect(() => { fetchData() }, [])
 
   async function fetchData() {
     setLoading(true)
-    const now = new Date()
-
-    let fromDate = null
-    if (period === '30') {
-      fromDate = new Date(now)
-      fromDate.setDate(now.getDate() - 30)
-    } else if (period === '90') {
-      fromDate = new Date(now)
-      fromDate.setDate(now.getDate() - 90)
-    }
-
-    const fromStr = fromDate
-      ? fromDate.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-      : null
-
-    // Load daily summaries
-    let summaryQuery = supabase
+    const { data: summaryData } = await supabase
       .from('daily_summaries')
       .select('*')
       .eq('user_id', userId)
-      .eq('submitted', true)
-      .order('summary_date', { ascending: true })
-    if (fromStr) summaryQuery = summaryQuery.gte('summary_date', fromStr)
-    const { data: summaryData } = await summaryQuery
+      .order('date', { ascending: true })
     setSummaries(summaryData || [])
 
-    // Load habit logs
-    let logQuery = supabase
+    const { data: logData } = await supabase
       .from('habit_logs')
       .select('*')
       .eq('user_id', userId)
-      .order('log_date', { ascending: true })
-    if (fromStr) logQuery = logQuery.gte('log_date', fromStr)
-    const { data: logData } = await logQuery
+      .order('date', { ascending: true })
     setLogs(logData || [])
-
     setLoading(false)
   }
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
-  const totalDays      = summaries.length
-  const successfulDays = summaries.filter(s => s.day_successful).length
-  const perfectDays    = summaries.filter(s => s.perfect_day).length
+  // ── Period filtering ───────────────────────────────────────────────────────
+  const now = new Date()
+  const periodDays = period === '30' ? 30 : period === '90' ? 90 : null
+  const periodFrom = periodDays
+    ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - periodDays)
+        .toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    : null
+
+  const filteredSummaries = periodFrom
+    ? summaries.filter(s => s.date >= periodFrom)
+    : summaries
+
+  const submittedSummaries = filteredSummaries.filter(s => s.submitted)
+
+  // ── KPIs ───────────────────────────────────────────────────────────────────
+  const totalDays      = submittedSummaries.length
+  const successfulDays = submittedSummaries.filter(s => s.day_successful).length
+  const perfectDays    = submittedSummaries.filter(s => s.perfect_day).length
   const successRate    = totalDays > 0 ? Math.round((successfulDays / totalDays) * 100) : 0
-  const totalPoints    = summaries.reduce((sum, s) => sum + (s.points_earned || 0), 0)
+  const totalPoints    = submittedSummaries.reduce((s, r) => s + (r.total_points || 0), 0)
   const avgPoints      = totalDays > 0 ? Math.round(totalPoints / totalDays) : 0
 
-  // ── Habit completion rates ─────────────────────────────────────────────────
-  const libraryKeys = userHabits
-    ? [userHabits.library_habit_1, userHabits.library_habit_2, userHabits.library_habit_3, userHabits.library_habit_4].filter(Boolean)
-    : ['sunlight', 'hydration', 'meditation', 'no_late_food']
-
-  const allHabitKeys = [
-    ...CORE_HABITS.map(h => h.key),
-    ...libraryKeys,
-    ...(userHabits?.custom_habit_1_label ? ['custom_1'] : []),
-    ...(userHabits?.custom_habit_2_label ? ['custom_2'] : []),
-  ]
-
-  const habitCompletionRates = allHabitKeys.map(key => {
-    const keyLogs    = logs.filter(l => l.habit_key === key)
-    const completed  = keyLogs.filter(l => l.completed).length
-    const total      = keyLogs.length
-    const rate       = total > 0 ? Math.round((completed / total) * 100) : 0
-    const coreHabit  = CORE_HABITS.find(h => h.key === key)
-    const libHabit   = LIBRARY_HABITS.find(h => h.key === key)
-    const label = coreHabit?.label || libHabit?.label
-      || (key === 'custom_1' ? userHabits?.custom_habit_1_label : userHabits?.custom_habit_2_label)
-      || key
-    const icon = coreHabit?.icon || libHabit?.icon || '⭐'
-    const type = coreHabit ? 'core' : key.startsWith('custom') ? 'custom' : 'library'
-    return { key, label, icon, rate, completed, total, type }
-  }).filter(h => h.total > 0)
-
-  // ── Day of week breakdown ──────────────────────────────────────────────────
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const dayStats = dayNames.map((name, i) => {
-    const daySummaries = summaries.filter(s => new Date(s.summary_date + 'T12:00:00').getDay() === i)
-    const daySuccess   = daySummaries.filter(s => s.day_successful).length
-    const dayTotal     = daySummaries.length
-    const rate         = dayTotal > 0 ? Math.round((daySuccess / dayTotal) * 100) : null
-    return { name, rate, total: dayTotal }
-  })
-
-  const daysWithData  = dayStats.filter(d => d.rate !== null)
-  const bestDay       = daysWithData.length > 0 ? daysWithData.reduce((a, b) => a.rate > b.rate ? a : b) : null
-  const worstDay      = daysWithData.length > 0 ? daysWithData.reduce((a, b) => a.rate < b.rate ? a : b) : null
-  const maxDayRate    = Math.max(...daysWithData.map(d => d.rate), 1)
-
-  // ── Last 30 days points trend ──────────────────────────────────────────────
-  const last30 = summaries.slice(-30)
-  const maxPoints = Math.max(...last30.map(s => s.points_earned || 0), 1)
-
-  // ── Calendar heatmap (last 90 days) ───────────────────────────────────────
+  // ── Calendar data ──────────────────────────────────────────────────────────
   const summaryMap = {}
-  summaries.forEach(s => { summaryMap[s.summary_date] = s })
+  summaries.forEach(s => { summaryMap[s.date] = s })
 
-  const calendarDays = []
-  for (let i = 89; i >= 0; i--) {
-    const d   = new Date()
-    d.setDate(d.getDate() - i)
-    const str = d.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-    const s   = summaryMap[str]
-    calendarDays.push({
-      date: str,
-      status: !s ? 'none' : s.perfect_day ? 'perfect' : s.day_successful ? 'success' : 'miss',
-      points: s?.points_earned || 0,
+  const { year: calYear, month: calMonthIdx } = calMonth
+  const daysInMonth   = getDaysInMonth(calYear, calMonthIdx)
+  const firstDayOfWeek = getFirstDayOfMonth(calYear, calMonthIdx)
+
+  const calDays = []
+  // Padding before first day
+  for (let i = 0; i < firstDayOfWeek; i++) calDays.push(null)
+  // Actual days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonthIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const s = summaryMap[dateStr]
+    const isFuture = dateStr > today
+    calDays.push({
+      day: d, date: dateStr, isFuture,
+      status: isFuture ? 'future' : !s ? 'inactive' : s.perfect_day ? 'perfect' : s.day_successful ? 'success' : 'miss',
+      points: s?.total_points || 0,
     })
   }
 
-  // Pad to start on Sunday
-  const firstDayOfWeek = new Date(calendarDays[0].date + 'T12:00:00').getDay()
-  const paddedDays = [
-    ...Array(firstDayOfWeek).fill(null),
-    ...calendarDays,
-  ]
-
-  const calColor = (status) => {
+  function calColor(status) {
     if (status === 'perfect')  return '#C9973A'
     if (status === 'success')  return 'var(--theme-primary)'
-    if (status === 'miss')     return '#E05252'
-    return 'var(--theme-border)'
+    if (status === 'miss')     return 'var(--theme-secondary)'
+    if (status === 'future')   return 'transparent'
+    return 'var(--theme-border)' // inactive
+  }
+
+  function prevMonth() {
+    setCalMonth(prev => {
+      if (prev.month === 0) return { year: prev.year - 1, month: 11 }
+      return { year: prev.year, month: prev.month - 1 }
+    })
+  }
+  function nextMonth() {
+    const now = new Date()
+    setCalMonth(prev => {
+      if (prev.year === now.getFullYear() && prev.month === now.getMonth()) return prev
+      if (prev.month === 11) return { year: prev.year + 1, month: 0 }
+      return { year: prev.year, month: prev.month + 1 }
+    })
+  }
+  const isCurrentMonth = calYear === now.getFullYear() && calMonthIdx === now.getMonth()
+
+  // ── Habit completion rates ─────────────────────────────────────────────────
+  const libraryRows  = Array.isArray(userHabits) ? userHabits.filter(h => h.habit_type === 'library') : []
+  const customRows   = Array.isArray(userHabits) ? userHabits.filter(h => h.habit_type === 'custom')  : []
+
+  const libraryHabits = libraryRows.length > 0
+    ? libraryRows.map(r => LIBRARY_HABITS.find(h => h.key === r.habit_key) || { key: r.habit_key, label: r.habit_label, icon: '📌' })
+    : ['sunlight','hydration','meditation','no_late_food'].map(k => LIBRARY_HABITS.find(h => h.key === k)).filter(Boolean)
+
+  const customHabits = customRows.map((r, i) => ({
+    key: r.habit_key || `custom_${i+1}`, label: r.habit_label, icon: '⭐'
+  }))
+
+  const allHabits = [
+    ...CORE_HABITS,
+    ...libraryHabits,
+    ...customHabits,
+  ]
+
+  const habitRates = allHabits.map(habit => {
+    const habitLogs = logs.filter(l => l.habit_key === habit.key)
+    const completed = habitLogs.filter(l => l.completed).length
+    const total     = habitLogs.length
+    const rate      = total > 0 ? Math.round((completed / total) * 100) : 0
+    const type      = CORE_HABITS.find(h => h.key === habit.key) ? 'core'
+      : habit.key.startsWith('custom') ? 'custom' : 'library'
+    return { ...habit, rate, completed, total, type }
+  }).filter(h => h.total > 0).sort((a, b) => b.rate - a.rate)
+
+  // ── Best day of week ───────────────────────────────────────────────────────
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const dayStats = dayNames.map((name, i) => {
+    const daySummaries = submittedSummaries.filter(s => new Date(s.date + 'T12:00:00').getDay() === i)
+    const success = daySummaries.filter(s => s.day_successful).length
+    const total   = daySummaries.length
+    return { name, short: name.slice(0,3), rate: total > 0 ? Math.round((success/total)*100) : null, total }
+  })
+  const daysWithData = dayStats.filter(d => d.rate !== null)
+  const bestDay  = daysWithData.length > 0 ? daysWithData.reduce((a,b) => a.rate > b.rate ? a : b) : null
+  const worstDay = daysWithData.length > 0 ? daysWithData.reduce((a,b) => a.rate < b.rate ? a : b) : null
+
+  // ── Points sparkline (last 30 days) ───────────────────────────────────────
+  const sparklineDays = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const str = d.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    const s   = summaryMap[str]
+    sparklineDays.push({ date: str, points: s?.total_points || 0, status: !s ? 'none' : s.perfect_day ? 'perfect' : s.day_successful ? 'success' : 'miss' })
+  }
+  const maxSparkPoints = Math.max(...sparklineDays.map(d => d.points), 1)
+  const recentTrend = (() => {
+    const first15 = sparklineDays.slice(0,15).filter(d=>d.points>0)
+    const last15  = sparklineDays.slice(15).filter(d=>d.points>0)
+    if (first15.length === 0 || last15.length === 0) return null
+    const avg1 = first15.reduce((s,d)=>s+d.points,0)/first15.length
+    const avg2 = last15.reduce((s,d)=>s+d.points,0)/last15.length
+    const diff  = Math.round(((avg2-avg1)/avg1)*100)
+    return diff
+  })()
+
+  // ── Milestone progress ─────────────────────────────────────────────────────
+  const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
+  const tierCfg       = TIER_CONFIG[effectiveTier]
+  const currentSuccessfulDays = profile?.successful_days || 0
+
+  const milestones = []
+  if (tierCfg?.milestones?.days_10_bonus) {
+    milestones.push({ label: '10-day milestone', days: 10, bonus: `+$${tierCfg.milestones.days_10_bonus.toFixed(2)}` })
+  }
+  if (tierCfg?.milestones?.days_20_bonus) {
+    milestones.push({ label: '20-day milestone', days: 20, bonus: `+$${tierCfg.milestones.days_20_bonus.toFixed(2)}` })
+  }
+  if (tierCfg?.milestones?.successful_month_bonus) {
+    milestones.push({ label: 'Successful month', days: null, bonus: `+$${tierCfg.milestones.successful_month_bonus.toFixed(2)}`, special: true })
+  }
+  if (tierCfg?.milestones?.perfect_month_bonus) {
+    milestones.push({ label: 'Perfect month', days: null, bonus: `+$${tierCfg.milestones.perfect_month_bonus.toFixed(2)}`, special: true, gold: true })
   }
 
   const card = {
-    background: 'var(--theme-card)',
-    border: '1px solid var(--theme-border)',
-    borderRadius: '16px',
-    padding: '20px',
-    marginBottom: '16px',
+    background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
+    borderRadius: '16px', padding: '20px', marginBottom: '16px',
   }
 
   if (loading) return (
@@ -154,167 +208,170 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
-        <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--theme-text)' }}>Your analytics</h1>
-        {/* Period selector */}
-        <div style={{ display:'flex', background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'10px', padding:'3px', gap:'2px' }}>
-          {[['30','30d'],['90','90d'],['all','All']].map(([val, label]) => (
-            <button key={val} onClick={() => setPeriod(val)}
-              style={{
-                padding:'5px 10px', borderRadius:'7px', border:'none', cursor:'pointer',
-                background: period===val ? 'var(--theme-primary)' : 'transparent',
-                color: period===val ? 'white' : 'var(--theme-text-muted)',
-                fontSize:'12px', fontWeight: period===val ? '700' : '400',
-                transition:'all 0.15s',
-              }}>
-              {label}
-            </button>
-          ))}
-        </div>
+      {/* ── Header ── */}
+      <div style={{ marginBottom:'20px' }}>
+        <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'4px' }}>Your analytics</h1>
+        <p style={{ fontSize:'13px', color:'var(--theme-text-muted)' }}>
+          {summaries.length} day{summaries.length!==1?'s':''} tracked total
+        </p>
       </div>
 
-      {totalDays === 0 ? (
-        <div style={{ ...card, textAlign:'center', padding:'40px 20px' }}>
-          <p style={{ fontSize:'32px', marginBottom:'12px' }}>📊</p>
-          <p style={{ fontSize:'16px', fontWeight:'600', color:'var(--theme-text)', marginBottom:'8px' }}>No data yet</p>
+      {summaries.length === 0 ? (
+        <div style={{ ...card, textAlign:'center', padding:'48px 20px' }}>
+          <p style={{ fontSize:'40px', marginBottom:'16px' }}>📊</p>
+          <p style={{ fontSize:'16px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'8px' }}>No data yet</p>
           <p style={{ fontSize:'13px', color:'var(--theme-text-muted)', lineHeight:'1.6' }}>
             Submit your first day of habits to start seeing your analytics here.
           </p>
         </div>
       ) : (
         <>
-          {/* ── Overview KPIs ── */}
+          {/* ── Period selector ── */}
+          <div style={{ display:'flex', background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'12px', padding:'3px', marginBottom:'16px' }}>
+            {[['30','Last 30 days'],['90','Last 90 days'],['all','All time']].map(([val, label]) => (
+              <button key={val} onClick={() => setPeriod(val)}
+                style={{
+                  flex:1, padding:'8px 4px', borderRadius:'9px', border:'none', cursor:'pointer',
+                  background: period===val ? 'var(--theme-primary)' : 'transparent',
+                  color: period===val ? 'white' : 'var(--theme-text-muted)',
+                  fontWeight: period===val ? '700' : '400',
+                  fontSize:'12px', transition:'all 0.15s',
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── KPI strip ── */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'16px' }}>
             {[
-              { label:'Days logged',      value: totalDays,       sub: `in last ${period==='all'?'all time':period+' days'}`, color:'var(--theme-text)' },
-              { label:'Success rate',     value: `${successRate}%`, sub:`${successfulDays} successful days`, color:'var(--theme-primary)' },
-              { label:'Perfect days',     value: perfectDays,     sub:'all habits completed', color:'#C9973A' },
-              { label:'Avg points/day',   value: avgPoints,       sub:'out of 750 max', color:'var(--theme-text)' },
-            ].map(stat => (
-              <div key={stat.label} style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'14px', padding:'14px' }}>
-                <p style={{ fontSize:'11px', color:'var(--theme-text-secondary)', marginBottom:'4px' }}>{stat.label}</p>
-                <p style={{ fontSize:'24px', fontWeight:'800', color: stat.color, lineHeight:1 }}>{stat.value}</p>
-                <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginTop:'3px' }}>{stat.sub}</p>
+              { label:'Success rate',   value:`${successRate}%`, sub:`${successfulDays} of ${totalDays} days`,   color:'var(--theme-primary)' },
+              { label:'Perfect days',   value:perfectDays,        sub:'all habits completed',                      color:'#C9973A'              },
+              { label:'Avg pts / day',  value:avgPoints,           sub:'out of 750 max',                           color:'var(--theme-text)'    },
+              { label:'Best streak',    value:`${streak?.longest_streak||0}d`, sub:`current: ${streak?.current_streak||0} days`, color:'var(--theme-text)' },
+            ].map(kpi => (
+              <div key={kpi.label} style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'14px', padding:'14px' }}>
+                <p style={{ fontSize:'11px', color:'var(--theme-text-secondary)', marginBottom:'4px' }}>{kpi.label}</p>
+                <p style={{ fontSize:'24px', fontWeight:'800', color:kpi.color, lineHeight:1 }}>{kpi.value}</p>
+                <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginTop:'3px' }}>{kpi.sub}</p>
               </div>
             ))}
           </div>
 
-          {/* ── Streak stats ── */}
-          <div style={{ ...card }}>
-            <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'14px' }}>🔥 Streak</h3>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
-              {[
-                { label:'Current',  value: streak?.current_streak || 0, unit:'days' },
-                { label:'Longest',  value: streak?.longest_streak  || 0, unit:'days' },
-                { label:'This month', value: profile?.successful_days || 0, unit:'successful' },
-              ].map(s => (
-                <div key={s.label} style={{ textAlign:'center', background:'var(--theme-primary-light)', borderRadius:'10px', padding:'12px 8px' }}>
-                  <p style={{ fontSize:'22px', fontWeight:'800', color:'var(--theme-primary)', lineHeight:1 }}>{s.value}</p>
-                  <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginTop:'3px' }}>{s.unit}</p>
-                  <p style={{ fontSize:'10px', fontWeight:'600', color:'var(--theme-text-secondary)', marginTop:'1px' }}>{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* ── Calendar heatmap ── */}
           <div style={card}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px' }}>
-              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)' }}>Last 90 days</h3>
-              {/* Legend */}
-              <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
-                {[
-                  { color:'#C9973A', label:'Perfect' },
-                  { color:'var(--theme-primary)', label:'Success' },
-                  { color:'#E05252', label:'Miss' },
-                ].map(l => (
-                  <div key={l.label} style={{ display:'flex', alignItems:'center', gap:'3px' }}>
-                    <div style={{ width:'8px', height:'8px', borderRadius:'2px', background:l.color }} />
-                    <span style={{ fontSize:'9px', color:'var(--theme-text-muted)' }}>{l.label}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Month navigation */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
+              <button onClick={prevMonth}
+                style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1px solid var(--theme-border)', background:'var(--theme-card)', cursor:'pointer', fontSize:'16px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                ‹
+              </button>
+              <p style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)' }}>
+                {formatMonth(calYear, calMonthIdx)}
+              </p>
+              <button onClick={nextMonth} disabled={isCurrentMonth}
+                style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1px solid var(--theme-border)', background:'var(--theme-card)', cursor:isCurrentMonth?'not-allowed':'pointer', fontSize:'16px', display:'flex', alignItems:'center', justifyContent:'center', opacity:isCurrentMonth?0.3:1 }}>
+                ›
+              </button>
             </div>
 
-            {/* Day of week labels */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:'3px', marginBottom:'3px' }}>
+            {/* Day of week headers */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:'4px', marginBottom:'4px' }}>
               {['S','M','T','W','T','F','S'].map((d,i) => (
-                <div key={i} style={{ textAlign:'center', fontSize:'9px', color:'var(--theme-text-muted)', fontWeight:'600' }}>{d}</div>
+                <div key={i} style={{ textAlign:'center', fontSize:'10px', fontWeight:'700', color:'var(--theme-text-muted)', padding:'2px 0' }}>{d}</div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:'3px' }}>
-              {paddedDays.map((day, i) => (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:'4px' }}>
+              {calDays.map((day, i) => (
                 <div key={i} style={{
-                  aspectRatio:'1',
-                  borderRadius:'3px',
+                  aspectRatio:'1', borderRadius:'6px',
                   background: day ? calColor(day.status) : 'transparent',
-                  opacity: day?.status === 'none' ? 0.25 : 1,
-                  title: day?.date,
-                }} />
+                  border: day?.date === today ? '2px solid var(--theme-primary)' : '1px solid transparent',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  opacity: day?.status === 'inactive' ? 0.3 : 1,
+                  position:'relative',
+                }}>
+                  {day && (
+                    <span style={{
+                      fontSize:'10px', fontWeight:'600',
+                      color: day.status==='future' ? 'var(--theme-text-muted)'
+                        : (day.status==='inactive') ? 'var(--theme-text-muted)'
+                        : 'white',
+                    }}>
+                      {day.day}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
+
+            {/* Legend */}
+            <div style={{ display:'flex', gap:'12px', marginTop:'14px', justifyContent:'center', flexWrap:'wrap' }}>
+              {[
+                { color:'#C9973A',              label:'Perfect day'  },
+                { color:'var(--theme-primary)',  label:'Successful'   },
+                { color:'var(--theme-secondary)',label:'Miss'         },
+                { color:'var(--theme-border)',   label:'Inactive'     },
+              ].map(l => (
+                <div key={l.label} style={{ display:'flex', alignItems:'center', gap:'4px' }}>
+                  <div style={{ width:'10px', height:'10px', borderRadius:'3px', background:l.color }} />
+                  <span style={{ fontSize:'10px', color:'var(--theme-text-muted)' }}>{l.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Month summary */}
+            {(() => {
+              const monthStr = `${calYear}-${String(calMonthIdx+1).padStart(2,'0')}`
+              const monthSummaries = summaries.filter(s => s.date.startsWith(monthStr) && s.submitted)
+              if (monthSummaries.length === 0) return null
+              const monthSuccess  = monthSummaries.filter(s => s.day_successful).length
+              const monthPerfect  = monthSummaries.filter(s => s.perfect_day).length
+              const monthRate     = Math.round((monthSuccess/monthSummaries.length)*100)
+              return (
+                <div style={{ marginTop:'14px', paddingTop:'14px', borderTop:'1px solid var(--theme-border)', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px', textAlign:'center' }}>
+                  {[
+                    { label:'Days logged', value:monthSummaries.length },
+                    { label:'Successful',  value:`${monthSuccess} (${monthRate}%)` },
+                    { label:'Perfect',     value:monthPerfect },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-text)' }}>{s.value}</p>
+                      <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginTop:'2px' }}>{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
 
-          {/* ── Day of week breakdown ── */}
-          {daysWithData.length > 0 && (
+          {/* ── Points sparkline ── */}
+          {sparklineDays.some(d => d.points > 0) && (
             <div style={card}>
-              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'8px' }}>Day of week</h3>
-
-              {/* Best / worst callouts */}
-              {bestDay && worstDay && bestDay.name !== worstDay.name && (
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'14px' }}>
-                  <div style={{ background:'var(--theme-primary-light)', borderRadius:'10px', padding:'10px', textAlign:'center' }}>
-                    <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginBottom:'2px' }}>Best day</p>
-                    <p style={{ fontSize:'16px', fontWeight:'800', color:'var(--theme-primary)' }}>{bestDay.name}</p>
-                    <p style={{ fontSize:'11px', color:'var(--theme-primary)', fontWeight:'600' }}>{bestDay.rate}% success</p>
-                  </div>
-                  <div style={{ background:'#fef2f2', borderRadius:'10px', padding:'10px', textAlign:'center' }}>
-                    <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginBottom:'2px' }}>Needs work</p>
-                    <p style={{ fontSize:'16px', fontWeight:'800', color:'#dc2626' }}>{worstDay.name}</p>
-                    <p style={{ fontSize:'11px', color:'#dc2626', fontWeight:'600' }}>{worstDay.rate}% success</p>
-                  </div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
+                <div>
+                  <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'2px' }}>Points — last 30 days</h3>
+                  {recentTrend !== null && (
+                    <p style={{ fontSize:'12px', color: recentTrend >= 0 ? 'var(--theme-primary)' : 'var(--theme-secondary)', fontWeight:'600' }}>
+                      {recentTrend >= 0 ? `▲ ${recentTrend}%` : `▼ ${Math.abs(recentTrend)}%`} vs previous 15 days
+                    </p>
+                  )}
                 </div>
-              )}
-
-              {/* Bar chart */}
-              <div style={{ display:'flex', alignItems:'flex-end', gap:'6px', height:'80px' }}>
-                {dayStats.map(d => (
-                  <div key={d.name} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', height:'100%', justifyContent:'flex-end' }}>
-                    <div style={{
-                      width:'100%',
-                      height: d.rate !== null ? `${Math.max((d.rate / maxDayRate) * 64, 4)}px` : '4px',
-                      background: d.rate !== null
-                        ? (d.name === bestDay?.name ? 'var(--theme-primary)' : d.name === worstDay?.name ? '#E05252' : 'var(--theme-primary-light)')
-                        : 'var(--theme-border)',
-                      borderRadius:'4px 4px 0 0',
-                      transition:'height 0.3s',
-                    }} />
-                    <p style={{ fontSize:'9px', color:'var(--theme-text-muted)', fontWeight:'600' }}>{d.name}</p>
-                    {d.rate !== null && (
-                      <p style={{ fontSize:'9px', color:'var(--theme-text-muted)' }}>{d.rate}%</p>
-                    )}
-                  </div>
-                ))}
+                <p style={{ fontSize:'13px', fontWeight:'700', color:'var(--theme-text)' }}>{avgPoints} avg</p>
               </div>
-            </div>
-          )}
 
-          {/* ── Points trend (last 30 days) ── */}
-          {last30.length > 0 && (
-            <div style={card}>
-              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'14px' }}>Points trend</h3>
-              <div style={{ display:'flex', alignItems:'flex-end', gap:'2px', height:'80px' }}>
-                {last30.map((s, i) => (
+              {/* Sparkline bars */}
+              <div style={{ display:'flex', alignItems:'flex-end', gap:'2px', height:'60px' }}>
+                {sparklineDays.map((d, i) => (
                   <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', height:'100%' }}>
                     <div style={{
                       width:'100%',
-                      height: `${Math.max(((s.points_earned||0) / maxPoints) * 72, 2)}px`,
-                      background: s.perfect_day ? '#C9973A' : s.day_successful ? 'var(--theme-primary)' : 'var(--theme-secondary)',
+                      height: d.points > 0 ? `${Math.max((d.points/maxSparkPoints)*56, 3)}px` : '2px',
+                      background: d.status==='perfect' ? '#C9973A' : d.status==='success' ? 'var(--theme-primary)' : d.status==='miss' ? 'var(--theme-secondary)' : 'var(--theme-border)',
                       borderRadius:'2px 2px 0 0',
-                      opacity: 0.85,
+                      opacity: d.points > 0 ? 0.9 : 0.3,
                     }} />
                   </div>
                 ))}
@@ -323,115 +380,177 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                 <span style={{ fontSize:'10px', color:'var(--theme-text-muted)' }}>30 days ago</span>
                 <span style={{ fontSize:'10px', color:'var(--theme-text-muted)' }}>Today</span>
               </div>
-              <div style={{ display:'flex', gap:'12px', marginTop:'10px', justifyContent:'center' }}>
-                {[
-                  { color:'#C9973A', label:'Perfect day' },
-                  { color:'var(--theme-primary)', label:'Successful' },
-                  { color:'var(--theme-secondary)', label:'Miss' },
-                ].map(l => (
-                  <div key={l.label} style={{ display:'flex', alignItems:'center', gap:'4px' }}>
-                    <div style={{ width:'8px', height:'8px', borderRadius:'2px', background:l.color }} />
-                    <span style={{ fontSize:'10px', color:'var(--theme-text-muted)' }}>{l.label}</span>
+            </div>
+          )}
+
+          {/* ── Best day of week ── */}
+          {bestDay && (
+            <div style={card}>
+              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'12px' }}>Day of week</h3>
+
+              {/* Insight cards */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'14px' }}>
+                <div style={{ background:'var(--theme-primary-light)', borderRadius:'10px', padding:'12px', textAlign:'center' }}>
+                  <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginBottom:'4px' }}>Strongest day</p>
+                  <p style={{ fontSize:'20px', fontWeight:'800', color:'var(--theme-primary)' }}>{bestDay.name}</p>
+                  <p style={{ fontSize:'11px', color:'var(--theme-primary)', fontWeight:'600', marginTop:'2px' }}>{bestDay.rate}% success rate</p>
+                </div>
+                {worstDay && worstDay.name !== bestDay.name && (
+                  <div style={{ background:'#fef2f2', borderRadius:'10px', padding:'12px', textAlign:'center' }}>
+                    <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginBottom:'4px' }}>Needs attention</p>
+                    <p style={{ fontSize:'20px', fontWeight:'800', color:'#dc2626' }}>{worstDay.name}</p>
+                    <p style={{ fontSize:'11px', color:'#dc2626', fontWeight:'600', marginTop:'2px' }}>{worstDay.rate}% success rate</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bar chart */}
+              <div style={{ display:'flex', alignItems:'flex-end', gap:'4px', height:'64px' }}>
+                {dayStats.map(d => {
+                  const maxRate = Math.max(...daysWithData.map(x => x.rate), 1)
+                  const isBest  = d.name === bestDay?.name
+                  const isWorst = d.name === worstDay?.name
+                  return (
+                    <div key={d.name} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', height:'100%', gap:'3px' }}>
+                      <div style={{
+                        width:'100%',
+                        height: d.rate !== null ? `${Math.max((d.rate/maxRate)*52, 4)}px` : '4px',
+                        background: isBest ? 'var(--theme-primary)' : isWorst ? 'var(--theme-secondary)' : 'var(--theme-primary-light)',
+                        borderRadius:'3px 3px 0 0', transition:'height 0.3s',
+                      }} />
+                      <p style={{ fontSize:'9px', color: isBest?'var(--theme-primary)':isWorst?'var(--theme-secondary)':'var(--theme-text-muted)', fontWeight: (isBest||isWorst)?'700':'400' }}>{d.short}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Habit completion rates ── */}
+          {habitRates.length > 0 && (
+            <div style={card}>
+              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'4px' }}>Habit completion</h3>
+              <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginBottom:'16px' }}>All time · sorted best to worst</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
+                {habitRates.map(h => (
+                  <div key={h.key}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'5px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                        <span style={{ fontSize:'14px' }}>{h.icon}</span>
+                        <span style={{ fontSize:'13px', color:'var(--theme-text-secondary)' }}>{h.label}</span>
+                        <span style={{
+                          fontSize:'9px', fontWeight:'700', padding:'1px 5px', borderRadius:'6px',
+                          background: h.type==='core'?'var(--theme-primary-light)':h.type==='custom'?'#fef3e2':'#f0eef7',
+                          color: h.type==='core'?'var(--theme-primary)':h.type==='custom'?'#C9973A':'#7B6BAA',
+                        }}>
+                          {h.type.toUpperCase()}
+                        </span>
+                      </div>
+                      <span style={{ fontSize:'13px', fontWeight:'700', color: h.rate>=80?'var(--theme-primary)':h.rate>=50?'#C9973A':'var(--theme-secondary)' }}>
+                        {h.rate}%
+                      </span>
+                    </div>
+                    <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'6px' }}>
+                      <div style={{
+                        background: h.rate>=80?'var(--theme-primary)':h.rate>=50?'#C9973A':'var(--theme-secondary)',
+                        borderRadius:'4px', height:'6px', width:`${h.rate}%`, transition:'width 0.4s',
+                      }} />
+                    </div>
+                    <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginTop:'2px' }}>
+                      {h.completed} of {h.total} days
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── Habit completion rates ── */}
-          {habitCompletionRates.length > 0 && (
+          {/* ── Milestone progress (Plus/Premium only) ── */}
+          {milestones.length > 0 && (
             <div style={card}>
-              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'14px' }}>Habit completion</h3>
+              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'4px' }}>Reward milestones</h3>
+              <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginBottom:'16px' }}>
+                {currentSuccessfulDays} successful days this month
+              </p>
               <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-                {habitCompletionRates
-                  .sort((a, b) => b.rate - a.rate)
-                  .map(h => (
-                    <div key={h.key}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px' }}>
+                {milestones.filter(m => m.days).map(m => {
+                  const reached  = currentSuccessfulDays >= m.days
+                  const progress = Math.min((currentSuccessfulDays / m.days) * 100, 100)
+                  const daysLeft = Math.max(m.days - currentSuccessfulDays, 0)
+                  return (
+                    <div key={m.label}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'5px' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                          <span style={{ fontSize:'14px' }}>{h.icon}</span>
-                          <span style={{ fontSize:'12px', color:'var(--theme-text-secondary)' }}>{h.label}</span>
-                          <span style={{ fontSize:'9px', fontWeight:'700', padding:'1px 5px', borderRadius:'6px',
-                            background: h.type==='core' ? 'var(--theme-primary-light)' : h.type==='custom' ? '#fef3e2' : '#f0eef7',
-                            color: h.type==='core' ? 'var(--theme-primary)' : h.type==='custom' ? '#C9973A' : '#7B6BAA',
-                          }}>
-                            {h.type.toUpperCase()}
-                          </span>
+                          <span style={{ fontSize:'14px' }}>{reached ? '✅' : '🎯'}</span>
+                          <span style={{ fontSize:'13px', color:'var(--theme-text)', fontWeight: reached?'700':'400' }}>{m.label}</span>
                         </div>
-                        <span style={{ fontSize:'12px', fontWeight:'700', color: h.rate>=80?'var(--theme-primary)':h.rate>=50?'#C9973A':'var(--theme-secondary)' }}>
-                          {h.rate}%
+                        <span style={{ fontSize:'13px', fontWeight:'700', color: reached?'var(--theme-primary)':'var(--theme-text-muted)' }}>
+                          {m.bonus}
                         </span>
                       </div>
-                      <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'6px' }}>
+                      <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'8px' }}>
                         <div style={{
-                          background: h.rate>=80?'var(--theme-primary)':h.rate>=50?'#C9973A':'var(--theme-secondary)',
-                          borderRadius:'4px', height:'6px',
-                          width:`${h.rate}%`, transition:'width 0.3s',
+                          background: reached ? 'var(--theme-primary)' : '#C9973A',
+                          borderRadius:'4px', height:'8px', width:`${progress}%`, transition:'width 0.4s',
                         }} />
                       </div>
-                      <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginTop:'2px' }}>
-                        {h.completed} of {h.total} days
+                      <p style={{ fontSize:'10px', color: reached?'var(--theme-primary)':'var(--theme-text-muted)', marginTop:'3px', fontWeight: reached?'600':'400' }}>
+                        {reached ? `✓ Unlocked — ${m.days} days reached!` : `${daysLeft} more successful ${daysLeft===1?'day':'days'} to unlock`}
                       </p>
                     </div>
-                  ))}
+                  )
+                })}
+
+                {/* Successful month and perfect month — special */}
+                {milestones.filter(m => m.special).map(m => {
+                  const isSuccessfulMonth = currentSuccessfulDays > 0 && currentSuccessfulDays === (profile?.total_days_logged || 0)
+                  const reached = isSuccessfulMonth
+                  return (
+                    <div key={m.label} style={{ background: m.gold ? '#fffbeb' : 'var(--theme-primary-light)', borderRadius:'10px', padding:'12px' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                          <span style={{ fontSize:'14px' }}>{m.gold ? '🏆' : '🌟'}</span>
+                          <span style={{ fontSize:'13px', fontWeight:'700', color: m.gold ? '#92400e' : 'var(--theme-primary)' }}>{m.label}</span>
+                        </div>
+                        <span style={{ fontSize:'13px', fontWeight:'700', color: m.gold ? '#C9973A' : 'var(--theme-primary)' }}>{m.bonus}</span>
+                      </div>
+                      <p style={{ fontSize:'11px', color: m.gold ? '#78350f' : 'var(--theme-text-secondary)', marginTop:'6px', lineHeight:'1.4' }}>
+                        {m.gold
+                          ? 'Complete every submitted day perfectly — all 9 habits — to earn this bonus.'
+                          : 'Make every submitted day a successful day this month to earn this bonus.'}
+                      </p>
+                      {reached && <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-primary)', marginTop:'4px' }}>✓ On track!</p>}
+                    </div>
+                  )
+                })}
               </div>
+
+              {/* Free/Basic upsell */}
+              {milestones.length === 0 && (
+                <div style={{ background:'var(--theme-primary-light)', borderRadius:'10px', padding:'14px', textAlign:'center' }}>
+                  <p style={{ fontSize:'13px', color:'var(--theme-primary)', lineHeight:'1.6' }}>
+                    Upgrade to Plus or Premium to unlock milestone bonuses — earn up to <strong>$45/month</strong>.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* ── Monthly comparison ── */}
-          <MonthlyComparison summaries={summaries} />
+          {/* Upsell for free/basic */}
+          {milestones.length === 0 && (
+            <div style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'16px', padding:'20px', marginBottom:'16px' }}>
+              <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'8px' }}>🎯 Reward milestones</h3>
+              <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.6', marginBottom:'12px' }}>
+                Upgrade to Plus or Premium to unlock milestone bonuses — earn extra rewards at 10 days, 20 days, and for a successful or perfect month.
+              </p>
+              <div style={{ background:'var(--theme-primary)', borderRadius:'8px', padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:'13px', fontWeight:'600', color:'white' }}>Plus — $4.99/month</span>
+                <span style={{ fontSize:'13px', fontWeight:'700', color:'white' }}>Up to $17.50/mo →</span>
+              </div>
+            </div>
+          )}
         </>
       )}
-    </div>
-  )
-}
-
-// ── Monthly comparison component ──────────────────────────────────────────────
-function MonthlyComparison({ summaries }) {
-  const now       = new Date()
-  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
-  const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1)
-  const lastMonthStr = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth()+1).padStart(2,'0')}`
-
-  const thisMonthData = summaries.filter(s => s.summary_date.startsWith(thisMonth))
-  const lastMonthData = summaries.filter(s => s.summary_date.startsWith(lastMonthStr))
-
-  if (thisMonthData.length === 0 && lastMonthData.length === 0) return null
-
-  const thisSuccess  = thisMonthData.filter(s => s.day_successful).length
-  const lastSuccess  = lastMonthData.filter(s => s.day_successful).length
-  const thisPoints   = thisMonthData.reduce((s,r) => s+(r.points_earned||0), 0)
-  const lastPoints   = lastMonthData.reduce((s,r) => s+(r.points_earned||0), 0)
-  const thisPerfect  = thisMonthData.filter(s => s.perfect_day).length
-  const lastPerfect  = lastMonthData.filter(s => s.perfect_day).length
-
-  const card = { background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'16px', padding:'20px', marginBottom:'16px' }
-
-  return (
-    <div style={card}>
-      <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'14px' }}>This month vs last</h3>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
-        {[
-          { label:'Successful days', this: thisSuccess,  last: lastSuccess  },
-          { label:'Points earned',   this: thisPoints,   last: lastPoints   },
-          { label:'Perfect days',    this: thisPerfect,  last: lastPerfect  },
-        ].map(stat => {
-          const diff   = stat.this - stat.last
-          const up     = diff > 0
-          const same   = diff === 0
-          return (
-            <div key={stat.label} style={{ background:'var(--theme-primary-light)', borderRadius:'10px', padding:'12px', textAlign:'center' }}>
-              <p style={{ fontSize:'10px', color:'var(--theme-text-muted)', marginBottom:'4px', lineHeight:'1.3' }}>{stat.label}</p>
-              <p style={{ fontSize:'20px', fontWeight:'800', color:'var(--theme-primary)', lineHeight:1 }}>{stat.this}</p>
-              {stat.last > 0 && (
-                <p style={{ fontSize:'10px', marginTop:'3px', color: same?'var(--theme-text-muted)':up?'var(--theme-primary)':'var(--theme-secondary)', fontWeight:'600' }}>
-                  {same ? '—' : up ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
-                </p>
-              )}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
