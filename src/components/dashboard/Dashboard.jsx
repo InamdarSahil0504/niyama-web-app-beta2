@@ -23,6 +23,7 @@ import AnalyticsTab from './AnalyticsTab'
 import RewardsTab from './RewardsTab'
 import SettingsTab from './SettingsTab'
 import BottomNav from './BottomNav'
+import ReferralTab from './ReferralTab'
 
 // Onboarding steps in order
 const STEPS = [
@@ -51,6 +52,7 @@ export default function Dashboard({ session }) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [showUpdate, setShowUpdate] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
+  const [streakFreeze, setStreakFreeze] = useState(null)
 
   // Onboarding collected data — passed forward through screens
   const [onboardingData, setOnboardingData] = useState({
@@ -99,6 +101,64 @@ export default function Dashboard({ session }) {
         }
       }
     }
+    // Auto-submit yesterday if habits logged but not submitted
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+
+    const { data: yesterdaySummary } = await supabase
+      .from('daily_summaries').select('*')
+      .eq('user_id', userId).eq('date', yesterdayStr).maybeSingle()
+
+    const { data: yesterdayLogs } = await supabase
+      .from('habit_logs').select('*')
+      .eq('user_id', userId).eq('date', yesterdayStr)
+
+    if (yesterdayLogs && yesterdayLogs.length > 0 && !yesterdaySummary?.submitted) {
+      // Has logs but not submitted — auto-submit
+      const coreKeys = ['wake', 'no_phone', 'steps']
+      const coreCompleted = yesterdayLogs.filter(l => coreKeys.includes(l.habit_key) && l.completed).length
+      const totalCompleted = yesterdayLogs.filter(l => l.completed).length
+      const daySuccessful = totalCompleted >= 5 && coreCompleted >= 2
+      const dayPerfect = totalCompleted >= 9
+      const totalPoints = yesterdayLogs.reduce((s, l) => s + (l.points_earned || 0), 0)
+
+      const autoPayload = {
+        user_id: userId, date: yesterdayStr,
+        core_completed: coreCompleted,
+        library_completed: yesterdayLogs.filter(l => l.habit_type === 'library' && l.completed).length,
+        custom_completed: yesterdayLogs.filter(l => l.habit_type === 'custom' && l.completed).length,
+        total_completed: totalCompleted,
+        total_habits: 9,
+        day_successful: daySuccessful,
+        perfect_day: dayPerfect,
+        total_points: Math.min(totalPoints, 750),
+        submitted: true,
+        auto_submitted: true,
+        submitted_at: new Date().toISOString(),
+      }
+
+      if (yesterdaySummary) {
+        await supabase.from('daily_summaries').update(autoPayload).eq('id', yesterdaySummary.id)
+      } else {
+        await supabase.from('daily_summaries').insert(autoPayload)
+      }
+    } else if (!yesterdaySummary && (!yesterdayLogs || yesterdayLogs.length === 0)) {
+      // Nothing logged — mark as inactive
+      await supabase.from('daily_summaries').insert({
+        user_id: userId, date: yesterdayStr,
+        core_completed: 0, library_completed: 0, custom_completed: 0,
+        total_completed: 0, total_habits: 9,
+        day_successful: false, perfect_day: false,
+        total_points: 0,
+        submitted: true, auto_submitted: true,
+        submitted_at: new Date().toISOString(),
+      })
+      // Increment consecutive inactive days
+      await supabase.from('profiles').update({
+        consecutive_inactive_days: (updatedProfile?.consecutive_inactive_days || 0) + 1
+      }).eq('id', userId)
+    }
 
     // 2. Reload profile
     const { data: updatedProfile } = await supabase
@@ -123,6 +183,17 @@ export default function Dashboard({ session }) {
     const { data: streakData } = await supabase
       .from('streaks').select('*').eq('user_id', userId).single()
     setStreak(streakData)
+
+    // 3b. Load streak freeze status
+    const now2 = new Date()
+    const currentMonth2 = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}`
+    const { data: freezeData } = await supabase
+      .from('streak_freezes')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', `${currentMonth2}-01`)
+      .maybeSingle()
+    setStreakFreeze(freezeData || null)
 
     // 4. Load habit selection (one row per habit)
     const { data: userHabitData } = await supabase
@@ -329,6 +400,7 @@ export default function Dashboard({ session }) {
             session={session}
             profile={profile}
             streak={streak}
+            streakFreeze={streakFreeze}
             userHabits={userHabits}
             todayLogs={todayLogs}
             todaySummary={todaySummary}
@@ -354,7 +426,12 @@ export default function Dashboard({ session }) {
             isMinor={isMinor}
           />
         )}
-
+        {activeTab === 'referrals' && (
+          <ReferralTab
+            session={session}
+            profile={profile}
+          />
+        )}
         {activeTab === 'settings' && (
           <SettingsTab
             session={session}

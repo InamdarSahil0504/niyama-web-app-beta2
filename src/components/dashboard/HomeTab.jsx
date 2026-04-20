@@ -27,7 +27,7 @@ function Confetti() {
   )
 }
 
-export default function HomeTab({ session, profile, streak, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh }) {
+export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh }) {
   const userId = session.user.id
 
   const buildHabitState = () => {
@@ -87,6 +87,22 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
   const daySuccessful = isDaySuccessful(coreCompleted, totalCompleted)
   const dayPerfect = isDayPerfect(totalCompleted)
   const isSubmitted = !!todaySummary?.submitted
+  const effectiveTierForFreeze = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
+  const canUseFreeze = effectiveTierForFreeze === 'plus' || effectiveTierForFreeze === 'premium'
+  const freezeUsed = !!streakFreeze
+  const freezeAvailable = canUseFreeze && !freezeUsed
+
+  async function applyStreakFreeze() {
+    if (!freezeAvailable) return
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const missedDate = yesterday.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    try {
+      await supabase.rpc('apply_streak_freeze', { p_user_id: userId, p_missed_date: missedDate })
+      trackEvent(supabase, userId, 'streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
+      await onRefresh()
+    } catch (e) { console.error('Freeze failed', e) }
+  }
 
   // ── Live points ────────────────────────────────────────────────────────────
   const stepsPoints = calcStepsPoints(stepCount)
@@ -402,6 +418,36 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
               })}
             </div>
           </div>
+
+          {/* Streak freeze button */}
+          {(streak?.current_streak || 0) > 0 && canUseFreeze && (
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px', opacity: freezeUsed ? 0.4 : 1, filter: freezeUsed ? 'grayscale(1)' : 'none' }}>❄️</span>
+                <div>
+                  <p style={{ fontSize: '12px', fontWeight: '600', color: 'white' }}>
+                    {freezeUsed ? 'Streak freeze used' : 'Streak freeze available'}
+                  </p>
+                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>
+                    {freezeUsed ? 'Resets 1st of next month' : 'Protects your streak for 1 missed day'}
+                  </p>
+                </div>
+              </div>
+              {!freezeUsed && !isSubmitted && (
+                <button onClick={applyStreakFreeze}
+                  style={{ background: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.5)', color: 'white', fontSize: '11px', fontWeight: '700', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
+                  Use freeze
+                </button>
+              )}
+            </div>
+          )}
+          {!canUseFreeze && (streak?.current_streak || 0) > 0 && (
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px', opacity: 0.5 }}>❄️</span>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Streak freeze — available on Plus and Premium</p>
+            </div>
+          )}
+
           {(streak?.current_streak || 0) >= 10 && (
             <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
               <p style={{ fontSize: '12px', opacity: '0.9' }}>
@@ -536,6 +582,15 @@ export default function HomeTab({ session, profile, streak, userHabits, todayLog
         )}
       </div>
 
+      {/* Social sharing */}
+      <SocialShareCard
+        session={session}
+        profile={profile}
+        streak={streak}
+        todaySummary={todaySummary}
+        todayPoints={todayPoints}
+      />
+
       {/* Reward eligibility */}
       <div style={card}>
         {isFreeExpired ? (
@@ -641,5 +696,90 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
       </div>
       <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>+{habit.points}</span>
     </label>
+  )
+}
+// ─── Social Share Card ────────────────────────────────────────────────────────
+export function SocialShareCard({ session, profile, streak, todaySummary, todayPoints }) {
+  const [shared, setShared] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  if (!todaySummary?.submitted || !todaySummary?.day_successful) return null
+  if (todaySummary?.social_points > 0) return null // already shared today
+
+  const userId = session.user.id
+
+  async function handleShare(platform) {
+    setLoading(true)
+    const text = `Day ${streak?.current_streak || 1} streak 🔥 | ${todayPoints} pts today | Niyama Life is rewarding my discipline daily. Join me: https://app.niyamalife.com`
+    try {
+      if (platform === 'share' && navigator.share) {
+        await navigator.share({ title: 'My Niyama streak', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+      }
+      // Award points via RPC
+      await supabase.rpc('log_social_share', { p_user_id: userId, p_platform: platform })
+      setShared(true)
+    } catch (e) { console.error('Share failed', e) }
+    setLoading(false)
+  }
+
+  if (shared) return (
+    <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '16px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+      <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-primary)' }}>🎉 +20 points for sharing!</p>
+      <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginTop: '4px' }}>Thanks for spreading the word.</p>
+    </div>
+  )
+
+  return (
+    <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🔥</span>
+        <div>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-text)' }}>Share your streak — earn 20 pts</p>
+          <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>{streak?.current_streak || 1} day streak · {todayPoints} pts today · Once per day</p>
+        </div>
+      </div>
+
+      {/* Branded card preview */}
+      <div style={{ background: 'linear-gradient(135deg, #5A8A78, #3D6B5A)', borderRadius: '12px', padding: '16px', marginBottom: '12px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <div>
+            <p style={{ fontSize: '11px', opacity: '0.8', marginBottom: '2px' }}>NIYAMA LIFE</p>
+            <p style={{ fontSize: '13px', fontWeight: '600' }}>Daily Discipline. Rewarded.</p>
+          </div>
+          <span style={{ fontSize: '20px' }}>🌿</span>
+        </div>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
+          <div>
+            <p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>{streak?.current_streak || 1}</p>
+            <p style={{ fontSize: '10px', opacity: '0.8' }}>day streak</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>{todayPoints}</p>
+            <p style={{ fontSize: '10px', opacity: '0.8' }}>pts today</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>✅</p>
+            <p style={{ fontSize: '10px', opacity: '0.8' }}>successful</p>
+          </div>
+        </div>
+        <p style={{ fontSize: '11px', opacity: '0.7' }}>@NiyamaLife · app.niyamalife.com</p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={() => handleShare('share')} disabled={loading}
+          style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13px', opacity: loading ? 0.7 : 1 }}>
+          {loading ? '...' : 'Share 📤'}
+        </button>
+        <button onClick={() => handleShare('copy')} disabled={loading}
+          style={{ flex: 1, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', color: 'var(--theme-primary)', fontWeight: '700', padding: '11px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}>
+          Copy text
+        </button>
+      </div>
+      <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', textAlign: 'center', marginTop: '8px' }}>
+        Tap "I shared this" after posting to earn your 20 points
+      </p>
+    </div >
   )
 }
