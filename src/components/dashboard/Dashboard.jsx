@@ -20,7 +20,6 @@ import OnboardingReady from '../onboarding/OnboardingReady'
 // Dashboard tabs
 import HomeTab from './HomeTab'
 import AnalyticsTab from './AnalyticsTab'
-import AnalyticsTab from './AnalyticsTab'
 import BottomNav from './BottomNav'
 
 // Onboarding steps in order
