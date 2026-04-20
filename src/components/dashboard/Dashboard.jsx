@@ -20,6 +20,7 @@ import OnboardingReady from '../onboarding/OnboardingReady'
 // Dashboard tabs
 import HomeTab from './HomeTab'
 import AnalyticsTab from './AnalyticsTab'
+import RewardsTab from './RewardsTab'
 import BottomNav from './BottomNav'
 
 // Onboarding steps in order
@@ -346,11 +347,11 @@ export default function Dashboard({ session }) {
         )}
 
         {activeTab === 'rewards' && (
-          <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--theme-text-muted)' }}>
-            <p style={{ fontSize: '32px', marginBottom: '12px' }}>🎁</p>
-            <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--theme-text)' }}>Rewards</p>
-            <p style={{ fontSize: '13px', marginTop: '6px' }}>Coming soon</p>
-          </div>
+          <RewardsTab
+            session={session}
+            profile={profile}
+            isMinor={isMinor}
+          />
         )}
 
         {activeTab === 'settings' && (
