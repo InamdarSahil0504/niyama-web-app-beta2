@@ -19,6 +19,8 @@ import OnboardingReady from '../onboarding/OnboardingReady'
 
 // Dashboard tabs
 import HomeTab from './HomeTab'
+import AnalyticsTab from './AnalyticsTab'
+import AnalyticsTab from './AnalyticsTab'
 import BottomNav from './BottomNav'
 
 // Onboarding steps in order
@@ -37,17 +39,17 @@ const STEPS = [
 ]
 
 export default function Dashboard({ session }) {
-  const [profile, setProfile]           = useState(null)
-  const [streak, setStreak]             = useState(null)
-  const [userHabits, setUserHabits]     = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [streak, setStreak] = useState(null)
+  const [userHabits, setUserHabits] = useState(null)
   const [todaySummary, setTodaySummary] = useState(null)
-  const [todayLogs, setTodayLogs]       = useState([])
-  const [loading, setLoading]           = useState(true)
-  const [activeTab, setActiveTab]       = useState('home')
+  const [todayLogs, setTodayLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('home')
   const [onboardingStep, setOnboardingStep] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
-  const [showUpdate, setShowUpdate]     = useState(false)
-  const [isMinor, setIsMinor]           = useState(false)
+  const [showUpdate, setShowUpdate] = useState(false)
+  const [isMinor, setIsMinor] = useState(false)
 
   // Onboarding collected data — passed forward through screens
   const [onboardingData, setOnboardingData] = useState({
@@ -58,7 +60,7 @@ export default function Dashboard({ session }) {
     notificationPrefs: {},
   })
 
-  const today  = getTodayString()
+  const today = getTodayString()
   const userId = session.user.id
 
   useEffect(() => { fetchData() }, [])
@@ -197,10 +199,10 @@ export default function Dashboard({ session }) {
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight:'100vh', background:'var(--theme-bg)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ textAlign:'center' }}>
-        <div style={{ width:'32px', height:'32px', border:'3px solid var(--theme-primary)', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
-        <p style={{ fontSize:'14px', color:'var(--theme-text-secondary)' }}>Loading your data...</p>
+    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>Loading your data...</p>
       </div>
     </div>
   )
@@ -264,7 +266,7 @@ export default function Dashboard({ session }) {
   // Screen 9 — Custom habits (skipped for Free tier inside the component)
   if (onboardingStep === 'custom-habits') {
     const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-    
+
     const slots = TIER_CONFIG[effectiveTier]?.custom_habit_slots || 0
     if (slots === 0) {
       // Skip straight to next step for Free tier
@@ -311,7 +313,7 @@ export default function Dashboard({ session }) {
 
   // ── Main app ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:'100vh', background:'var(--theme-bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)' }}>
       {showTutorial && (
         <Tutorial profile={profile} onComplete={async () => {
           setShowTutorial(false)
@@ -319,7 +321,7 @@ export default function Dashboard({ session }) {
         }} />
       )}
 
-      <div style={{ maxWidth:'448px', margin:'0 auto', padding:'32px 16px 96px' }}>
+      <div style={{ maxWidth: '448px', margin: '0 auto', padding: '32px 16px 96px' }}>
 
         {activeTab === 'home' && (
           <HomeTab
@@ -336,28 +338,29 @@ export default function Dashboard({ session }) {
         )}
 
         {activeTab === 'analytics' && (
-          <div style={{ textAlign:'center', paddingTop:'60px', color:'var(--theme-text-muted)' }}>
-            <p style={{ fontSize:'32px', marginBottom:'12px' }}>📊</p>
-            <p style={{ fontSize:'16px', fontWeight:'600', color:'var(--theme-text)' }}>Analytics</p>
-            <p style={{ fontSize:'13px', marginTop:'6px' }}>Coming soon</p>
-          </div>
+          <AnalyticsTab
+            session={session}
+            profile={profile}
+            streak={streak}
+            userHabits={userHabits}
+          />
         )}
 
         {activeTab === 'rewards' && (
-          <div style={{ textAlign:'center', paddingTop:'60px', color:'var(--theme-text-muted)' }}>
-            <p style={{ fontSize:'32px', marginBottom:'12px' }}>🎁</p>
-            <p style={{ fontSize:'16px', fontWeight:'600', color:'var(--theme-text)' }}>Rewards</p>
-            <p style={{ fontSize:'13px', marginTop:'6px' }}>Coming soon</p>
+          <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--theme-text-muted)' }}>
+            <p style={{ fontSize: '32px', marginBottom: '12px' }}>🎁</p>
+            <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--theme-text)' }}>Rewards</p>
+            <p style={{ fontSize: '13px', marginTop: '6px' }}>Coming soon</p>
           </div>
         )}
 
         {activeTab === 'settings' && (
-          <div style={{ textAlign:'center', paddingTop:'60px', color:'var(--theme-text-muted)' }}>
-            <p style={{ fontSize:'32px', marginBottom:'12px' }}>⚙️</p>
-            <p style={{ fontSize:'16px', fontWeight:'600', color:'var(--theme-text)' }}>Settings</p>
-            <p style={{ fontSize:'13px', marginTop:'6px' }}>Coming soon</p>
+          <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--theme-text-muted)' }}>
+            <p style={{ fontSize: '32px', marginBottom: '12px' }}>⚙️</p>
+            <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--theme-text)' }}>Settings</p>
+            <p style={{ fontSize: '13px', marginTop: '6px' }}>Coming soon</p>
             <button onClick={signOut}
-              style={{ marginTop:'24px', padding:'10px 24px', background:'var(--theme-secondary)', color:'white', border:'none', borderRadius:'8px', fontSize:'14px', fontWeight:'600', cursor:'pointer' }}>
+              style={{ marginTop: '24px', padding: '10px 24px', background: 'var(--theme-secondary)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
               Sign out
             </button>
           </div>
