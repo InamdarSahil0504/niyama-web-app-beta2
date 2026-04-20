@@ -21,6 +21,7 @@ import OnboardingReady from '../onboarding/OnboardingReady'
 import HomeTab from './HomeTab'
 import AnalyticsTab from './AnalyticsTab'
 import RewardsTab from './RewardsTab'
+import SettingsTab from './SettingsTab'
 import BottomNav from './BottomNav'
 
 // Onboarding steps in order
@@ -355,15 +356,12 @@ export default function Dashboard({ session }) {
         )}
 
         {activeTab === 'settings' && (
-          <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--theme-text-muted)' }}>
-            <p style={{ fontSize: '32px', marginBottom: '12px' }}>⚙️</p>
-            <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--theme-text)' }}>Settings</p>
-            <p style={{ fontSize: '13px', marginTop: '6px' }}>Coming soon</p>
-            <button onClick={signOut}
-              style={{ marginTop: '24px', padding: '10px 24px', background: 'var(--theme-secondary)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-              Sign out
-            </button>
-          </div>
+          <SettingsTab
+            session={session}
+            profile={profile}
+            onSignOut={signOut}
+            onRefresh={fetchData}
+          />
         )}
 
       </div>
