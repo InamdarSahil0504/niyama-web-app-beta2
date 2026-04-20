@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --theme-bg: #F4F7F5;
+  --theme-primary: #5A8A78;
+  --theme-secondary: #D4735F;
+  --theme-border: #D9E5DF;
+  --theme-card: #FFFFFF;
+  --theme-primary-light: #EAF2EE;
+  --theme-secondary-light: #FCEEE9;
+  --theme-text: #1A2E25;
+  --theme-text-secondary: #4A6358;
+  --theme-text-muted: #8AA89C;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--theme-bg);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--theme-text);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) }
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes flame-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.12); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
