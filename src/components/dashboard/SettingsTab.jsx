@@ -3,6 +3,7 @@ import { supabase } from '../../supabase'
 import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS } from '../../config'
 import { supabase } from '../../supabase'
 import { trackEvent } from '../../config'
+import posthog from 'posthog-js'
 
 export default function SettingsTab({ session, profile, onSignOut, onRefresh }) {
   const [activeSection, setActiveSection] = useState('profile')
@@ -397,7 +398,10 @@ function NotificationsSection({ profile, userId, card, saving, setSaving, showMe
     const permission = await Notification.requestPermission()
     setPushEnabled(permission === 'granted')
     setRequesting(false)
-    if (permission === 'granted') showMessage('Push notifications enabled.')
+    if (permission === 'granted') {
+      showMessage('Push notifications enabled.')
+      posthog.capture('push_notifications_enabled')
+    }
   }
 
   async function saveNotifications() {
@@ -493,6 +497,7 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
         billing: billingCycle,
         from_tier: effectiveTier,
       })
+      posthog.capture('checkout_started', { tier, billing: billingCycle, from_tier: effectiveTier })
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -519,7 +524,10 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
     setSaving(true)
     const { error } = await supabase.rpc('request_pause', { p_user_id: userId })
     if (error) showMessage('Could not pause account. Please contact support.', 'error')
-    else showMessage('Account pause scheduled for the 1st of next month.')
+    else {
+      showMessage('Account pause scheduled for the 1st of next month.')
+      posthog.capture('account_paused')
+    }
     setShowPauseConfirm(false)
     setSaving(false)
   }
@@ -527,6 +535,8 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
   async function deleteAccount() {
     if (deleteInput !== 'DELETE') return
     setSaving(true)
+    posthog.capture('account_deleted')
+    posthog.reset()
     await supabase.rpc('delete_user', { user_id: userId })
     await supabase.auth.signOut()
     setSaving(false)
@@ -582,13 +592,13 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
 
         {/* Upgrade / manage */}
         {isFree ? (
-          <button onClick={() => setShowUpgrade(true)}
+          <button onClick={() => { setShowUpgrade(true); posthog.capture('upgrade_modal_opened', { from_tier: effectiveTier }) }}
             style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
             Upgrade to a paid plan →
           </button>
         ) : (
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setShowUpgrade(true)}
+            <button onClick={() => { setShowUpgrade(true); posthog.capture('upgrade_modal_opened', { from_tier: effectiveTier }) }}
               style={{ flex: 1, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', color: 'var(--theme-primary)', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
               Change plan
             </button>

@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import Auth from './components/Auth'
 import Dashboard from './components/dashboard/Dashboard'
 import ResetPassword from './components/ResetPassword'
+import posthog from 'posthog-js'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -10,10 +11,13 @@ function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) posthog.identify(session.user.id)
       setSession(session)
       setLoading(false)
     })
     supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) posthog.identify(session.user.id)
+      else posthog.reset()
       setSession(session)
     })
   }, [])
