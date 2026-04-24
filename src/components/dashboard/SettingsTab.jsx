@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS } from '../../config'
+import { supabase } from '../../supabase'
+import { trackEvent } from '../../config'
 
 export default function SettingsTab({ session, profile, onSignOut, onRefresh }) {
   const [activeSection, setActiveSection] = useState('profile')
@@ -486,6 +488,11 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
   async function startCheckout(tier, billingCycle) {
     setCheckoutLoading(true)
     try {
+      trackEvent(supabase, userId, 'checkout_started', {
+        tier,
+        billing: billingCycle,
+        from_tier: effectiveTier,
+      })
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

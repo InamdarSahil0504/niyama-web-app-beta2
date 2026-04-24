@@ -256,6 +256,12 @@ export default function Dashboard({ session }) {
   async function completeOnboarding() {
     await saveUserHabits(onboardingData)
     await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', userId)
+    trackEvent(supabase, userId, 'onboarding_completed', {
+      tier: profile?.tier || 'free',
+      movement: onboardingData.movementPreference,
+      library_habits: onboardingData.libraryKeys,
+      wake_minutes: onboardingData.wakeMinutes,
+    })
     setOnboardingStep(null)
     await fetchData()
   }
