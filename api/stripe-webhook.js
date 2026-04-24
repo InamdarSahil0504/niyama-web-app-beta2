@@ -8,7 +8,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Map Stripe price IDs to tier + billing
 const PRICE_TO_TIER = {
   'price_1TPaBo9crPKLFCMF39E116lA': { tier: 'basic',   billing: 'monthly' },
   'price_1TPaBo9crPKLFCMFNkXgFJUF': { tier: 'basic',   billing: 'annual'  },
@@ -18,17 +17,28 @@ const PRICE_TO_TIER = {
   'price_1TPaE09crPKLFCMFIgphzKgO': { tier: 'premium', billing: 'annual'  },
 }
 
+// Read raw body from request stream
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    req.on('data', chunk => chunks.push(chunk))
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const sig     = req.headers['stripe-signature']
-  const secret  = process.env.STRIPE_WEBHOOK_SECRET
+  const sig    = req.headers['stripe-signature']
+  const secret = process.env.STRIPE_WEBHOOK_SECRET
   let event
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, secret)
+    const rawBody = await getRawBody(req)
+    event = stripe.webhooks.constructEvent(rawBody, sig, secret)
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
@@ -37,7 +47,6 @@ export default async function handler(req, res) {
   try {
     switch (event.type) {
 
-      // ── Checkout completed — user paid ─────────────────────────────────────
       case 'checkout.session.completed': {
         const session    = event.data.object
         const userId     = session.client_reference_id
@@ -49,7 +58,6 @@ export default async function handler(req, res) {
           break
         }
 
-        // Get subscription to find price ID
         const subscription = await stripe.subscriptions.retrieve(subId)
         const priceId      = subscription.items.data[0]?.price?.id
         const tierInfo     = PRICE_TO_TIER[priceId]
@@ -60,17 +68,16 @@ export default async function handler(req, res) {
         }
 
         await supabase.from('profiles').update({
-          tier:                   tierInfo.tier,
-          billing_cycle:          tierInfo.billing,
-          stripe_customer_id:     customerId,
-          stripe_subscription_id: subId,
-          subscription_status:    'active',
-          tier_chosen:            true,
+          tier:                    tierInfo.tier,
+          billing_cycle:           tierInfo.billing,
+          stripe_customer_id:      customerId,
+          stripe_subscription_id:  subId,
+          subscription_status:     'active',
+          tier_chosen:             true,
           subscription_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
           subscription_end_date:   new Date(subscription.current_period_end   * 1000).toISOString(),
         }).eq('id', userId)
 
-        // Log tier change
         await supabase.from('user_tier_history').insert({
           user_id:    userId,
           old_tier:   'free',
@@ -83,11 +90,10 @@ export default async function handler(req, res) {
         break
       }
 
-      // ── Subscription updated — upgrade, downgrade, or billing change ───────
       case 'customer.subscription.updated': {
-        const sub      = event.data.object
-        const priceId  = sub.items.data[0]?.price?.id
-        const tierInfo = PRICE_TO_TIER[priceId]
+        const sub        = event.data.object
+        const priceId    = sub.items.data[0]?.price?.id
+        const tierInfo   = PRICE_TO_TIER[priceId]
         const customerId = sub.customer
 
         if (!tierInfo) {
@@ -95,7 +101,6 @@ export default async function handler(req, res) {
           break
         }
 
-        // Find user by stripe_customer_id
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, tier, billing_cycle')
@@ -110,15 +115,14 @@ export default async function handler(req, res) {
         const oldTier = profile.tier
 
         await supabase.from('profiles').update({
-          tier:                   tierInfo.tier,
-          billing_cycle:          tierInfo.billing,
-          stripe_subscription_id: sub.id,
-          subscription_status:    sub.status,
+          tier:                    tierInfo.tier,
+          billing_cycle:           tierInfo.billing,
+          stripe_subscription_id:  sub.id,
+          subscription_status:     sub.status,
           subscription_start_date: new Date(sub.current_period_start * 1000).toISOString(),
           subscription_end_date:   new Date(sub.current_period_end   * 1000).toISOString(),
         }).eq('id', profile.id)
 
-        // Log tier change if tier actually changed
         if (oldTier !== tierInfo.tier) {
           await supabase.from('user_tier_history').insert({
             user_id:    profile.id,
@@ -133,7 +137,6 @@ export default async function handler(req, res) {
         break
       }
 
-      // ── Subscription deleted — cancellation or payment failure ─────────────
       case 'customer.subscription.deleted': {
         const sub        = event.data.object
         const customerId = sub.customer
@@ -149,19 +152,17 @@ export default async function handler(req, res) {
           break
         }
 
-        const oldTier = profile.tier
-
         await supabase.from('profiles').update({
-          tier:                   'free',
-          billing_cycle:          null,
-          subscription_status:    'cancelled',
-          stripe_subscription_id: null,
+          tier:                    'free',
+          billing_cycle:           null,
+          subscription_status:     'cancelled',
+          stripe_subscription_id:  null,
           subscription_end_date:   new Date().toISOString(),
         }).eq('id', profile.id)
 
         await supabase.from('user_tier_history').insert({
           user_id:    profile.id,
-          old_tier:   oldTier,
+          old_tier:   profile.tier,
           new_tier:   'free',
           changed_by: 'stripe',
           reason:     'subscription.deleted — downgraded to free',
@@ -171,7 +172,6 @@ export default async function handler(req, res) {
         break
       }
 
-      // ── Payment failed ─────────────────────────────────────────────────────
       case 'invoice.payment_failed': {
         const invoice    = event.data.object
         const customerId = invoice.customer
@@ -195,7 +195,6 @@ export default async function handler(req, res) {
   }
 }
 
-// Required for Stripe webhook signature verification — disable body parsing
 export const config = {
   api: { bodyParser: false }
 }
