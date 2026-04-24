@@ -217,12 +217,28 @@ export function applyTheme(theme) {
 
 // ─── EVENT TRACKING ───────────────────────────────────────────────────────────
 export async function trackEvent(supabase, userId, eventType, eventData = {}) {
+  const payload = { ...eventData, timestamp: new Date().toISOString(), hour: new Date().getHours() }
   try {
+    // 1. Supabase app_events (server-side → PostHog + Mixpanel via edge function)
     await supabase.from('app_events').insert({
       user_id: userId,
       event_type: eventType,
-      event_data: { ...eventData, timestamp: new Date().toISOString(), hour: new Date().getHours() }
+      event_data: payload,
     })
+  } catch (e) { }
+
+  try {
+    // 2. PostHog client-side
+    if (typeof window !== 'undefined' && window.posthog) {
+      window.posthog.capture(eventType, { ...payload, user_id: userId })
+    }
+  } catch (e) { }
+
+  try {
+    // 3. Mixpanel client-side
+    if (typeof window !== 'undefined' && window.mixpanel) {
+      window.mixpanel.track(eventType, { ...payload, user_id: userId })
+    }
   } catch (e) { }
 }
 
