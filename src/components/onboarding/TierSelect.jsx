@@ -94,11 +94,11 @@ const TIERS = [
 ]
 
 export default function TierSelect({ userId, onComplete }) {
-  const [selected, setSelected]   = useState(null)
-  const [billing, setBilling]     = useState('monthly')
-  const [saving, setSaving]       = useState(false)
-  const [expanded, setExpanded]   = useState(null)
-  const [message, setMessage]     = useState('')
+  const [selected, setSelected] = useState(null)
+  const [billing, setBilling] = useState('monthly')
+  const [saving, setSaving] = useState(false)
+  const [expanded, setExpanded] = useState(null)
+  const [message, setMessage] = useState('')
 
   function showMessage(msg) {
     setMessage(msg)
@@ -131,6 +131,7 @@ export default function TierSelect({ userId, onComplete }) {
       localStorage.setItem('niyama_onboarding_tier', selected)
       localStorage.setItem('niyama_onboarding_billing', billing)
       localStorage.setItem('niyama_onboarding_pending', 'true')
+      localStorage.setItem('niyama_onboarding_step', 'tier-select')
 
       const { data: { user } } = await supabase.auth.getUser()
       const res = await fetch('/api/create-checkout-session', {
@@ -142,7 +143,7 @@ export default function TierSelect({ userId, onComplete }) {
           userId,
           userEmail: user?.email,
           successUrl: `${window.location.origin}?onboarding=continue`,
-          cancelUrl:  `${window.location.origin}?onboarding=tier`,
+          cancelUrl: `${window.location.origin}?onboarding=tier`,
         })
       })
       const data = await res.json()
@@ -200,8 +201,8 @@ export default function TierSelect({ userId, onComplete }) {
           {TIERS.map(tier => {
             const isSelected = selected === tier.key
             const isExpanded = expanded === tier.key
-            const price      = billing === 'annual' && tier.annualPrice ? tier.annualPrice : tier.monthlyPrice
-            const priceNote  = billing === 'annual' && tier.annualPrice ? '/year' : tier.priceNote
+            const price = billing === 'annual' && tier.annualPrice ? tier.annualPrice : tier.monthlyPrice
+            const priceNote = billing === 'annual' && tier.annualPrice ? '/year' : tier.priceNote
 
             return (
               <div key={tier.key} style={{

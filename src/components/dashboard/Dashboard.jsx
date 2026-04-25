@@ -68,12 +68,29 @@ export default function Dashboard({ session }) {
   // Handle return from Stripe checkout during onboarding
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+
     if (params.get('onboarding') === 'continue') {
+      // Payment completed — go to next step after tier select
       window.history.replaceState({}, '', window.location.pathname)
-      // Clear localStorage flags
       localStorage.removeItem('niyama_onboarding_pending')
-      // Continue onboarding from after tier select
+      localStorage.removeItem('niyama_onboarding_step')
       setOnboardingStep('wake-time')
+      return
+    }
+
+    if (params.get('onboarding') === 'tier') {
+      // User cancelled Stripe — return to tier select
+      window.history.replaceState({}, '', window.location.pathname)
+      localStorage.removeItem('niyama_onboarding_pending')
+      setOnboardingStep('tier-select')
+      return
+    }
+
+    // Check if we were mid-onboarding before a redirect
+    const savedStep = localStorage.getItem('niyama_onboarding_step')
+    if (savedStep) {
+      setOnboardingStep(savedStep)
+      localStorage.removeItem('niyama_onboarding_step')
     }
   }, [])
   async function fetchData() {
