@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 
 export default function Auth() {
-  const [screen, setScreen]       = useState('welcome')
-  const [email, setEmail]         = useState('')
-  const [fullName, setFullName]   = useState('')
-  const [phone, setPhone]         = useState('')
-  const [password, setPassword]   = useState('')
-  const [otp, setOtp]             = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [message, setMessage]     = useState('')
+  const [screen, setScreen] = useState('welcome')
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
   const [isNewUser, setIsNewUser] = useState(false)
 
   const inputStyle = {
@@ -95,7 +95,7 @@ export default function Auth() {
         .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
 
       if (!existingProfile) {
-        await supabase.from('profiles').insert({
+        await supabase.from('profiles').upsert({
           id: data.user.id,
           email,
           full_name: fullName.trim(),
@@ -103,7 +103,7 @@ export default function Auth() {
           tier: 'free',
           monthly_points: 0,
           onboarding_complete: false,
-        })
+        }, { onConflict: 'id' })
         await supabase.from('streaks').insert({
           user_id: data.user.id,
           current_streak: 0,

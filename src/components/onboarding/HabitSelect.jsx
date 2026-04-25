@@ -85,7 +85,11 @@ export default function HabitSelect({ onContinue }) {
             )
           })}
         </div>
-
+        <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
+            🔒 Choose carefully — habits can only be changed once every 30 days after you start.
+          </p>
+        </div>
         <button
           onClick={() => selected.size === 4 && onContinue([...selected])}
           disabled={selected.size !== 4}

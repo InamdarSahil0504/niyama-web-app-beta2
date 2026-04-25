@@ -387,9 +387,32 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
           </div>
         )
       })()}
+      {/* 30-day lock notice */}
+      <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+        {profile?.habits_last_changed && (() => {
+          const daysSince = (Date.now() - new Date(profile.habits_last_changed)) / (1000 * 60 * 60 * 24)
+          const daysLeft = Math.ceil(30 - daysSince)
+          if (daysLeft > 0) return (
+            <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
+              🔒 Habits locked for <strong>{daysLeft} more day{daysLeft === 1 ? '' : 's'}</strong>. You can change your habits once every 30 days.
+            </p>
+          )
+          return (
+            <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
+              ✅ Your habits are unlocked. You can make changes and save below.
+            </p>
+          )
+        })()}
+        {!profile?.habits_last_changed && (
+          <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
+            ✅ Set your habits and wake time below. Changes can be made once every 30 days.
+          </p>
+        )}
+      </div>
+
       <button onClick={saveHabits} disabled={saving || selectedLibrary.length !== 4}
         style={{ width: '100%', background: selectedLibrary.length === 4 ? 'var(--theme-primary)' : 'var(--theme-border)', color: selectedLibrary.length === 4 ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '14px', borderRadius: '10px', border: 'none', cursor: saving || selectedLibrary.length !== 4 ? 'not-allowed' : 'pointer', fontSize: '15px', opacity: saving ? 0.7 : 1 }}>
-        {saving ? 'Saving...' : selectedLibrary.length === 4 ? 'Save habit settings' : 'Select exactly 4 habits'}
+        {saving ? 'Saving...' : selectedLibrary.length === 4 ? 'Save changes' : 'Select exactly 4 habits'}
       </button>
     </div>
   )
@@ -705,11 +728,14 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
       <div style={card}>
         <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Account info</p>
         {[
+          { label: 'Full name', value: profile?.full_name || '—' },
+          { label: 'Email', value: profile?.email || '—' },
+          { label: 'Date of birth', value: profile?.date_of_birth ? new Date(profile.date_of_birth + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
           { label: 'Member since', value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
           { label: 'Days logged', value: `${profile?.total_days_logged || 0} days` },
           { label: 'Overall successful days', value: `${profile?.overall_successful_days || 0} days` },
         ].map((item, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid var(--theme-border)' : 'none' }}>
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 5 ? '1px solid var(--theme-border)' : 'none' }}>
             <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>{item.label}</span>
             <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)' }}>{item.value}</span>
           </div>
