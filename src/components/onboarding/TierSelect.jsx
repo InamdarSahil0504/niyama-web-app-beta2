@@ -84,7 +84,6 @@ const TIERS = [
     customSlots: 2,
     features: [
       'Everything in Plus',
-      '2 custom habit slots',
       'Base reward up to $22.50/mo',
       '+$2.50 at 10 days, +$5.00 at 20 days',
       '+$7.50 for a successful month',
@@ -93,17 +92,18 @@ const TIERS = [
     ],
   },
 ]
-const [message, setMessage] = useState('')
 
-function showMessage(msg) {
-  setMessage(msg)
-  setTimeout(() => setMessage(''), 3000)
-}
 export default function TierSelect({ userId, onComplete }) {
-  const [selected, setSelected] = useState(null)
-  const [billing, setBilling] = useState('monthly') // 'monthly' | 'annual'
-  const [saving, setSaving] = useState(false)
-  const [expanded, setExpanded] = useState(null)
+  const [selected, setSelected]   = useState(null)
+  const [billing, setBilling]     = useState('monthly')
+  const [saving, setSaving]       = useState(false)
+  const [expanded, setExpanded]   = useState(null)
+  const [message, setMessage]     = useState('')
+
+  function showMessage(msg) {
+    setMessage(msg)
+    setTimeout(() => setMessage(''), 3000)
+  }
 
   async function confirmTier() {
     if (!selected || saving) return
@@ -124,17 +124,15 @@ export default function TierSelect({ userId, onComplete }) {
     setSaving(true)
     try {
       trackEvent(supabase, userId, 'tier_selected', { tier: selected, billing })
-
-      // Save tier selection first so webhook can confirm it
       await supabase.from('profiles')
         .update({ tier: selected, tier_chosen: true })
         .eq('id', userId)
 
-      // Save onboarding progress to localStorage so we can restore after payment
       localStorage.setItem('niyama_onboarding_tier', selected)
       localStorage.setItem('niyama_onboarding_billing', billing)
       localStorage.setItem('niyama_onboarding_pending', 'true')
 
+      const { data: { user } } = await supabase.auth.getUser()
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,20 +140,20 @@ export default function TierSelect({ userId, onComplete }) {
           tier: selected,
           billing,
           userId,
-          userEmail: (await supabase.auth.getUser()).data.user?.email,
+          userEmail: user?.email,
           successUrl: `${window.location.origin}?onboarding=continue`,
-          cancelUrl: `${window.location.origin}?onboarding=tier`,
+          cancelUrl:  `${window.location.origin}?onboarding=tier`,
         })
       })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
-        showMessage('Could not start checkout. Please try again.', 'error')
+        showMessage('Could not start checkout. Please try again.')
         setSaving(false)
       }
     } catch (e) {
-      showMessage('Could not start checkout. Please try again.', 'error')
+      showMessage('Could not start checkout. Please try again.')
       setSaving(false)
     }
   }
@@ -172,7 +170,7 @@ export default function TierSelect({ userId, onComplete }) {
             Choose your plan
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
-            Start free. Upgrade anytime. No fees during beta.
+            Start free. Upgrade anytime.
           </p>
         </div>
 
@@ -202,19 +200,15 @@ export default function TierSelect({ userId, onComplete }) {
           {TIERS.map(tier => {
             const isSelected = selected === tier.key
             const isExpanded = expanded === tier.key
-            const price = billing === 'annual' && tier.annualPrice ? tier.annualPrice : tier.monthlyPrice
-            const priceNote = billing === 'annual' && tier.annualPrice ? '/year' : tier.priceNote
+            const price      = billing === 'annual' && tier.annualPrice ? tier.annualPrice : tier.monthlyPrice
+            const priceNote  = billing === 'annual' && tier.annualPrice ? '/year' : tier.priceNote
 
             return (
-              <div key={tier.key}
-                style={{
-                  background: isSelected ? 'var(--theme-primary-light)' : 'var(--theme-card)',
-                  border: `${isSelected ? '2px' : '1px'} solid ${isSelected ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
-                  borderRadius: '16px', overflow: 'hidden',
-                  transition: 'all 0.15s',
-                }}>
-
-                {/* Main row — tap to select */}
+              <div key={tier.key} style={{
+                background: isSelected ? 'var(--theme-primary-light)' : 'var(--theme-card)',
+                border: `${isSelected ? '2px' : '1px'} solid ${isSelected ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+                borderRadius: '16px', overflow: 'hidden', transition: 'all 0.15s',
+              }}>
                 <button onClick={() => { setSelected(tier.key); setExpanded(isExpanded ? null : tier.key) }}
                   style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '16px 20px', textAlign: 'left' }}>
 
@@ -283,17 +277,19 @@ export default function TierSelect({ userId, onComplete }) {
 
         {/* Pricing link */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <button
-            onClick={() => window.open('https://www.niyamalife.com/pricing', '_blank')}
+          <button onClick={() => window.open('https://www.niyamalife.com/pricing', '_blank')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--theme-primary)', fontWeight: '600', textDecoration: 'underline' }}>
             View full pricing details ↗
           </button>
         </div>
+
+        {/* Error message */}
         {message && (
           <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
             <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
           </div>
         )}
+
         {/* Confirm button */}
         <button onClick={confirmTier} disabled={!selected || saving}
           style={{
@@ -303,8 +299,8 @@ export default function TierSelect({ userId, onComplete }) {
             color: selected ? 'white' : 'var(--theme-text-muted)',
             cursor: selected ? 'pointer' : 'not-allowed',
           }}>
-          {saving ? 'Saving...' : selected
-            ? `Continue with ${TIERS.find(t => t.key === selected)?.name} →`
+          {saving ? 'Please wait...' : selected
+            ? (selected === 'free' ? 'Continue with Free →' : `Subscribe to ${TIERS.find(t => t.key === selected)?.name} →`)
             : 'Select a plan to continue'}
         </button>
 
