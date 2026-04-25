@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { getEffectiveTier, TIER_CONFIG } from '../../config'
-import posthog from 'posthog-js'
 
 export default function ReferralTab({ session, profile }) {
   const [referralCode, setReferralCode]   = useState(null)
@@ -48,13 +47,13 @@ export default function ReferralTab({ session, profile }) {
     navigator.clipboard.writeText(referralCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-    posthog.capture('referral_code_copied')
+    window.posthog?.capture('referral_code_copied')
   }
 
   function shareCode() {
     if (!referralCode) return
     const text = `Join me on Niyama Life — the habit app that pays you real rewards for daily discipline. Use my code ${referralCode} to get started: https://app.niyamalife.com`
-    posthog.capture('referral_shared', { method: navigator.share ? 'native_share' : 'clipboard' })
+    window.posthog?.capture('referral_shared', { method: navigator.share ? 'native_share' : 'clipboard' })
     if (navigator.share) {
       navigator.share({ title: 'Join Niyama Life', text })
     } else {

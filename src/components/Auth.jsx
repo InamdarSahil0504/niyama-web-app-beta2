@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
-import posthog from 'posthog-js'
 
 export default function Auth() {
   const [screen, setScreen] = useState('welcome')  // 'welcome' | 'signup' | 'login' | 'otp'
@@ -91,11 +90,11 @@ export default function Auth() {
           longest_streak: 0,
         })
       }
-      posthog.identify(data.user.id)
-      posthog.capture('signed_up', { method: 'otp' })
+      window.posthog?.identify(data.user.id)
+      window.posthog?.capture('signed_up', { method: 'otp' })
     } else if (data.user) {
-      posthog.identify(data.user.id)
-      posthog.capture('logged_in', { method: 'otp' })
+      window.posthog?.identify(data.user.id)
+      window.posthog?.capture('logged_in', { method: 'otp' })
     }
     // Auth state change in App.jsx will handle the redirect to Dashboard
     setLoading(false)
@@ -154,8 +153,8 @@ export default function Auth() {
     if (error) {
       setMessage(error.message)
     } else if (loginData.user) {
-      posthog.identify(loginData.user.id)
-      posthog.capture('logged_in', { method: 'password' })
+      window.posthog?.identify(loginData.user.id)
+      window.posthog?.capture('logged_in', { method: 'password' })
     }
     setLoading(false)
   }

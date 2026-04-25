@@ -6,7 +6,6 @@ import {
   calcReward, calcStepsPoints, isDaySuccessful, isDayPerfect,
   trackEvent, getTodayString,
 } from '../../config'
-import posthog from 'posthog-js'
 
 const DEFAULT_CUSTOM_1 = { key: 'custom_1', label: 'Stretching or yoga (15+ min)', points: 50, icon: '🤸' }
 const DEFAULT_CUSTOM_2 = { key: 'custom_2', label: 'Gratitude journaling', points: 50, icon: '📓' }
@@ -101,7 +100,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     try {
       await supabase.rpc('apply_streak_freeze', { p_user_id: userId, p_missed_date: missedDate })
       trackEvent(supabase, userId, 'streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
-      posthog.capture('streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
+      window.posthog?.capture('streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
       await onRefresh()
     } catch (e) { console.error('Freeze failed', e) }
   }
@@ -171,7 +170,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         completed: checked,
         points_earned: checked ? pts : 0,
       }, { onConflict: 'user_id,date,habit_key' })
-      posthog.capture('habit_logged', { habit_key: habitKey, habit_type: habitType, completed: checked })
+      window.posthog?.capture('habit_logged', { habit_key: habitKey, habit_type: habitType, completed: checked })
     } catch (e) { console.error('Auto-save failed', e) }
   }
 
@@ -298,7 +297,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         core_completed: coreCompleted, library_completed: libraryCompleted,
         custom_completed: customCompleted, hour: now.getHours(),
       })
-      posthog.capture('day_submitted', {
+      window.posthog?.capture('day_submitted', {
         points: todayPoints, day_successful: daySuccessful, perfect_day: dayPerfect,
         core_completed: coreCompleted, library_completed: libraryCompleted,
         custom_completed: customCompleted, total_completed: totalCompleted,
