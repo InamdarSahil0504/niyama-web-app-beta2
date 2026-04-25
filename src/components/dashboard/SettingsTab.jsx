@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../supabase'
 import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS } from '../../config'
 import { supabase } from '../../supabase'
 import { trackEvent } from '../../config'
