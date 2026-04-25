@@ -153,7 +153,7 @@ export default function Dashboard({ session }) {
       }
     } else if (!yesterdaySummary && (!yesterdayLogs || yesterdayLogs.length === 0)) {
       // Nothing logged — mark as inactive
-      await supabase.from('daily_summaries').insert({
+      await supabase.from('daily_summaries').upsert({
         user_id: userId, date: yesterdayStr,
         core_completed: 0, library_completed: 0, custom_completed: 0,
         total_completed: 0, total_habits: 9,
@@ -161,7 +161,7 @@ export default function Dashboard({ session }) {
         total_points: 0,
         submitted: true, auto_submitted: true,
         submitted_at: new Date().toISOString(),
-      })
+      }, { onConflict: 'user_id,date' })
       // Increment consecutive inactive days
       await supabase.from('profiles').update({
         consecutive_inactive_days: (profileData?.consecutive_inactive_days || 0) + 1
