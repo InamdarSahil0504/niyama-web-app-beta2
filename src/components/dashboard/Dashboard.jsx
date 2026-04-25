@@ -190,7 +190,7 @@ export default function Dashboard({ session }) {
       return
     }
     if (updatedProfile) {
-      if (!updatedProfile.onboarding_complete) {
+      if (!updatedProfile.onboarding_complete && !onboardingStep) {
         setOnboardingStep('founder-story')
         setLoading(false)
         return
@@ -286,8 +286,9 @@ export default function Dashboard({ session }) {
       library_habits: onboardingData.libraryKeys,
       wake_minutes: onboardingData.wakeMinutes,
     })
+    // Update local profile state directly to avoid re-triggering onboarding
+    setProfile(prev => ({ ...prev, onboarding_complete: true }))
     setOnboardingStep(null)
-    await fetchData()
   }
 
   async function signOut() {
