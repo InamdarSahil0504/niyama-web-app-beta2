@@ -93,7 +93,7 @@ const TIERS = [
   },
 ]
 
-export default function TierSelect({ userId, onContinue, onBack }) {
+export default function TierSelect({ userId, onComplete, onBack }) {
   const [selected, setSelected] = useState(null)
   const [billing, setBilling] = useState('monthly')
   const [saving, setSaving] = useState(false)
