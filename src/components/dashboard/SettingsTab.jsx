@@ -139,7 +139,7 @@ function ProfileSection({ profile, userId, card, saving, setSaving, showMessage,
           { label: 'Full name', value: profile?.full_name || '—' },
           { label: 'Email', value: profile?.email || '—' },
           { label: 'Phone', value: profile?.phone || 'Not provided' },
-          { label: 'Date of birth', value: profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
+          { label: 'Date of birth', value: profile?.date_of_birth ? new Date(profile.date_of_birth + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
           { label: 'Member since', value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
         ].map((item, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 4 ? '1px solid var(--theme-border)' : 'none' }}>
