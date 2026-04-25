@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { applyTheme, getEffectiveTier, getTodayString, trackEvent, TIER_CONFIG } from '../../config'
-import Tutorial from '../Tutorial'
 
 // Onboarding screens
 import FounderStory from '../onboarding/FounderStory'
@@ -54,7 +53,7 @@ export default function Dashboard({ session }) {
 
   // Onboarding collected data — passed forward through screens
   const [onboardingData, setOnboardingData] = useState({
-    wakeMinutes: 390,         // default 6:30am
+    wakeMinutes: 450,         // default 7:30am
     movementPreference: 'steps',
     libraryKeys: [],
     customHabits: [],
@@ -209,9 +208,6 @@ export default function Dashboard({ session }) {
         }
         setLoading(false)
         return
-      }
-      if (!updatedProfile.tutorial_seen) {
-        setShowTutorial(true)
       }
     }
 
@@ -429,12 +425,6 @@ export default function Dashboard({ session }) {
   // ── Main app ───────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)' }}>
-      {showTutorial && (
-        <Tutorial profile={profile} onComplete={async () => {
-          setShowTutorial(false)
-          await supabase.from('profiles').update({ tutorial_seen: true }).eq('id', userId)
-        }} />
-      )}
 
       <div style={{ maxWidth: '448px', margin: '0 auto', padding: '32px 16px 96px' }}>
 

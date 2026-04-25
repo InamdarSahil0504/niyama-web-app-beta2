@@ -112,48 +112,44 @@ export default function SettingsTab({ session, profile, onSignOut, onRefresh }) 
 
 // ─── Profile Section ──────────────────────────────────────────────────────────
 function ProfileSection({ profile, userId, card, saving, setSaving, showMessage, onRefresh }) {
-  const [fullName, setFullName] = useState(profile?.full_name || '')
   const [theme, setTheme] = useState(profile?.color_theme || 'sage')
 
   async function saveProfile() {
     setSaving(true)
     const { error } = await supabase.from('profiles').update({
-      full_name: fullName,
       color_theme: theme,
     }).eq('id', userId)
     applyTheme(theme)
-    if (error) showMessage('Failed to save. Please try again.', 'error')
-    else { showMessage('Profile updated successfully.'); onRefresh() }
+    if (error) showMessage('Failed to save.', 'error')
+    else { showMessage('Theme updated.'); onRefresh() }
     setSaving(false)
-  }
-
-  const inputStyle = {
-    background: 'var(--theme-bg)', border: '1px solid var(--theme-border)',
-    color: 'var(--theme-text)', width: '100%', borderRadius: '10px',
-    padding: '12px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   }
 
   return (
     <div>
+      {/* Read-only personal info */}
       <div style={card}>
-        <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
+        <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>
           Personal info
         </p>
-
-        <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '5px' }}>Full name</label>
-          <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} />
-        </div>
-
-        <div style={{ marginBottom: '4px' }}>
-          <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '5px' }}>Email</label>
-          <div style={{ ...inputStyle, color: 'var(--theme-text-muted)', background: 'var(--theme-bg)', display: 'block', opacity: 0.7 }}>
-            {profile?.email || session?.user?.email}
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '14px', lineHeight: '1.5' }}>
+          🔒 Personal details can only be changed by contacting support at support@niyamalife.com
+        </p>
+        {[
+          { label: 'Full name', value: profile?.full_name || '—' },
+          { label: 'Email', value: profile?.email || '—' },
+          { label: 'Phone', value: profile?.phone || 'Not provided' },
+          { label: 'Date of birth', value: profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
+          { label: 'Member since', value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 4 ? '1px solid var(--theme-border)' : 'none' }}>
+            <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>{item.label}</span>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)' }}>{item.value}</span>
           </div>
-          <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '4px' }}>Email cannot be changed.</p>
-        </div>
+        ))}
       </div>
 
+      {/* Theme */}
       <div style={card}>
         <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
           App theme
@@ -164,11 +160,7 @@ function ProfileSection({ profile, userId, card, saving, setSaving, showMessage,
             { key: 'salmon', label: 'Salmon Pink', bg: '#F7F4F4', primary: '#D4735F' },
           ].map(t => (
             <button key={t.key} onClick={() => setTheme(t.key)}
-              style={{
-                padding: '14px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center',
-                background: t.bg,
-                border: `2px solid ${theme === t.key ? t.primary : 'var(--theme-border)'}`,
-              }}>
+              style={{ padding: '14px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center', background: t.bg, border: `2px solid ${theme === t.key ? t.primary : 'var(--theme-border)'}` }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: t.primary, margin: '0 auto 8px' }} />
               <p style={{ fontSize: '12px', fontWeight: '600', color: theme === t.key ? t.primary : 'var(--theme-text-secondary)' }}>{t.label}</p>
               {theme === t.key && <p style={{ fontSize: '10px', color: t.primary, marginTop: '2px' }}>✓ Active</p>}
@@ -179,7 +171,7 @@ function ProfileSection({ profile, userId, card, saving, setSaving, showMessage,
 
       <button onClick={saveProfile} disabled={saving}
         style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '14px', borderRadius: '10px', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '15px', opacity: saving ? 0.7 : 1 }}>
-        {saving ? 'Saving...' : 'Save changes'}
+        {saving ? 'Saving...' : 'Save theme'}
       </button>
     </div>
   )
@@ -188,7 +180,7 @@ function ProfileSection({ profile, userId, card, saving, setSaving, showMessage,
 // ─── Habits Section ───────────────────────────────────────────────────────────
 function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, onRefresh, effectiveTier, tierConfig }) {
   const [userHabits, setUserHabits] = useState([])
-  const [wakeMinutes, setWakeMinutes] = useState(390)
+  const [wakeMinutes, setWakeMinutes] = useState(450)
   const [movement, setMovement] = useState('steps')
   const [selectedLibrary, setSelectedLibrary] = useState([])
   const [custom1, setCustom1] = useState('')
@@ -241,6 +233,17 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
   }
 
   async function saveHabits() {
+    // Check 30-day lock
+    const { data: lockCheck } = await supabase
+      .from('profiles').select('habits_last_changed').eq('id', userId).single()
+    if (lockCheck?.habits_last_changed) {
+      const daysSince = (Date.now() - new Date(lockCheck.habits_last_changed)) / (1000 * 60 * 60 * 24)
+      if (daysSince < 30) {
+        const daysLeft = Math.ceil(30 - daysSince)
+        showMessage(`Habits locked for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}. Changes allowed once per 30 days.`, 'error')
+        return
+      }
+    }
     setSaving(true)
     try {
       // Delete existing and re-insert
@@ -264,12 +267,15 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
       }
       await supabase.from('user_habits').insert(rows)
       await supabase.from('profiles').update({ wake_time_minutes: wakeMinutes }).eq('id', userId)
+      await supabase.from('profiles').update({ habits_last_changed: new Date().toISOString() }).eq('id', userId)
       showMessage('Habits updated successfully.')
       onRefresh()
     } catch (e) {
       showMessage('Failed to save. Please try again.', 'error')
     }
     setSaving(false)
+    await supabase.from('profiles').update({ habits_last_changed: new Date().toISOString() }).eq('id', userId)
+
   }
 
   if (loading) return (
@@ -370,7 +376,17 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
           </div>
         </div>
       )}
-
+      {(() => {
+        if (!profile?.habits_last_changed) return null
+        const daysSince = (Date.now() - new Date(profile.habits_last_changed)) / (1000 * 60 * 60 * 24)
+        const daysLeft = Math.ceil(30 - daysSince)
+        if (daysLeft <= 0) return null
+        return (
+          <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '12px', color: '#92400e' }}>🔒 Habits locked for {daysLeft} more day{daysLeft === 1 ? '' : 's'}. Changes allowed once per 30 days.</p>
+          </div>
+        )
+      })()}
       <button onClick={saveHabits} disabled={saving || selectedLibrary.length !== 4}
         style={{ width: '100%', background: selectedLibrary.length === 4 ? 'var(--theme-primary)' : 'var(--theme-border)', color: selectedLibrary.length === 4 ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '14px', borderRadius: '10px', border: 'none', cursor: saving || selectedLibrary.length !== 4 ? 'not-allowed' : 'pointer', fontSize: '15px', opacity: saving ? 0.7 : 1 }}>
         {saving ? 'Saving...' : selectedLibrary.length === 4 ? 'Save habit settings' : 'Select exactly 4 habits'}

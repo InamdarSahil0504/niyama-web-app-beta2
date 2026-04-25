@@ -2,27 +2,51 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 
 export default function Auth() {
-  const [screen, setScreen] = useState('welcome')  // 'welcome' | 'signup' | 'login' | 'otp'
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [screen, setScreen]       = useState('welcome')
+  const [email, setEmail]         = useState('')
+  const [fullName, setFullName]   = useState('')
+  const [phone, setPhone]         = useState('')
+  const [password, setPassword]   = useState('')
+  const [otp, setOtp]             = useState('')
+  const [loading, setLoading]     = useState(false)
+  const [message, setMessage]     = useState('')
   const [isNewUser, setIsNewUser] = useState(false)
-  const [password, setPassword] = useState('')
 
-  // ── Send OTP ────────────────────────────────────────────────────────────────
+  const inputStyle = {
+    background: 'var(--theme-bg)', border: '1px solid var(--theme-border)',
+    color: 'var(--theme-text)', width: '100%', borderRadius: '10px',
+    padding: '14px 16px', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+  }
+
+  const btnPrimary = {
+    background: 'var(--theme-primary)', color: 'white', width: '100%',
+    fontWeight: '700', padding: '14px', borderRadius: '10px',
+    cursor: loading ? 'not-allowed' : 'pointer', fontSize: '15px',
+    border: 'none', opacity: loading ? 0.7 : 1, marginTop: '8px',
+  }
+
+  const btnGhost = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: '14px', color: 'var(--theme-text-secondary)',
+    padding: '8px 0', width: '100%',
+  }
+
+  // ── Send OTP ─────────────────────────────────────────────────────────────
   async function sendOTP(mode) {
     if (!email || !email.includes('@')) {
       setMessage('Please enter a valid email address.')
+      return
+    }
+    if (mode === 'signup' && !fullName.trim()) {
+      setMessage('Please enter your full name.')
       return
     }
     setLoading(true)
     setMessage('')
 
     if (mode === 'signup') {
-      // Check if user already exists
       const { data: existing } = await supabase
-        .from('profiles').select('id').eq('email', email).single()
+        .from('profiles').select('id').eq('email', email).maybeSingle()
       if (existing) {
         setMessage('An account with this email already exists. Please log in instead.')
         setLoading(false)
@@ -35,10 +59,7 @@ export default function Auth() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: mode === 'signup',
-        emailRedirectTo: window.location.origin,
-      }
+      options: { shouldCreateUser: mode === 'signup' }
     })
 
     if (error) {
@@ -50,7 +71,7 @@ export default function Auth() {
     setLoading(false)
   }
 
-  // ── Verify OTP ──────────────────────────────────────────────────────────────
+  // ── Verify OTP ────────────────────────────────────────────────────────────
   async function verifyOTP() {
     if (!otp || otp.length < 6) {
       setMessage('Please enter the 6-digit code from your email.')
@@ -60,9 +81,7 @@ export default function Auth() {
     setMessage('')
 
     const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'email',
+      email, token: otp, type: 'email',
     })
 
     if (error) {
@@ -71,7 +90,6 @@ export default function Auth() {
       return
     }
 
-    // If new user — create profile and streaks row
     if (data.user && isNewUser) {
       const { data: existingProfile } = await supabase
         .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
@@ -79,7 +97,9 @@ export default function Auth() {
       if (!existingProfile) {
         await supabase.from('profiles').insert({
           id: data.user.id,
-          email: email,
+          email,
+          full_name: fullName.trim(),
+          phone: phone.trim() || null,
           tier: 'free',
           monthly_points: 0,
           onboarding_complete: false,
@@ -96,52 +116,10 @@ export default function Auth() {
       window.posthog?.identify(data.user.id)
       window.posthog?.capture('logged_in', { method: 'otp' })
     }
-    // Auth state change in App.jsx will handle the redirect to Dashboard
     setLoading(false)
   }
 
-  // ── Resend OTP ──────────────────────────────────────────────────────────────
-  async function resendOTP() {
-    setMessage('')
-    setOtp('')
-    await sendOTP(isNewUser ? 'signup' : 'login')
-  }
-
-  const inputStyle = {
-    background: 'var(--theme-bg)',
-    border: '1px solid var(--theme-border)',
-    color: 'var(--theme-text)',
-    width: '100%',
-    borderRadius: '10px',
-    padding: '14px 16px',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box',
-  }
-
-  const btnPrimary = {
-    background: 'var(--theme-primary)',
-    color: 'white',
-    width: '100%',
-    fontWeight: '700',
-    padding: '14px',
-    borderRadius: '10px',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    fontSize: '15px',
-    border: 'none',
-    opacity: loading ? 0.7 : 1,
-    marginTop: '8px',
-  }
-
-  const btnGhost = {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    color: 'var(--theme-text-secondary)',
-    padding: '8px 0',
-    width: '100%',
-  }
+  // ── Password login (Beta 1 accounts) ─────────────────────────────────────
   async function handlePasswordLogin() {
     if (!email || !password) {
       setMessage('Please enter your email and password.')
@@ -158,28 +136,28 @@ export default function Auth() {
     }
     setLoading(false)
   }
-  // ── Screen 1: Welcome ───────────────────────────────────────────────────────
+
+  async function resendOTP() {
+    setMessage('')
+    setOtp('')
+    await sendOTP(isNewUser ? 'signup' : 'login')
+  }
+
+  // ── Screen 1: Welcome ─────────────────────────────────────────────────────
   if (screen === 'welcome') return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-
-        {/* Logo */}
         <div style={{ marginBottom: '48px' }}>
           <div style={{ width: '72px', height: '72px', background: 'var(--theme-primary)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <span style={{ fontSize: '36px' }}>🌿</span>
           </div>
-          <h1 style={{ fontSize: '40px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.03em', marginBottom: '8px' }}>
-            Niyama
-          </h1>
-          <p style={{ fontSize: '16px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
-            Rewarding Discipline.
-          </p>
+          <h1 style={{ fontSize: '40px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.03em', marginBottom: '8px' }}>Niyama</h1>
+          <p style={{ fontSize: '16px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>Rewarding Discipline.</p>
         </div>
 
-        {/* Value props */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '48px', textAlign: 'left' }}>
           {[
-            { icon: '🔬', text: '5 science-backed habits, tracked daily' },
+            { icon: '🔬', text: '9 science-backed habits, tracked daily' },
             { icon: '🔥', text: 'Build streaks and earn real financial rewards' },
             { icon: '📊', text: 'Your data stays yours — no ads, ever' },
           ].map((item, i) => (
@@ -190,7 +168,6 @@ export default function Auth() {
           ))}
         </div>
 
-        {/* CTAs */}
         <button onClick={() => setScreen('signup')} style={{ ...btnPrimary, marginBottom: '12px' }}>
           Get started — it's free
         </button>
@@ -201,12 +178,13 @@ export default function Auth() {
     </div>
   )
 
-  // ── Screen 2a: Sign up ──────────────────────────────────────────────────────
+  // ── Screen 2a: Sign up ────────────────────────────────────────────────────
   if (screen === 'signup') return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
 
-        <button onClick={() => { setScreen('welcome'); setMessage('') }} style={{ ...btnGhost, width: 'auto', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--theme-text-muted)' }}>
+        <button onClick={() => { setScreen('welcome'); setMessage('') }}
+          style={{ ...btnGhost, width: 'auto', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--theme-text-muted)' }}>
           ← Back
         </button>
 
@@ -214,22 +192,39 @@ export default function Auth() {
           Create your account
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginBottom: '32px', lineHeight: '1.5' }}>
-          We'll send a one-time code to your email — no password needed.
+          We'll send a one-time code to your email to verify your account.
         </p>
 
+        {/* Full name */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Email address
+            Full name <span style={{ color: '#dc2626' }}>*</span>
           </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
+          <input type="text" placeholder="Your full name" value={fullName}
+            onChange={e => setFullName(e.target.value)} style={inputStyle} autoFocus />
+        </div>
+
+        {/* Email */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
+            Email address <span style={{ color: '#dc2626' }}>*</span>
+          </label>
+          <input type="email" placeholder="you@example.com" value={email}
             onChange={e => setEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendOTP('signup')}
-            style={inputStyle}
-            autoFocus
-          />
+            style={inputStyle} />
+        </div>
+
+        {/* Phone */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
+            Phone number <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: '400' }}>(optional)</span>
+          </label>
+          <input type="tel" placeholder="+1 (555) 000-0000" value={phone}
+            onChange={e => setPhone(e.target.value)} style={inputStyle} />
+          <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '4px' }}>
+            Used for account recovery. Phone OTP coming soon.
+          </p>
         </div>
 
         {message && (
@@ -269,12 +264,13 @@ export default function Auth() {
     </div>
   )
 
-  // Screen 2b: Log in
+  // ── Screen 2b: Log in ─────────────────────────────────────────────────────
   if (screen === 'login') return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
 
-        <button onClick={() => { setScreen('welcome'); setMessage('') }} style={{ ...btnGhost, width: 'auto', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--theme-text-muted)' }}>
+        <button onClick={() => { setScreen('welcome'); setMessage('') }}
+          style={{ ...btnGhost, width: 'auto', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--theme-text-muted)' }}>
           ← Back
         </button>
 
@@ -286,31 +282,17 @@ export default function Auth() {
         </p>
 
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Email address
-          </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            style={inputStyle}
-            autoFocus
-          />
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>Email address</label>
+          <input type="email" placeholder="you@example.com" value={email}
+            onChange={e => setEmail(e.target.value)} style={inputStyle} autoFocus />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>Password</label>
+          <input type="password" placeholder="••••••••" value={password}
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handlePasswordLogin()}
-            style={inputStyle}
-          />
+            style={inputStyle} />
         </div>
 
         {message && (
@@ -347,7 +329,7 @@ export default function Auth() {
     </div>
   )
 
-  // ── Screen 2c: OTP verification ─────────────────────────────────────────────
+  // ── Screen 2c: OTP verification ───────────────────────────────────────────
   if (screen === 'otp') return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
@@ -374,15 +356,11 @@ export default function Auth() {
           <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
             Verification code
           </label>
-          <input
-            type="number"
-            placeholder="000000"
-            value={otp}
+          <input type="number" placeholder="000000" value={otp}
             onChange={e => setOtp(e.target.value.slice(0, 6))}
             onKeyDown={e => e.key === 'Enter' && verifyOTP()}
             style={{ ...inputStyle, fontSize: '24px', fontWeight: '700', letterSpacing: '0.2em', textAlign: 'center' }}
-            autoFocus
-          />
+            autoFocus />
         </div>
 
         {message && (
