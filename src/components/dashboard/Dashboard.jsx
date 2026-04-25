@@ -164,6 +164,7 @@ export default function Dashboard({ session }) {
     const { data: updatedProfile } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(updatedProfile)
+
     if (!updatedProfile) {
       await supabase.from('profiles').insert({
         id: userId,
