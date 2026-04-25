@@ -1,14 +1,14 @@
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
+const { tier, billing, userId, userEmail, successUrl, cancelUrl } = req.body
 const PRICE_IDS = {
-  basic_monthly:   'price_1TPaBo9crPKLFCMF39E116lA',
-  basic_annual:    'price_1TPaBo9crPKLFCMFNkXgFJUF',
-  plus_monthly:    'price_1TPaD49crPKLFCMF22QHLlq1',
-  plus_annual:     'price_1TPaD49crPKLFCMFiYXkQpz0',
+  basic_monthly: 'price_1TPaBo9crPKLFCMF39E116lA',
+  basic_annual: 'price_1TPaBo9crPKLFCMFNkXgFJUF',
+  plus_monthly: 'price_1TPaD49crPKLFCMF22QHLlq1',
+  plus_annual: 'price_1TPaD49crPKLFCMFiYXkQpz0',
   premium_monthly: 'price_1TPaE09crPKLFCMFaFzsnPrn',
-  premium_annual:  'price_1TPaE09crPKLFCMFIgphzKgO',
+  premium_annual: 'price_1TPaE09crPKLFCMFIgphzKgO',
 }
 
 export default async function handler(req, res) {
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   const priceKey = `${tier}_${billing}`
-  const priceId  = PRICE_IDS[priceKey]
+  const priceId = PRICE_IDS[priceKey]
 
   if (!priceId) {
     return res.status(400).json({ error: `Unknown plan: ${priceKey}` })
@@ -31,13 +31,13 @@ export default async function handler(req, res) {
 
   try {
     const session = await stripe.checkout.sessions.create({
-      mode:               'subscription',
+      mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email:     userEmail,
+      customer_email: userEmail,
       client_reference_id: userId,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: 'https://app.niyamalife.com?checkout=success',
-      cancel_url:  'https://app.niyamalife.com/settings',
+      success_url: successUrl || 'https://app.niyamalife.com?checkout=success',
+      cancel_url: cancelUrl || 'https://app.niyamalife.com/settings',
       subscription_data: {
         metadata: { userId, tier, billing }
       },

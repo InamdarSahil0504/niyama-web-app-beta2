@@ -328,7 +328,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama Life</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
           <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginTop: '2px' }}>
             Hey, {profile?.full_name?.split(' ')[0] || 'there'} 👋
           </p>
@@ -339,7 +339,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       </div>
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
         <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '12px', fontWeight: '500', padding: '4px 12px', borderRadius: '20px' }}>
-          Beta testing version
         </span>
       </div>
 
@@ -643,49 +642,33 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         ))}
       </div>
 
-      {/* Rewards summary */}
-      <div style={card}>
-        <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '16px' }}>Rewards</h2>
-        {isFreeExpired ? (
+      {/* Monthly points motivator */}
+      <div style={{ background: 'var(--theme-primary)', borderRadius: '16px', padding: '20px', marginBottom: '16px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>Points this month</span>
-              <span style={{ fontSize: '16px', fontWeight: '600' }}>{profile?.monthly_points || 0}</span>
-            </div>
-            <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>Free trial ended</p>
-              <p style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.6', marginBottom: '10px' }}>
-                {(profile?.monthly_points || 0) > 0 ? `You would have earned $${((profile?.monthly_points || 0) / 1000).toFixed(2)} this month. Upgrade to keep earning.` : 'Upgrade to Basic for $0.99/month and start earning rewards.'}
-              </p>
-              <div style={{ background: 'var(--theme-primary)', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '12px', fontWeight: '500', color: 'white' }}>Basic — $0.99/month</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>Up to $5.00/mo →</span>
-              </div>
-            </div>
+            <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '4px' }}>Points this month</p>
+            <p style={{ fontSize: '36px', fontWeight: '800', lineHeight: 1 }}>{(profile?.monthly_points || 0).toLocaleString()}</p>
+            <p style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>of 22,500 possible</p>
           </div>
-        ) : (
-          <div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
-              {[
-                { label: 'Estimated reward', value: `$${reward}`, color: 'var(--theme-primary)' },
-                { label: 'Reward cap', value: `$${typeof tierCap === 'number' ? tierCap.toFixed(2) : tierCap}`, color: 'var(--theme-text)' },
-                { label: 'Remaining cap', value: `$${remaining}`, color: 'var(--theme-text)' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>{item.label}</span>
-                  <span style={{ fontSize: '16px', fontWeight: '600', color: item.color }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-            {isMinor && <div style={{ background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '10px' }}><p style={{ fontSize: '13px', textAlign: 'center', color: 'var(--theme-primary)' }}>Rewards available when you turn 18</p></div>}
-            {!isMinor && isInactive && <div style={{ background: '#fef2f2', borderRadius: '8px', padding: '10px' }}><p style={{ fontSize: '13px', textAlign: 'center', color: '#dc2626' }}>⚠️ Ineligible — 5+ consecutive inactive days</p></div>}
-            {!isMinor && isFreeTrial && (
-              <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '10px', padding: '12px' }}>
-                <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.6' }}>🎁 <strong>{trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} left</strong> in your free trial.</p>
-              </div>
-            )}
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '28px', fontWeight: '800' }}>{Math.round(((profile?.monthly_points || 0) / 22500) * 100)}%</p>
+            <p style={{ fontSize: '11px', opacity: '0.7' }}>of max</p>
           </div>
-        )}
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '4px', height: '8px', marginBottom: '10px' }}>
+          <div style={{ background: 'white', borderRadius: '4px', height: '8px', width: `${Math.min(((profile?.monthly_points || 0) / 22500) * 100, 100)}%`, transition: 'width 0.3s' }} />
+        </div>
+        {(() => {
+          const pts = profile?.monthly_points || 0
+          const pct = Math.round((pts / 22500) * 100)
+          const msg = pct === 0 ? 'Start logging habits to earn points 💪'
+            : pct < 25 ? 'Good start — keep the momentum going 🔥'
+              : pct < 50 ? "You're building a great habit streak! 🌟"
+                : pct < 75 ? "Halfway there — you're crushing it! 💥"
+                  : pct < 100 ? 'Almost at your peak — incredible month! 🏆'
+                    : 'Perfect month — maximum points! 🎯'
+          return <p style={{ fontSize: '13px', opacity: '0.9', fontWeight: '600' }}>{msg}</p>
+        })()}
       </div>
     </>
   )
@@ -718,7 +701,7 @@ export function SocialShareCard({ session, profile, streak, todaySummary, todayP
 
   async function handleShare(platform) {
     setLoading(true)
-    const text = `Day ${streak?.current_streak || 1} streak 🔥 | ${todayPoints} pts today | Niyama Life is rewarding my discipline daily. Join me: https://app.niyamalife.com`
+    const text = `Day ${streak?.current_streak || 1} streak 🔥 | ${todayPoints} pts today | Niyama is rewarding my discipline daily. Join me: https://app.niyamalife.com`
     try {
       if (platform === 'share' && navigator.share) {
         await navigator.share({ title: 'My Niyama streak', text })

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { applyTheme, getEffectiveTier, getTodayString, trackEvent, TIER_CONFIG } from '../../config'
-import AppUpdate, { CURRENT_VERSION } from '../AppUpdate'
 import Tutorial from '../Tutorial'
 
 // Onboarding screens
@@ -50,7 +49,6 @@ export default function Dashboard({ session }) {
   const [activeTab, setActiveTab] = useState('home')
   const [onboardingStep, setOnboardingStep] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
-  const [showUpdate, setShowUpdate] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
 
@@ -67,7 +65,17 @@ export default function Dashboard({ session }) {
   const userId = session.user.id
 
   useEffect(() => { fetchData() }, [])
-
+  // Handle return from Stripe checkout during onboarding
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('onboarding') === 'continue') {
+      window.history.replaceState({}, '', window.location.pathname)
+      // Clear localStorage flags
+      localStorage.removeItem('niyama_onboarding_pending')
+      // Continue onboarding from after tier select
+      setOnboardingStep('wake-time')
+    }
+  }, [])
   async function fetchData() {
     setLoading(true)
 
@@ -190,9 +198,6 @@ export default function Dashboard({ session }) {
       if (!updatedProfile.tutorial_seen) {
         setShowTutorial(true)
       }
-      if (updatedProfile.last_acknowledged_version !== CURRENT_VERSION) {
-        setShowUpdate(true)
-      }
     }
 
     // 3. Load streak
@@ -271,7 +276,10 @@ export default function Dashboard({ session }) {
   // ── Complete onboarding ────────────────────────────────────────────────────
   async function completeOnboarding() {
     await saveUserHabits(onboardingData)
-    await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', userId)
+    await supabase.from('profiles').update({
+      onboarding_complete: true,
+      wake_time_minutes: onboardingData.wakeMinutes,
+    }).eq('id', userId)
     trackEvent(supabase, userId, 'onboarding_completed', {
       tier: profile?.tier || 'free',
       movement: onboardingData.movementPreference,
@@ -401,9 +409,6 @@ export default function Dashboard({ session }) {
       setProfile(prev => ({ ...prev, tier, tier_chosen: true }))
     }} />
 
-  // ── Version update screen ──────────────────────────────────────────────────
-  if (showUpdate)
-    return <AppUpdate userId={userId} onComplete={() => setShowUpdate(false)} />
 
   // ── Main app ───────────────────────────────────────────────────────────────
   return (

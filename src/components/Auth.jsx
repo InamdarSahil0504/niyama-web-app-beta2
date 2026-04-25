@@ -169,7 +169,7 @@ export default function Auth() {
             <span style={{ fontSize: '36px' }}>🌿</span>
           </div>
           <h1 style={{ fontSize: '40px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.03em', marginBottom: '8px' }}>
-            Niyama Life
+            Niyama
           </h1>
           <p style={{ fontSize: '16px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
             Rewarding Discipline.

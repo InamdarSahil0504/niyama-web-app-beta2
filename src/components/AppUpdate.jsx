@@ -41,7 +41,7 @@ export const VERSION_HISTORY = [
         updates: [
             {
                 emoji: '🌿',
-                title: 'Niyama Life Beta 1 launched',
+                title: 'Niyama Beta 1 launched',
                 detail: 'Five science-backed daily habits, points system, streak tracking, tier selection, analytics calendar, rewards tracking, and contact support.',
             },
         ],
@@ -82,7 +82,7 @@ export default function AppUpdate({ userId, onComplete }) {
                         🌿
                     </div>
                     <p style={{ fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                        Niyama Life
+                        Niyama
                     </p>
                     <h1 style={{ fontSize: '26px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '6px' }}>
                         What's new in {currentUpdate.version}
@@ -200,7 +200,7 @@ export function AppUpdatesPage({ onBack }) {
                 App updates
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginBottom: '28px' }}>
-                A full history of everything that's changed in Niyama Life.
+                A full history of everything that's changed in Niyama.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

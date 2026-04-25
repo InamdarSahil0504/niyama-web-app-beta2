@@ -209,8 +209,9 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
       if (customRows[0]) setCustom1(customRows[0].habit_label || '')
       if (customRows[1]) setCustom2(customRows[1].habit_label || '')
       const coreRows = data.filter(h => h.habit_type === 'core')
-      const wakeRow = coreRows.find(h => h.habit_key === 'wake')
-      if (wakeRow?.points) setWakeMinutes(wakeRow.points) // reusing points field for wake minutes
+      const { data: profileData } = await supabase
+        .from('profiles').select('wake_time_minutes').eq('id', userId).single()
+      if (profileData?.wake_time_minutes) setWakeMinutes(profileData.wake_time_minutes)
       const stepsRow = coreRows.find(h => h.habit_key === 'steps')
       if (stepsRow?.habit_label === 'activity') setMovement('activity')
     }
@@ -262,6 +263,7 @@ function HabitsSection({ profile, userId, card, saving, setSaving, showMessage, 
         rows.push({ user_id: userId, habit_type: 'custom', habit_key: 'custom_2', habit_label: custom2.trim(), is_active: true, slot_index: 1 })
       }
       await supabase.from('user_habits').insert(rows)
+      await supabase.from('profiles').update({ wake_time_minutes: wakeMinutes }).eq('id', userId)
       showMessage('Habits updated successfully.')
       onRefresh()
     } catch (e) {

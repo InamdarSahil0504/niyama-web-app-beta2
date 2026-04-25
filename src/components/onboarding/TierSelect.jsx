@@ -93,7 +93,12 @@ const TIERS = [
     ],
   },
 ]
+const [message, setMessage] = useState('')
 
+function showMessage(msg) {
+  setMessage(msg)
+  setTimeout(() => setMessage(''), 3000)
+}
 export default function TierSelect({ userId, onComplete }) {
   const [selected, setSelected] = useState(null)
   const [billing, setBilling] = useState('monthly') // 'monthly' | 'annual'
@@ -102,16 +107,57 @@ export default function TierSelect({ userId, onComplete }) {
 
   async function confirmTier() {
     if (!selected || saving) return
+
+    // Free tier — save and continue normally
+    if (selected === 'free') {
+      setSaving(true)
+      await supabase.from('profiles')
+        .update({ tier: 'free', tier_chosen: true })
+        .eq('id', userId)
+      trackEvent(supabase, userId, 'tier_selected', { tier: 'free', billing })
+      onComplete('free')
+      setSaving(false)
+      return
+    }
+
+    // Paid tier — redirect to Stripe checkout
     setSaving(true)
-    await supabase.from('profiles')
-      .update({ tier: selected, tier_chosen: true })
-      .eq('id', userId)
-    trackEvent(supabase, userId, 'tier_selected', {
-      tier: selected,
-      billing,
-    })
-    onComplete(selected)
-    setSaving(false)
+    try {
+      trackEvent(supabase, userId, 'tier_selected', { tier: selected, billing })
+
+      // Save tier selection first so webhook can confirm it
+      await supabase.from('profiles')
+        .update({ tier: selected, tier_chosen: true })
+        .eq('id', userId)
+
+      // Save onboarding progress to localStorage so we can restore after payment
+      localStorage.setItem('niyama_onboarding_tier', selected)
+      localStorage.setItem('niyama_onboarding_billing', billing)
+      localStorage.setItem('niyama_onboarding_pending', 'true')
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: selected,
+          billing,
+          userId,
+          userEmail: (await supabase.auth.getUser()).data.user?.email,
+          successUrl: `${window.location.origin}?onboarding=continue`,
+          cancelUrl: `${window.location.origin}?onboarding=tier`,
+        })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        showMessage('Could not start checkout. Please try again.', 'error')
+        setSaving(false)
+      }
+    } catch (e) {
+      showMessage('Could not start checkout. Please try again.', 'error')
+      setSaving(false)
+    }
   }
 
   return (
@@ -238,27 +284,16 @@ export default function TierSelect({ userId, onComplete }) {
         {/* Pricing link */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
-            onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
+            onClick={() => window.open('https://www.niyamalife.com/pricing', '_blank')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--theme-primary)', fontWeight: '600', textDecoration: 'underline' }}>
             View full pricing details ↗
           </button>
         </div>
-
-        {/* Beta notice */}
-        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '14px', padding: '14px 16px', marginBottom: '20px' }}>
-          <p style={{ fontSize: '12px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>🧪 Beta testing notice</p>
-          {[
-            'No subscription fees charged during beta',
-            'No rewards paid out during beta',
-            'Your plan selection carries over at launch',
-          ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: i < 2 ? '4px' : '0' }}>
-              <span style={{ fontSize: '11px', color: '#78350f', flexShrink: 0 }}>✓</span>
-              <p style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.4' }}>{item}</p>
-            </div>
-          ))}
-        </div>
-
+        {message && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
+          </div>
+        )}
         {/* Confirm button */}
         <button onClick={confirmTier} disabled={!selected || saving}
           style={{

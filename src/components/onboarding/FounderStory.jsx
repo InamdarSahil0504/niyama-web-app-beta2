@@ -5,7 +5,7 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
         'Five years ago, as a young scientist with a PhD focusing on cancer immunotherapy, I began developing cures for diseases like Sepsis, Traumatic Brain Injury and cancer. Since 2025 I have been focused on Alzheimer\'s and Parkinson\'s — diseases that steal independence, memory and the ability to recognise the faces you love.',
         'But as I spent years searching for cures, a question kept nagging at me: what if we never had to get here in the first place?',
         'The science is unambiguous — sleep, movement, screen time and circadian rhythm are the foundation on which these diseases are built or prevented. The problem is never knowledge. The problem is doing it every single day. Every habit app I found relied on streaks and badges. None changed the underlying economics of behaviour. Skipping a habit costs nothing. So people skip.',
-        'That\'s why I built Niyama. A daily discipline platform where consistency is rewarded financially — based on the same reinforcement principles we use in clinical research.',
+        'That\'s why I built Niyama. A daily discipline platform where consistency is rewarded — based on the same reinforcement principles we use in clinical research.',
         'Living healthy every single day — not for others, but for yourself.',
     ]
 
@@ -16,7 +16,7 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
         'The scientific literature is unambiguous. Sleep deprivation accelerates neurodegeneration. Sedentary behaviour drives metabolic disease. Chronic screen exposure disrupts dopamine and cortisol regulation. Irregular wake times destabilise the circadian rhythm.',
         'The five habits in Niyama are not arbitrary. They were chosen because the evidence for each is overwhelming. These are the highest-leverage daily behaviours known to science for extending healthspan and reducing the risk of the diseases I have spent my career trying to cure.',
         'The problem was never that people didn\'t know this. The problem is that knowing something and doing it every single day are completely different challenges. Motivation fades. Willpower is finite. Every habit app I found relied entirely on streaks and badges. None of them changed the underlying economics of behaviour. Skipping a habit costs nothing. So people skip.',
-        'That\'s why I built Niyama. A daily discipline platform where your behaviour has real financial consequences. Consistency is rewarded. The rewards are real enough to actually change behaviour — not as a gimmick, but as a scientifically grounded intervention based on the same reinforcement principles we use in clinical research.',
+        'That\'s why I built Niyama. A daily discipline platform where your behaviour has real life consequences. Consistency is rewarded. The rewards are real enough to actually change behaviour — not as a gimmick, but as a scientifically grounded intervention based on the same reinforcement principles we use in clinical research.',
         'The goal is simple. Living healthy every single day — not for others, but for yourself.',
     ]
 
@@ -55,11 +55,6 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
                 ))}
 
                 <div style={{ borderTop: '1px solid var(--theme-border)', marginTop: '20px', paddingTop: '20px' }}>
-                    {!minimal && (
-                        <p style={{ fontSize: '14px', lineHeight: '1.8', color: 'var(--theme-text-secondary)', marginBottom: '12px' }}>
-                            Thank you for being one of our first beta testers. Your experience over the coming weeks will directly shape the future of Niyama. I am grateful you are here.
-                        </p>
-                    )}
                     <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--theme-text)' }}>
                         — Sahil Inamdar, Founder
                     </p>
