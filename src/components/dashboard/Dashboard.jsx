@@ -156,7 +156,7 @@ export default function Dashboard({ session }) {
       })
       // Increment consecutive inactive days
       await supabase.from('profiles').update({
-        consecutive_inactive_days: (updatedProfile?.consecutive_inactive_days || 0) + 1
+        consecutive_inactive_days: (profileData?.consecutive_inactive_days || 0) + 1
       }).eq('id', userId)
     }
 
