@@ -10,7 +10,7 @@ export default function RulesPage({ onContinue, showButton = true }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '32px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
 
-      <div style={{ marginBottom: '28px' }}>
+      <div style={{ marginBottom: '28px', textAlign: 'center' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
           How Niyama works
         </h1>

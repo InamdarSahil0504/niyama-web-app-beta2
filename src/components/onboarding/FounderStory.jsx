@@ -23,15 +23,9 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
     const story = minimal ? longStory : shortStory
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--theme-bg)' }} className="px-4 py-10 max-w-lg mx-auto">
-
+        <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '40px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
             {!minimal && (
                 <>
-                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                        <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '12px', fontWeight: '500', padding: '4px 12px', borderRadius: '20px' }}>
-                            Beta testing version
-                        </span>
-                    </div>
                     <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                         <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
                         <h2 style={{ fontSize: '18px', fontWeight: '600', marginTop: '12px', color: 'var(--theme-primary)' }}>A message from the founder</h2>
@@ -55,7 +49,7 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
                 ))}
 
                 <div style={{ borderTop: '1px solid var(--theme-border)', marginTop: '20px', paddingTop: '20px' }}>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--theme-text)' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--theme-text)', textAlign: 'right' }}>
                         — Sahil Inamdar, Founder
                     </p>
                 </div>
