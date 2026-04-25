@@ -198,10 +198,6 @@ export default function Auth() {
         <button onClick={() => setScreen('login')} style={btnGhost}>
           I already have an account
         </button>
-
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '24px', lineHeight: '1.6' }}>
-          Beta testing version · No fees charged · No rewards paid out yet
-        </p>
       </div>
     </div>
   )
@@ -261,11 +257,11 @@ export default function Auth() {
           <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', lineHeight: '1.6', textAlign: 'center' }}>
             By signing up you agree to our{' '}
             <span style={{ color: 'var(--theme-primary)', textDecoration: 'underline', cursor: 'pointer' }}
-              onClick={() => window.open('https://niyamalife.com/terms', '_blank')}>
+              onClick={() => window.open('https://www.niyamalife.com/terms', '_blank')}>
               Terms of Service
             </span>{' '}and{' '}
             <span style={{ color: 'var(--theme-primary)', textDecoration: 'underline', cursor: 'pointer' }}
-              onClick={() => window.open('https://niyamalife.com/privacy', '_blank')}>
+              onClick={() => window.open('https://www.niyamalife.com/privacy', '_blank')}>
               Privacy Policy
             </span>.
           </p>
