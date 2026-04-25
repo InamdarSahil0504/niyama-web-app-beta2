@@ -256,6 +256,15 @@ export default function Dashboard({ session }) {
     }
   }
 
+  function prevStep(currentStep) {
+    const idx = STEPS.indexOf(currentStep)
+    if (idx <= 0) return
+    const prevStepKey = STEPS[idx - 1]
+    // Can't go back past payment
+    if (prevStepKey === 'tier-select' && profile?.stripe_subscription_id) return
+    setOnboardingStep(prevStepKey)
+  }
+
   // ── Save user_habits row after onboarding ──────────────────────────────────
   async function saveUserHabits(data) {
     const { libraryKeys, customHabits, wakeMinutes, movementPreference } = data
@@ -290,6 +299,7 @@ export default function Dashboard({ session }) {
     await supabase.from('profiles').update({
       onboarding_complete: true,
       wake_time_minutes: onboardingData.wakeMinutes,
+      habits_last_changed: new Date().toISOString(),
     }).eq('id', userId)
     trackEvent(supabase, userId, 'onboarding_completed', {
       tier: profile?.tier || 'free',
@@ -329,53 +339,72 @@ export default function Dashboard({ session }) {
 
   // Screen 2 — Rules (using RulesPage which covers the "how it works" context)
   if (onboardingStep === 'rules')
-    return <RulesPage onContinue={async () => {
+    return <RulesPage onBack={() => prevStep('rules')} onContinue={async () => {
       await supabase.from('profiles').update({ rules_acknowledged: true }).eq('id', userId)
       nextStep('rules')
     }} />
 
   // Screen 3 — Personal details
   if (onboardingStep === 'personal-details')
-    return <PersonalDetails userId={userId} onContinue={async (minor, theme) => {
+    return <PersonalDetails userId={userId} onBack={() => prevStep('personal-details')} onContinue={async (minor, theme) => {
       setIsMinor(minor)
       applyTheme(theme)
-      nextStep('personal-details')
+      if (minor) {
+        // Minors skip tier select — set free tier automatically
+        await supabase.from('profiles').update({ tier: 'free', tier_chosen: true }).eq('id', userId)
+        setProfile(prev => ({ ...prev, tier: 'free', tier_chosen: true, is_minor: true }))
+        // Skip health-permission and tier-select, go straight to wake-time
+        setOnboardingStep('health-permission')
+      } else {
+        nextStep('personal-details')
+      }
     }} />
 
   // Screen 4 — Health permission
   if (onboardingStep === 'health-permission')
     return <HealthPermission
+      onBack={() => prevStep('health-permission')}
       onContinue={() => nextStep('health-permission')}
       onSkip={() => nextStep('health-permission')}
     />
 
   // Screen 5 — Tier select
-  if (onboardingStep === 'tier-select')
-    return <TierSelect userId={userId} onComplete={async (tier) => {
-      setProfile(prev => ({ ...prev, tier, tier_chosen: true }))
-      nextStep('tier-select')
-    }} />
+  if (onboardingStep === 'tier-select') {
+    if (isMinor) { nextStep('tier-select'); return null }
+    return <TierSelect userId={userId}
+      onBack={() => prevStep('tier-select')}
+      onComplete={async (tier) => {
+        setProfile(prev => ({ ...prev, tier, tier_chosen: true }))
+        nextStep('tier-select')
+      }} />
+  }
 
   // Screen 6 — Wake time
   if (onboardingStep === 'wake-time')
-    return <WakeTime onContinue={(wakeMinutes) => {
-      setOnboardingData(prev => ({ ...prev, wakeMinutes }))
-      nextStep('wake-time')
-    }} />
+    return <WakeTime
+      onBack={() => prevStep('wake-time')}
+      onContinue={(wakeMinutes) => {
+        setOnboardingData(prev => ({ ...prev, wakeMinutes }))
+        nextStep('wake-time')
+      }} />
 
   // Screen 7 — Movement preference
   if (onboardingStep === 'movement')
-    return <MovementPreference onContinue={(movementPreference) => {
-      setOnboardingData(prev => ({ ...prev, movementPreference }))
-      nextStep('movement')
-    }} />
+    return <MovementPreference
+      onBack={() => prevStep('movement')}
+      onContinue={(movementPreference) => {
+        setOnboardingData(prev => ({ ...prev, movementPreference }))
+        nextStep('movement')
+      }} />
 
   // Screen 8 — Library habit selection
   if (onboardingStep === 'habit-select')
-    return <HabitSelect onContinue={(libraryKeys) => {
-      setOnboardingData(prev => ({ ...prev, libraryKeys }))
-      nextStep('habit-select')
-    }} />
+    return <HabitSelect
+      onBack={() => prevStep('habit-select')}
+      onContinue={(libraryKeys) => {
+        setOnboardingData(prev => ({ ...prev, libraryKeys }))
+        nextStep('habit-select')
+      }} />
 
   // Screen 9 — Custom habits (skipped for Free tier inside the component)
   if (onboardingStep === 'custom-habits') {
@@ -399,10 +428,12 @@ export default function Dashboard({ session }) {
 
   // Screen 10 — Notifications
   if (onboardingStep === 'notifications')
-    return <NotificationsSetup onContinue={(notificationPrefs) => {
-      setOnboardingData(prev => ({ ...prev, notificationPrefs }))
-      nextStep('notifications')
-    }} />
+    return <NotificationsSetup
+      onBack={() => prevStep('notifications')}
+      onContinue={(notificationPrefs) => {
+        setOnboardingData(prev => ({ ...prev, notificationPrefs }))
+        nextStep('notifications')
+      }} />
 
   // Screen 11 — Ready
   if (onboardingStep === 'ready')

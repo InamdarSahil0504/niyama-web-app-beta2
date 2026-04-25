@@ -93,7 +93,7 @@ const TIERS = [
   },
 ]
 
-export default function TierSelect({ userId, onComplete }) {
+export default function TierSelect({ userId, onContinue, onBack }) {
   const [selected, setSelected] = useState(null)
   const [billing, setBilling] = useState('monthly')
   const [saving, setSaving] = useState(false)
@@ -161,6 +161,17 @@ export default function TierSelect({ userId, onComplete }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '32px 24px 96px' }}>
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} style={{
+          position: 'absolute', top: '24px', left: '24px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: '14px', color: 'var(--theme-text-muted)',
+          display: 'flex', alignItems: 'center', gap: '6px', padding: '8px',
+        }}>
+          ← Back
+        </button>
+      )}
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
 
         <ProgressBar step={5} total={11} />

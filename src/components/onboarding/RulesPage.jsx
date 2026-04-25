@@ -1,4 +1,4 @@
-export default function RulesPage({ onContinue, showButton = true }) {
+export default function RulesPage({ onContinue, onBack, showButton = true }) {
   const card = {
     background: 'var(--theme-card)',
     border: '1px solid var(--theme-border)',
@@ -8,9 +8,21 @@ export default function RulesPage({ onContinue, showButton = true }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '32px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '32px 24px 96px', maxWidth: '448px', margin: '0 auto', position: 'relative' }}>
 
-      <div style={{ marginBottom: '28px', textAlign: 'center' }}>
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} style={{
+          position: 'absolute', top: '24px', left: '24px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: '14px', color: 'var(--theme-text-muted)',
+          display: 'flex', alignItems: 'center', gap: '6px', padding: '8px',
+        }}>
+          ← Back
+        </button>
+      )}
+
+      <div style={{ marginBottom: '28px', textAlign: 'center', marginTop: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
           How Niyama works
         </h1>
@@ -37,9 +49,7 @@ export default function RulesPage({ onContinue, showButton = true }) {
             { icon: '⭐', label: 'Custom habits (0–2)', desc: 'On Basic and above, set your own habit goals. Anything that matters to you.', color: '#FEF3E2', border: '#C9973A' },
           ].map((item, i) => (
             <div key={i} style={{ background: item.color, border: `1px solid ${item.border}`, borderRadius: '10px', padding: '10px 12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '3px' }}>
-                {item.icon} {item.label}
-              </p>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '3px' }}>{item.icon} {item.label}</p>
               <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', lineHeight: '1.4' }}>{item.desc}</p>
             </div>
           ))}
@@ -80,9 +90,7 @@ export default function RulesPage({ onContinue, showButton = true }) {
           <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--theme-text)' }}>Hit a successful day</h3>
         </div>
         <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '10px', padding: '14px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-primary)', marginBottom: '6px' }}>
-            ✅ Successful day = 5 of 9 habits completed
-          </p>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-primary)', marginBottom: '6px' }}>✅ Successful day = 5 of 9 habits completed</p>
           <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
             At least 2 of those 5 must be core habits. Build a streak of successful days to maximise your rewards.
           </p>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function WakeTime({ onContinue }) {
+export default function WakeTime({ onContinue, onBack }) {
   // Wake time stored as minutes from midnight. Default 7:30am = 450
   const [wakeMinutes, setWakeMinutes] = useState(450)
 
@@ -31,6 +31,17 @@ export default function WakeTime({ onContinue }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', padding: '32px 24px' }}>
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} style={{
+          position: 'absolute', top: '24px', left: '24px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: '14px', color: 'var(--theme-text-muted)',
+          display: 'flex', alignItems: 'center', gap: '6px', padding: '8px',
+        }}>
+          ← Back
+        </button>
+      )}
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
         <ProgressBar step={6} total={11} />

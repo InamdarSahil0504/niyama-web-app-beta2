@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 
-export default function PersonalDetails({ userId, onContinue }) {
+export default function PersonalDetails({ userId, onContinue, onBack }) {
     const [day, setDay] = useState('')
     const [month, setMonth] = useState('')
     const [year, setYear] = useState('')
@@ -52,7 +52,17 @@ export default function PersonalDetails({ userId, onContinue }) {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '40px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
-
+            {/* Back button */}
+            {onBack && (
+                <button onClick={onBack} style={{
+                    position: 'absolute', top: '24px', left: '24px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: '14px', color: 'var(--theme-text-muted)',
+                    display: 'flex', alignItems: 'center', gap: '6px', padding: '8px',
+                }}>
+                    ← Back
+                </button>
+            )}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
                 <h2 style={{ fontSize: '18px', fontWeight: '600', marginTop: '12px', color: 'var(--theme-text)' }}>Tell us about yourself</h2>

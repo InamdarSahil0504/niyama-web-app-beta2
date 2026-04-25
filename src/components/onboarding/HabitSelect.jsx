@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LIBRARY_HABITS, DEFAULT_LIBRARY_KEYS } from '../../config'
 
-export default function HabitSelect({ onContinue }) {
+export default function HabitSelect({ onContinue, onBack }) {
   const [selected, setSelected] = useState(new Set(DEFAULT_LIBRARY_KEYS))
 
   function toggle(key) {
@@ -20,6 +20,17 @@ export default function HabitSelect({ onContinue }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', padding: '32px 24px' }}>
+      {/* Back button */}
+      {onBack && (
+        <button onClick={onBack} style={{
+          position: 'absolute', top: '24px', left: '24px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: '14px', color: 'var(--theme-text-muted)',
+          display: 'flex', alignItems: 'center', gap: '6px', padding: '8px',
+        }}>
+          ← Back
+        </button>
+      )}
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
         <ProgressBar step={8} total={11} />
