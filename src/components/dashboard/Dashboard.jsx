@@ -73,7 +73,7 @@ export default function Dashboard({ session }) {
 
     // 1. Load profile
     const { data: profileData } = await supabase
-      .from('profiles').select('*').eq('id', userId).single()
+      .from('profiles').select('*').eq('id', userId).maybeSingle()
 
     if (profileData) {
       if (profileData.color_theme) applyTheme(profileData.color_theme)
@@ -162,9 +162,24 @@ export default function Dashboard({ session }) {
 
     // 2. Reload profile
     const { data: updatedProfile } = await supabase
-      .from('profiles').select('*').eq('id', userId).single()
+      .from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(updatedProfile)
-
+    if (!updatedProfile) {
+      await supabase.from('profiles').insert({
+        id: userId,
+        email: session.user.email,
+        tier: 'free',
+        monthly_points: 0,
+        onboarding_complete: false,
+      })
+      await supabase.from('streaks').insert({
+        user_id: userId,
+        current_streak: 0,
+        longest_streak: 0,
+      })
+      await fetchData()
+      return
+    }
     if (updatedProfile) {
       if (!updatedProfile.onboarding_complete) {
         setOnboardingStep('founder-story')

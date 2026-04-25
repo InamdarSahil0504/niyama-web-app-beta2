@@ -75,7 +75,7 @@ export default function Auth() {
     // If new user — create profile and streaks row
     if (data.user && isNewUser) {
       const { data: existingProfile } = await supabase
-        .from('profiles').select('id').eq('id', data.user.id).single()
+        .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
 
       if (!existingProfile) {
         await supabase.from('profiles').insert({
