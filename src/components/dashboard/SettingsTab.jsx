@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS } from '../../config'
 import { supabase } from '../../supabase'
-import { trackEvent } from '../../config'
+import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS, trackEvent } from '../../config'
 import posthog from 'posthog-js'
 
 export default function SettingsTab({ session, profile, onSignOut, onRefresh }) {
