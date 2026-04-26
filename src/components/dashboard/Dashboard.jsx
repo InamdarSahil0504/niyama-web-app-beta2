@@ -499,6 +499,7 @@ export default function Dashboard({ session }) {
           <ReferralTab
             session={session}
             profile={profile}
+            isMinor={isMinor}
           />
         )}
         {activeTab === 'settings' && (

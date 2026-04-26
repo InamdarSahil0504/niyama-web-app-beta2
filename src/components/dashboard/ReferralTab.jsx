@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { getEffectiveTier, TIER_CONFIG } from '../../config'
 
-export default function ReferralTab({ session, profile }) {
+export default function ReferralTab({ session, profile, isMinor }) {
   const [referralCode, setReferralCode] = useState(null)
   const [referrals, setReferrals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -105,9 +105,17 @@ export default function ReferralTab({ session, profile }) {
           ))}
         </div>
       </div>
-
+      {/* Minor gate */}
+      {isMinor && (
+        <div style={{ ...card, background: '#fffbeb', border: '1px solid #fcd34d' }}>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>Referrals available at 18</p>
+          <p style={{ fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
+            You can still invite friends to Niyama, but referral bonuses are only available to users aged 18 and above.
+          </p>
+        </div>
+      )}
       {/* Referral code */}
-      {(
+      {!isMinor && (
         <div style={card}>
           <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Your referral code</p>
 
@@ -152,7 +160,7 @@ export default function ReferralTab({ session, profile }) {
       )}
 
       {/* Stats */}
-      {(
+      {confirmedReferrals >= 0 && !isMinor && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
           {[
             { label: 'Confirmed', value: confirmedReferrals, color: 'var(--theme-primary)' },

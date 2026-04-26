@@ -596,6 +596,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         streak={streak}
         todaySummary={todaySummary}
         todayPoints={todayPoints}
+        isMinor={isMinor}
       />
 
       {/* Reward eligibility */}
@@ -690,13 +691,13 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
   )
 }
 // ─── Social Share Card ────────────────────────────────────────────────────────
-export function SocialShareCard({ session, profile, streak, todaySummary, todayPoints }) {
+export function SocialShareCard({ session, profile, streak, todaySummary, todayPoints, isMinor }) {
   const [shared, setShared] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (!todaySummary?.submitted || !todaySummary?.day_successful) return null
   if (todaySummary?.social_points > 0) return null // already shared today
-
+  if (isMinor) return null
   const userId = session.user.id
 
   async function handleShare(platform) {
