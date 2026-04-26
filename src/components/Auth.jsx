@@ -102,19 +102,21 @@ export default function Auth() {
       }
     }
     if (data.user && isNewUser) {
-      const { data: existingProfile } = await supabase
-        .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
+      // Always upsert to ensure full_name and phone are saved
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email,
+        full_name: fullName.trim(),
+        phone: phone.trim() || null,
+        tier: 'free',
+        monthly_points: 0,
+        onboarding_complete: false,
+      }, { onConflict: 'id' })
 
-      if (!existingProfile) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          email,
-          full_name: fullName.trim(),
-          phone: phone.trim() || null,
-          tier: 'free',
-          monthly_points: 0,
-          onboarding_complete: false,
-        }, { onConflict: 'id' })
+      // Only insert streaks if they don't exist
+      const { data: existingStreak } = await supabase
+        .from('streaks').select('id').eq('user_id', data.user.id).maybeSingle()
+      if (!existingStreak) {
         await supabase.from('streaks').insert({
           user_id: data.user.id,
           current_streak: 0,
