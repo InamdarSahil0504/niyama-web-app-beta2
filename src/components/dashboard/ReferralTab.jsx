@@ -26,7 +26,7 @@ export default function ReferralTab({ session, profile }) {
     // Get referrals made by this user
     const { data: referralData } = await supabase
       .from('referrals')
-      .select('*, referred:profiles!referrals_referred_id_fkey(full_name, created_at)')
+      .select('*')
       .eq('referrer_id', userId)
       .order('created_at', { ascending: false })
     setReferrals(referralData || [])
@@ -179,7 +179,7 @@ export default function ReferralTab({ session, profile }) {
                     {r.referred?.full_name || 'Pending sign-up'}
                   </p>
                   <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '1px' }}>
-                    {r.referred?.created_at ? new Date(r.referred.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    {r.referred?.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                   </p>
                 </div>
                 <span style={{
