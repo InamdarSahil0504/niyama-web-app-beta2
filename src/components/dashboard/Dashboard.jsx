@@ -181,6 +181,11 @@ export default function Dashboard({ session }) {
       .from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(updatedProfile)
 
+    if (updatedProfile?.deleted_at) {
+      await supabase.auth.signOut()
+      return
+    }
+
     if (!updatedProfile) {
       await supabase.from('profiles').insert({
         id: userId,

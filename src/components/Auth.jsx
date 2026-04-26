@@ -89,7 +89,18 @@ export default function Auth() {
       setLoading(false)
       return
     }
+    // Check if account is soft deleted
+    if (data.user) {
+      const { data: profileCheck } = await supabase
+        .from('profiles').select('deleted_at').eq('id', data.user.id).maybeSingle()
 
+      if (profileCheck?.deleted_at) {
+        await supabase.auth.signOut()
+        setMessage('This account is scheduled for deletion. To restore it, contact support@niyamalife.com')
+        setLoading(false)
+        return
+      }
+    }
     if (data.user && isNewUser) {
       const { data: existingProfile } = await supabase
         .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
@@ -136,7 +147,19 @@ export default function Auth() {
     }
     setLoading(false)
   }
+  if (loginData.user) {
+    const { data: profileCheck } = await supabase
+      .from('profiles').select('deleted_at').eq('id', loginData.user.id).maybeSingle()
 
+    if (profileCheck?.deleted_at) {
+      await supabase.auth.signOut()
+      setMessage('This account is scheduled for deletion. To restore it, contact support@niyamalife.com')
+      setLoading(false)
+      return
+    }
+    window.posthog?.identify(loginData.user.id)
+    window.posthog?.capture('logged_in', { method: 'password' })
+  }
   async function resendOTP() {
     setMessage('')
     setOtp('')

@@ -786,7 +786,7 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
       <div style={{ ...card, border: '1px solid #fecaca' }}>
         <p style={{ fontSize: '13px', fontWeight: '700', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Delete account</p>
         <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', marginBottom: '12px' }}>
-          Permanently delete your account and all data. This cannot be undone.
+          Your account will be deactivated immediately. All data is permanently deleted after 30 days. Financial records are kept for 7 years as required by law. To restore your account within 30 days, contact support@niyamalife.com
         </p>
         {!showDeleteConfirm ? (
           <button onClick={() => setShowDeleteConfirm(true)}
@@ -805,7 +805,7 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
               </button>
               <button onClick={deleteAccount} disabled={deleteInput !== 'DELETE' || saving}
                 style={{ flex: 1, background: deleteInput === 'DELETE' ? '#dc2626' : 'var(--theme-border)', color: deleteInput === 'DELETE' ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: deleteInput === 'DELETE' ? 'pointer' : 'not-allowed', fontSize: '13px', border: 'none' }}>
-                {saving ? '...' : 'Delete forever'}
+                {saving ? '...' : 'Delete account'}
               </button>
             </div>
           </div>
