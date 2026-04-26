@@ -142,24 +142,20 @@ export default function Auth() {
     if (error) {
       setMessage(error.message)
     } else if (loginData.user) {
+      const { data: profileCheck } = await supabase
+        .from('profiles').select('deleted_at').eq('id', loginData.user.id).maybeSingle()
+      if (profileCheck?.deleted_at) {
+        await supabase.auth.signOut()
+        setMessage('This account is scheduled for deletion. To restore it, contact support@niyamalife.com')
+        setLoading(false)
+        return
+      }
       window.posthog?.identify(loginData.user.id)
       window.posthog?.capture('logged_in', { method: 'password' })
     }
     setLoading(false)
   }
-  if (loginData.user) {
-    const { data: profileCheck } = await supabase
-      .from('profiles').select('deleted_at').eq('id', loginData.user.id).maybeSingle()
 
-    if (profileCheck?.deleted_at) {
-      await supabase.auth.signOut()
-      setMessage('This account is scheduled for deletion. To restore it, contact support@niyamalife.com')
-      setLoading(false)
-      return
-    }
-    window.posthog?.identify(loginData.user.id)
-    window.posthog?.capture('logged_in', { method: 'password' })
-  }
   async function resendOTP() {
     setMessage('')
     setOtp('')
