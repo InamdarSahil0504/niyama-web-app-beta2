@@ -3,46 +3,53 @@ export default function BottomNav({ activeTab, onTabChange }) {
     {
       key: 'home',
       label: 'Home',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      icon: (active) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'var(--theme-primary)' : 'none'} stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       ),
     },
     {
       key: 'analytics',
-      label: 'Analytics',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      label: 'Stats',
+      icon: (active) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
         </svg>
       ),
     },
     {
       key: 'rewards',
       label: 'Rewards',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+      icon: (active) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'var(--theme-primary)' : 'none'} stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
         </svg>
       ),
     },
     {
       key: 'referrals',
       label: 'Refer',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      icon: (active) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
         </svg>
       ),
     },
     {
       key: 'settings',
       label: 'Settings',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      icon: (active) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
         </svg>
       ),
     },
@@ -50,21 +57,17 @@ export default function BottomNav({ activeTab, onTabChange }) {
 
   return (
     <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      background: 'var(--theme-card)',
-      borderTop: '1px solid var(--theme-border)',
-      zIndex: 100,
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+      display: 'flex', justifyContent: 'center',
     }}>
       <div style={{
-        maxWidth: '448px',
-        margin: '0 auto',
+        width: '100%', maxWidth: '448px',
+        background: 'var(--theme-bg)',
+        borderTop: '1px solid var(--theme-border)',
         display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        padding: '10px 0 max(6px, env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}>
         {tabs.map(tab => {
           const active = activeTab === tab.key
@@ -73,31 +76,40 @@ export default function BottomNav({ activeTab, onTabChange }) {
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '3px',
-                padding: '4px 20px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: '4px', padding: '10px 4px 12px',
+                background: 'none', border: 'none', cursor: 'pointer',
                 color: active ? 'var(--theme-primary)' : 'var(--theme-text-muted)',
-                transition: 'color 0.15s ease',
+                transition: 'all 0.15s ease',
+                position: 'relative',
               }}
             >
-              {tab.icon}
-              <span style={{ fontSize: '11px', fontWeight: active ? '600' : '400' }}>
-                {tab.label}
-              </span>
+              {/* Active indicator dot */}
               {active && (
                 <div style={{
-                  width: '4px',
-                  height: '4px',
-                  borderRadius: '50%',
+                  position: 'absolute', top: '6px', left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '4px', height: '4px', borderRadius: '50%',
                   background: 'var(--theme-primary)',
-                  marginTop: '1px',
                 }} />
               )}
+
+              <div style={{
+                transform: active ? 'translateY(2px)' : 'translateY(0)',
+                transition: 'transform 0.15s ease',
+              }}>
+                {tab.icon(active)}
+              </div>
+
+              <span style={{
+                fontSize: '10px',
+                fontWeight: active ? '700' : '400',
+                letterSpacing: active ? '0.01em' : '0',
+                transition: 'all 0.15s ease',
+              }}>
+                {tab.label}
+              </span>
             </button>
           )
         })}
