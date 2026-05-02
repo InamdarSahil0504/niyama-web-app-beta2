@@ -11,19 +11,19 @@ import {
 const DEFAULT_CUSTOM_1 = { key: 'custom_1', label: 'Stretching or yoga (15+ min)', points: 50, icon: '🤸' }
 const DEFAULT_CUSTOM_2 = { key: 'custom_2', label: 'Gratitude journaling', points: 50, icon: '📓' }
 
-const MOODS = ['😩','😕','😐','😊','🔥']
+const MOODS = ['😩', '😕', '😐', '😊', '🔥']
 
 function Confetti() {
-  const colors = ['#5A8A78','#D4735F','#7CB9A8','#E8907A','#4A7C65','#C9973A','#F4D03F','#85C1E9']
+  const colors = ['#5A8A78', '#D4735F', '#7CB9A8', '#E8907A', '#4A7C65', '#C9973A', '#F4D03F', '#85C1E9']
   return (
-    <div style={{ position:'fixed', top:0, left:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:9999, overflow:'hidden' }}>
-      {Array.from({ length:40 }, (_,i) => (
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
+      {Array.from({ length: 40 }, (_, i) => (
         <div key={i} style={{
-          position:'absolute', left:`${Math.random()*100}%`, top:`-${Math.random()*20}px`,
-          width:`${Math.random()*8+6}px`, height:`${Math.random()*8+6}px`,
-          background: colors[Math.floor(Math.random()*colors.length)],
-          borderRadius: Math.random()>0.5?'50%':'2px',
-          animation:`confetti-fall ${Math.random()*2+2}s linear ${Math.random()}s forwards`, opacity:0,
+          position: 'absolute', left: `${Math.random() * 100}%`, top: `-${Math.random() * 20}px`,
+          width: `${Math.random() * 8 + 6}px`, height: `${Math.random() * 8 + 6}px`,
+          background: colors[Math.floor(Math.random() * colors.length)],
+          borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+          animation: `confetti-fall ${Math.random() * 2 + 2}s linear ${Math.random()}s forwards`, opacity: 0,
         }} />
       ))}
     </div>
@@ -39,32 +39,32 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     return state
   }
 
-  const [habitState, setHabitState]         = useState(buildHabitState)
-  const [stepCount, setStepCount]           = useState(0)
-  const [saving, setSaving]                 = useState(false)
+  const [habitState, setHabitState] = useState(buildHabitState)
+  const [stepCount, setStepCount] = useState(0)
+  const [saving, setSaving] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [lastTotalCompleted, setLastTotalCompleted] = useState(0)
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
-  const [todayMood, setTodayMood]           = useState(todaySummary?.mood || null)
+  const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
 
   useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
-  const effectiveTier  = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-  const tierConfig     = TIER_CONFIG[effectiveTier]
-  const customSlots    = tierConfig?.custom_habit_slots || 0
+  const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
+  const tierConfig = TIER_CONFIG[effectiveTier]
+  const customSlots = tierConfig?.custom_habit_slots || 0
 
   // ── Build habit lists ──────────────────────────────────────────────────────
-  const libraryRows  = userHabits?.filter(h => h.habit_type === 'library' && h.is_active) || []
-  const customRows   = userHabits?.filter(h => h.habit_type === 'custom'  && h.is_active) || []
+  const libraryRows = userHabits?.filter(h => h.habit_type === 'library' && h.is_active) || []
+  const customRows = userHabits?.filter(h => h.habit_type === 'custom' && h.is_active) || []
 
   const libraryHabits = libraryRows.length > 0
     ? libraryRows.map(row => {
-        const lib = LIBRARY_HABITS.find(h => h.key === row.habit_key)
-        return lib || { key: row.habit_key, label: row.habit_label, points: 50, icon: row.habit_icon || '📌' }
-      })
-    : ['sunlight','hydration','meditation','no_late_food'].map(k => LIBRARY_HABITS.find(h => h.key === k)).filter(Boolean)
+      const lib = LIBRARY_HABITS.find(h => h.key === row.habit_key)
+      return lib || { key: row.habit_key, label: row.habit_label, points: 50, icon: row.habit_icon || '📌' }
+    })
+    : ['sunlight', 'hydration', 'meditation', 'no_late_food'].map(k => LIBRARY_HABITS.find(h => h.key === k)).filter(Boolean)
 
   const customHabits = []
   if (customSlots >= 1) {
@@ -81,17 +81,17 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const totalHabitCount = 3 + libraryHabits.length + customHabits.length
 
   // ── Completion counts ──────────────────────────────────────────────────────
-  const coreCompleted    = CORE_HABITS.filter(h => habitState[h.key]).length
+  const coreCompleted = CORE_HABITS.filter(h => habitState[h.key]).length
   const libraryCompleted = libraryHabits.filter(h => habitState[h.key]).length
-  const customCompleted  = customHabits.filter(h => habitState[h.key]).length
-  const totalCompleted   = coreCompleted + libraryCompleted + customCompleted
-  const daySuccessful    = isDaySuccessful(coreCompleted, totalCompleted)
-  const dayPerfect       = isDayPerfect(totalCompleted)
-  const isSubmitted      = !!todaySummary?.submitted
+  const customCompleted = customHabits.filter(h => habitState[h.key]).length
+  const totalCompleted = coreCompleted + libraryCompleted + customCompleted
+  const daySuccessful = isDaySuccessful(coreCompleted, totalCompleted)
+  const dayPerfect = isDayPerfect(totalCompleted)
+  const isSubmitted = !!todaySummary?.submitted
 
   // ── Streak freeze ──────────────────────────────────────────────────────────
-  const canUseFreeze   = effectiveTier === 'plus' || effectiveTier === 'premium'
-  const freezeUsed     = !!streakFreeze
+  const canUseFreeze = effectiveTier === 'plus' || effectiveTier === 'premium'
+  const freezeUsed = !!streakFreeze
   const freezeAvailable = canUseFreeze && !freezeUsed
 
   async function applyStreakFreeze() {
@@ -108,35 +108,35 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   }
 
   // ── Live points ────────────────────────────────────────────────────────────
-  const stepsPoints  = calcStepsPoints(stepCount)
-  const wakePoints   = habitState['wake']     ? 100 : 0
-  const phonePoints  = habitState['no_phone'] ? 100 : 0
+  const stepsPoints = calcStepsPoints(stepCount)
+  const wakePoints = habitState['wake'] ? 100 : 0
+  const phonePoints = habitState['no_phone'] ? 100 : 0
   const stepsChecked = !!habitState['steps']
-  const corePoints   = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
-  const libPoints    = libraryCompleted * POINTS.library_habit
-  const custPoints   = customCompleted  * POINTS.library_habit
+  const corePoints = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
+  const libPoints = libraryCompleted * POINTS.library_habit
+  const custPoints = customCompleted * POINTS.library_habit
   const successBonus = daySuccessful ? POINTS.successful_day : 0
-  const perfectBonus = dayPerfect    ? POINTS.perfect_day    : 0
-  const todayPoints  = Math.min(corePoints + libPoints + custPoints + successBonus + perfectBonus, POINTS.daily_max)
+  const perfectBonus = dayPerfect ? POINTS.perfect_day : 0
+  const todayPoints = Math.min(corePoints + libPoints + custPoints + successBonus + perfectBonus, POINTS.daily_max)
 
   // ── Reward calculations ────────────────────────────────────────────────────
-  const memberMonths     = getMemberMonths(profile?.created_at)
-  const isFreeTrial      = effectiveTier === 'free_trial'
-  const isFreeExpired    = effectiveTier === 'free_expired'
-  const successfulDays   = profile?.successful_days || 0
+  const memberMonths = getMemberMonths(profile?.created_at)
+  const isFreeTrial = effectiveTier === 'free_trial'
+  const isFreeExpired = effectiveTier === 'free_expired'
+  const successfulDays = profile?.successful_days || 0
   const isSuccessfulMonth = (profile?.total_days_logged || 0) > 0 && successfulDays === (profile?.total_days_logged || 0)
-  const isPerfectMonth   = isSuccessfulMonth
-  const isInactive       = (profile?.consecutive_inactive_days || 0) >= 5
-  const minDays          = tierConfig?.min_days || 0
-  const isEligible       = minDays > 0 && successfulDays >= minDays && !isInactive
-  const trialMonthsLeft  = Math.max(3 - memberMonths, 0)
-  const reward           = isMinor ? '0.00' : calcReward(
+  const isPerfectMonth = isSuccessfulMonth
+  const isInactive = (profile?.consecutive_inactive_days || 0) >= 5
+  const minDays = tierConfig?.min_days || 0
+  const isEligible = minDays > 0 && successfulDays >= minDays && !isInactive
+  const trialMonthsLeft = Math.max(3 - memberMonths, 0)
+  const reward = isMinor ? '0.00' : calcReward(
     profile?.monthly_points || 0, effectiveTier,
     successfulDays, isSuccessfulMonth, isPerfectMonth,
     profile?.consecutive_inactive_days || 0
   )
-  const tierCap          = tierConfig?.max_cap || tierConfig?.reward_cap || 0
-  const isFirstTimeUser  = (profile?.total_days_logged || 0) === 0 && !isSubmitted
+  const tierCap = tierConfig?.max_cap || tierConfig?.reward_cap || 0
+  const isFirstTimeUser = (profile?.total_days_logged || 0) === 0 && !isSubmitted
 
   // ── Celebration ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -152,15 +152,15 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     if (isSubmitted) return
     setHabitState(prev => ({ ...prev, [habitKey]: checked }))
     try {
-      const isCore    = CORE_HABITS.find(h => h.key === habitKey)
-      const isCustom  = habitKey.startsWith('custom')
+      const isCore = CORE_HABITS.find(h => h.key === habitKey)
+      const isCustom = habitKey.startsWith('custom')
       const habitType = isCore ? 'core' : isCustom ? 'custom' : 'library'
-      const pts       = checked ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : 50) : 0
+      const pts = checked ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : 50) : 0
       const habitLabel = isCore
-        ? CORE_HABITS.find(h=>h.key===habitKey)?.label
+        ? CORE_HABITS.find(h => h.key === habitKey)?.label
         : isCustom
-          ? customHabits.find(h=>h.key===habitKey)?.label
-          : libraryHabits.find(h=>h.key===habitKey)?.label
+          ? customHabits.find(h => h.key === habitKey)?.label
+          : libraryHabits.find(h => h.key === habitKey)?.label
       await supabase.from('habit_logs').upsert({
         user_id: userId, date: today, habit_key: habitKey,
         habit_type: habitType, habit_label: habitLabel || habitKey,
@@ -190,36 +190,36 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     if (isSubmitted || saving) return
     setSaving(true)
     try {
-      const now          = new Date()
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+      const now = new Date()
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-      const corePointsTotal    = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
+      const corePointsTotal = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
       const libraryPointsTotal = libraryCompleted * POINTS.library_habit
-      const customPointsTotal  = customCompleted  * POINTS.library_habit
-      const bonusSuccessful    = daySuccessful ? POINTS.successful_day : 0
-      const bonusPerfect       = dayPerfect    ? POINTS.perfect_day    : 0
+      const customPointsTotal = customCompleted * POINTS.library_habit
+      const bonusSuccessful = daySuccessful ? POINTS.successful_day : 0
+      const bonusPerfect = dayPerfect ? POINTS.perfect_day : 0
 
       const summaryPayload = {
-        user_id:             userId,
-        date:                today,
-        core_total:          CORE_HABITS.length,
-        core_completed:      coreCompleted,
-        library_total:       libraryHabits.length,
-        library_completed:   libraryCompleted,
-        custom_total:        customHabits.length,
-        custom_completed:    customCompleted,
-        total_habits:        totalHabitCount,
-        total_completed:     totalCompleted,
-        day_successful:      daySuccessful,
-        perfect_day:         dayPerfect,
-        points_from_core:    corePointsTotal,
+        user_id: userId,
+        date: today,
+        core_total: CORE_HABITS.length,
+        core_completed: coreCompleted,
+        library_total: libraryHabits.length,
+        library_completed: libraryCompleted,
+        custom_total: customHabits.length,
+        custom_completed: customCompleted,
+        total_habits: totalHabitCount,
+        total_completed: totalCompleted,
+        day_successful: daySuccessful,
+        perfect_day: dayPerfect,
+        points_from_core: corePointsTotal,
         points_from_library: libraryPointsTotal,
-        points_from_custom:  customPointsTotal,
+        points_from_custom: customPointsTotal,
         bonus_successful_day: bonusSuccessful,
-        bonus_perfect_day:   bonusPerfect,
-        total_points:        todayPoints,
-        submitted:           true,
-        submitted_at:        now.toISOString(),
+        bonus_perfect_day: bonusPerfect,
+        total_points: todayPoints,
+        submitted: true,
+        submitted_at: now.toISOString(),
       }
 
       const { data: existingSummary } = await supabase
@@ -233,16 +233,16 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       }
 
       // Recalculate monthly points
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       const { data: monthSummaries } = await supabase
         .from('daily_summaries').select('total_points, day_successful')
         .eq('user_id', userId).gte('date', monthStart)
-      const monthlyPoints    = monthSummaries?.reduce((s,r) => s+(r.total_points||0), 0) || 0
+      const monthlyPoints = monthSummaries?.reduce((s, r) => s + (r.total_points || 0), 0) || 0
       const successfulDaysNew = monthSummaries?.filter(r => r.day_successful).length || 0
 
       // Update streak
-      let newStreak  = streak?.current_streak  || 0
-      let newLongest = streak?.longest_streak  || 0
+      let newStreak = streak?.current_streak || 0
+      let newLongest = streak?.longest_streak || 0
       if (daySuccessful) { newStreak += 1; if (newStreak > newLongest) newLongest = newStreak }
       else newStreak = 0
       await supabase.from('streaks').update({
@@ -253,25 +253,25 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       const { data: allSummaries } = await supabase
         .from('daily_summaries').select('day_successful').eq('user_id', userId)
       const overallSuccessful = allSummaries?.filter(r => r.day_successful).length || 0
-      const totalDaysLogged   = allSummaries?.length || 0
-      const isFirstEver       = totalDaysLogged === 1
+      const totalDaysLogged = allSummaries?.length || 0
+      const isFirstEver = totalDaysLogged === 1
       await supabase.from('profiles').update({
-        monthly_points:           monthlyPoints,
-        successful_days:          successfulDaysNew,
+        monthly_points: monthlyPoints,
+        successful_days: successfulDaysNew,
         consecutive_inactive_days: 0,
-        last_active_date:         today,
-        overall_successful_days:  overallSuccessful,
-        total_days_logged:        totalDaysLogged,
+        last_active_date: today,
+        overall_successful_days: overallSuccessful,
+        total_days_logged: totalDaysLogged,
         ...(isFirstEver && { first_submission_date: today }),
       }).eq('id', userId)
 
       // Upsert rewards row
       const tierCfg = TIER_CONFIG[effectiveTier]
       if (tierCfg && tierCfg.reward_cap > 0) {
-        const potentialReward    = monthlyPoints / 1000
-        const actualReward       = isEligible ? Math.min(potentialReward, tierCfg.reward_cap) : 0
-        const pointsLeftOnTable  = Math.max(potentialReward - tierCfg.reward_cap, 0)
-        const capUtil            = Math.min(Math.round((potentialReward / tierCfg.reward_cap) * 100), 100)
+        const potentialReward = monthlyPoints / 1000
+        const actualReward = isEligible ? Math.min(potentialReward, tierCfg.reward_cap) : 0
+        const pointsLeftOnTable = Math.max(potentialReward - tierCfg.reward_cap, 0)
+        const capUtil = Math.min(Math.round((potentialReward / tierCfg.reward_cap) * 100), 100)
         const { data: existingReward } = await supabase
           .from('rewards').select('id, manual_override')
           .eq('user_id', userId).eq('month', currentMonth).maybeSingle()
@@ -317,11 +317,11 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   }
 
   const stepsLabel = stepCount >= 10000 ? `${stepCount.toLocaleString()} steps — 100 pts available`
-    : stepCount >= 7500  ? `${stepCount.toLocaleString()} steps — 75 pts available`
-    : stepCount >= 5000  ? `${stepCount.toLocaleString()} steps — 50 pts available`
-    : stepCount > 0      ? `${stepCount.toLocaleString()} steps — need 5,000 minimum`
-    : 'Enter steps, then tick to log'
-  const stepsColor           = stepCount >= 5000 ? 'var(--theme-primary)' : 'var(--theme-text-muted)'
+    : stepCount >= 7500 ? `${stepCount.toLocaleString()} steps — 75 pts available`
+      : stepCount >= 5000 ? `${stepCount.toLocaleString()} steps — 50 pts available`
+        : stepCount > 0 ? `${stepCount.toLocaleString()} steps — need 5,000 minimum`
+          : 'Enter steps, then tick to log'
+  const stepsColor = stepCount >= 5000 ? 'var(--theme-primary)' : 'var(--theme-text-muted)'
   const availableStepsPoints = calcStepsPoints(stepCount)
 
   return (
@@ -337,58 +337,58 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       )}
 
       {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
-          <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--theme-text)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)' }}>
             Niyama
             {todayMood && (
-              <span style={{ fontSize:'20px', marginLeft:'10px', verticalAlign:'middle' }}>
+              <span style={{ fontSize: '20px', marginLeft: '10px', verticalAlign: 'middle' }}>
                 {MOODS[todayMood - 1]}
               </span>
             )}
           </h1>
-          <p style={{ fontSize:'14px', color:'var(--theme-text-secondary)', marginTop:'2px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginTop: '2px' }}>
             Hey, {profile?.full_name?.split(' ')[0] || 'there'} 👋
           </p>
         </div>
-        <span style={{ background:'var(--theme-primary)', color:'white', fontSize:'12px', fontWeight:'600', padding:'4px 12px', borderRadius:'20px', textTransform:'capitalize' }}>
+        <span style={{ background: 'var(--theme-primary)', color: 'white', fontSize: '12px', fontWeight: '600', padding: '4px 12px', borderRadius: '20px', textTransform: 'capitalize' }}>
           {tierConfig?.label || 'Free'}
         </span>
       </div>
 
       {/* Banners */}
       {isFreeTrial && !isFirstTimeUser && (
-        <div style={{ background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px' }}>
-          <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-primary)', marginBottom:'2px' }}>
-            🎁 Free trial — {trialMonthsLeft} month{trialMonthsLeft!==1?'s':''} remaining
+        <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-primary)', marginBottom: '2px' }}>
+            🎁 Free trial — {trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} remaining
           </p>
-          <p style={{ fontSize:'11px', color:'var(--theme-text-secondary)' }}>Earn up to $2.50/mo · Upgrades to Basic after month 3</p>
+          <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>Earn up to $2.50/mo · Upgrades to Basic after month 3</p>
         </div>
       )}
       {isFreeExpired && (
-        <div style={{ background:'#fffbeb', border:'1px solid #fcd34d', borderRadius:'12px', padding:'14px 16px', marginBottom:'16px' }}>
-          <p style={{ fontSize:'13px', fontWeight:'600', color:'#92400e', marginBottom:'4px' }}>Your free reward period has ended</p>
-          <p style={{ fontSize:'12px', color:'#78350f', marginBottom:'10px', lineHeight:'1.5' }}>Upgrade to Basic for $0.99/month to continue earning rewards.</p>
-          <div style={{ background:'var(--theme-primary)', borderRadius:'8px', padding:'8px 12px', display:'flex', justifyContent:'space-between' }}>
-            <span style={{ fontSize:'12px', fontWeight:'500', color:'white' }}>Basic — $0.99/month</span>
-            <span style={{ fontSize:'12px', fontWeight:'700', color:'white' }}>Up to $5.00/mo →</span>
+        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>Your free reward period has ended</p>
+          <p style={{ fontSize: '12px', color: '#78350f', marginBottom: '10px', lineHeight: '1.5' }}>Upgrade to Basic for $0.99/month to continue earning rewards.</p>
+          <div style={{ background: 'var(--theme-primary)', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '12px', fontWeight: '500', color: 'white' }}>Basic — $0.99/month</span>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>Up to $5.00/mo →</span>
           </div>
         </div>
       )}
 
       {/* First time welcome */}
       {isFirstTimeUser && (
-        <div style={{ ...card, background:'var(--theme-primary)', color:'white' }}>
-          <p style={{ fontSize:'22px', marginBottom:'8px' }}>👋</p>
-          <h2 style={{ fontSize:'20px', fontWeight:'700', marginBottom:'8px' }}>Welcome, {profile?.full_name?.split(' ')[0] || 'there'}!</h2>
-          <p style={{ fontSize:'14px', opacity:'0.9', lineHeight:'1.6', marginBottom:'16px' }}>
+        <div style={{ ...card, background: 'var(--theme-primary)', color: 'white' }}>
+          <p style={{ fontSize: '22px', marginBottom: '8px' }}>👋</p>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Welcome, {profile?.full_name?.split(' ')[0] || 'there'}!</h2>
+          <p style={{ fontSize: '14px', opacity: '0.9', lineHeight: '1.6', marginBottom: '16px' }}>
             You're all set. Today is day one of your Niyama journey. Check off your habits below and submit before midnight.
           </p>
-          <div style={{ background:'rgba(255,255,255,0.15)', borderRadius:'10px', padding:'12px' }}>
-            {['Check off each habit you completed today','Tap "Submit today" before midnight','Come back tomorrow and do it again'].map((s,i) => (
-              <div key={i} style={{ display:'flex', gap:'10px', marginBottom:i<2?'6px':'0' }}>
-                <span style={{ opacity:'0.8', fontSize:'13px' }}>{i+1}.</span>
-                <p style={{ fontSize:'13px', opacity:'0.9' }}>{s}</p>
+          <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px' }}>
+            {['Check off each habit you completed today', 'Tap "Submit today" before midnight', 'Come back tomorrow and do it again'].map((s, i) => (
+              <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < 2 ? '6px' : '0' }}>
+                <span style={{ opacity: '0.8', fontSize: '13px' }}>{i + 1}.</span>
+                <p style={{ fontSize: '13px', opacity: '0.9' }}>{s}</p>
               </div>
             ))}
           </div>
@@ -397,43 +397,43 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
       {/* Streak banner */}
       {!isFirstTimeUser && (
-        <div style={{ ...card, background:'var(--theme-primary)', color:'white', marginBottom:'16px' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+        <div style={{ ...card, background: 'var(--theme-primary)', color: 'white', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{
-                fontSize: (streak?.current_streak||0)>=25?'48px':(streak?.current_streak||0)>=10?'40px':(streak?.current_streak||0)>=5?'34px':'28px',
-                animation: (streak?.current_streak||0)>0?'flame-pulse 1.5s ease-in-out infinite':'none', lineHeight:1,
+                fontSize: (streak?.current_streak || 0) >= 25 ? '48px' : (streak?.current_streak || 0) >= 10 ? '40px' : (streak?.current_streak || 0) >= 5 ? '34px' : '28px',
+                animation: (streak?.current_streak || 0) > 0 ? 'flame-pulse 1.5s ease-in-out infinite' : 'none', lineHeight: 1,
               }}>🔥</span>
               <div>
-                <p style={{ fontSize:'13px', opacity:'0.8', marginBottom:'2px' }}>Current streak</p>
-                <p style={{ fontSize:'32px', fontWeight:'700', lineHeight:1 }}>
-                  {streak?.current_streak||0} <span style={{ fontSize:'16px', opacity:'0.8' }}>days</span>
+                <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '2px' }}>Current streak</p>
+                <p style={{ fontSize: '32px', fontWeight: '700', lineHeight: 1 }}>
+                  {streak?.current_streak || 0} <span style={{ fontSize: '16px', opacity: '0.8' }}>days</span>
                 </p>
               </div>
             </div>
-            <div style={{ textAlign:'right' }}>
-              <p style={{ fontSize:'12px', opacity:'0.7' }}>Longest</p>
-              <p style={{ fontSize:'18px', fontWeight:'700', marginTop:'2px' }}>{streak?.longest_streak||0}</p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '12px', opacity: '0.7' }}>Longest</p>
+              <p style={{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }}>{streak?.longest_streak || 0}</p>
             </div>
           </div>
 
           <div>
-            <p style={{ fontSize:'11px', opacity:'0.7', marginBottom:'8px' }}>Last 7 days</p>
-            <div style={{ display:'flex', gap:'8px' }}>
-              {Array.from({ length:7 }, (_,i) => {
-                const dayOffset = 6-i, isToday = dayOffset===0, wasSuccess = dayOffset<(streak?.current_streak||0)
+            <p style={{ fontSize: '11px', opacity: '0.7', marginBottom: '8px' }}>Last 7 days</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {Array.from({ length: 7 }, (_, i) => {
+                const dayOffset = 6 - i, isToday = dayOffset === 0, wasSuccess = dayOffset < (streak?.current_streak || 0)
                 return (
-                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                     <div style={{
-                      width:'100%', aspectRatio:'1', borderRadius:'50%',
-                      background: isToday?(daySuccessful?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.3)'):(wasSuccess?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.2)'),
-                      border: isToday?'2px solid rgba(255,255,255,0.8)':'none',
-                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width: '100%', aspectRatio: '1', borderRadius: '50%',
+                      background: isToday ? (daySuccessful ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)') : (wasSuccess ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)'),
+                      border: isToday ? '2px solid rgba(255,255,255,0.8)' : 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      {(wasSuccess||(isToday&&daySuccessful)) && <span style={{ fontSize:'10px' }}>✓</span>}
+                      {(wasSuccess || (isToday && daySuccessful)) && <span style={{ fontSize: '10px' }}>✓</span>}
                     </div>
-                    <p style={{ fontSize:'9px', opacity:'0.7' }}>
-                      {isToday?'Today':['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(new Date().getDay()+6-dayOffset)%7]}
+                    <p style={{ fontSize: '9px', opacity: '0.7' }}>
+                      {isToday ? 'Today' : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(new Date().getDay() + 6 - dayOffset) % 7]}
                     </p>
                   </div>
                 )
@@ -442,33 +442,33 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
           </div>
 
           {/* Streak freeze */}
-          {(streak?.current_streak||0)>0 && canUseFreeze && (
-            <div style={{ marginTop:'12px', display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(255,255,255,0.15)', borderRadius:'8px', padding:'8px 12px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-                <span style={{ fontSize:'20px', opacity:freezeUsed?0.4:1, filter:freezeUsed?'grayscale(1)':'none' }}>❄️</span>
+          {(streak?.current_streak || 0) > 0 && canUseFreeze && (
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px', opacity: freezeUsed ? 0.4 : 1, filter: freezeUsed ? 'grayscale(1)' : 'none' }}>❄️</span>
                 <div>
-                  <p style={{ fontSize:'12px', fontWeight:'600', color:'white' }}>{freezeUsed?'Streak freeze used':'Streak freeze available'}</p>
-                  <p style={{ fontSize:'10px', color:'rgba(255,255,255,0.7)' }}>{freezeUsed?'Resets 1st of next month':'Protects your streak for 1 missed day'}</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600', color: 'white' }}>{freezeUsed ? 'Streak freeze used' : 'Streak freeze available'}</p>
+                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>{freezeUsed ? 'Resets 1st of next month' : 'Protects your streak for 1 missed day'}</p>
                 </div>
               </div>
               {!freezeUsed && !isSubmitted && (
                 <button onClick={applyStreakFreeze}
-                  style={{ background:'rgba(255,255,255,0.25)', border:'1px solid rgba(255,255,255,0.5)', color:'white', fontSize:'11px', fontWeight:'700', padding:'5px 10px', borderRadius:'8px', cursor:'pointer' }}>
+                  style={{ background: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.5)', color: 'white', fontSize: '11px', fontWeight: '700', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
                   Use freeze
                 </button>
               )}
             </div>
           )}
-          {!canUseFreeze && (streak?.current_streak||0)>0 && (
-            <div style={{ marginTop:'12px', background:'rgba(255,255,255,0.1)', borderRadius:'8px', padding:'8px 12px', display:'flex', alignItems:'center', gap:'8px' }}>
-              <span style={{ fontSize:'16px', opacity:0.5 }}>❄️</span>
-              <p style={{ fontSize:'11px', color:'rgba(255,255,255,0.7)' }}>Streak freeze — available on Plus and Premium</p>
+          {!canUseFreeze && (streak?.current_streak || 0) > 0 && (
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px', opacity: 0.5 }}>❄️</span>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Streak freeze — available on Plus and Premium</p>
             </div>
           )}
-          {(streak?.current_streak||0)>=10 && (
-            <div style={{ marginTop:'12px', background:'rgba(255,255,255,0.15)', borderRadius:'8px', padding:'8px', textAlign:'center' }}>
-              <p style={{ fontSize:'12px', opacity:'0.9' }}>
-                {(streak?.current_streak||0)>=25?'🏆 25 days strong!':`🌟 ${streak?.current_streak} day streak! You're on fire!`}
+          {(streak?.current_streak || 0) >= 10 && (
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', opacity: '0.9' }}>
+                {(streak?.current_streak || 0) >= 25 ? '🏆 25 days strong!' : `🌟 ${streak?.current_streak} day streak! You're on fire!`}
               </p>
             </div>
           )}
@@ -477,74 +477,74 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
       {/* Habits card */}
       <div style={card}>
-        <h2 style={{ fontSize:'17px', fontWeight:'600', color:'var(--theme-text)', marginBottom:'4px' }}>Today's habits</h2>
-        <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginBottom:'4px' }}>{totalCompleted}/{totalHabitCount} completed · {todayPoints} pts</p>
-        <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginBottom:'20px' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '4px' }}>Today's habits</h2>
+        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '4px' }}>{totalCompleted}/{totalHabitCount} completed · {todayPoints} pts</p>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '20px' }}>
           Complete 5 of {totalHabitCount} habits (at least 2 core) for a successful day
         </p>
 
         {/* Core habits */}
-        <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-primary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>Core habits</p>
-        <div style={{ background:'var(--theme-primary-light)', borderRadius:'8px', padding:'10px 12px', marginBottom:'16px', display:'flex', alignItems:'flex-start', gap:'8px' }}>
-          <span style={{ fontSize:'14px', flexShrink:0 }}>🏥</span>
-          <p style={{ fontSize:'11px', color:'var(--theme-primary)', lineHeight:'1.5' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Core habits</p>
+        <div style={{ background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <span style={{ fontSize: '14px', flexShrink: 0 }}>🏥</span>
+          <p style={{ fontSize: '11px', color: 'var(--theme-primary)', lineHeight: '1.5' }}>
             Core habits will be <strong>auto-verified via Apple Health / Google Fit</strong> in the native app. Log manually for now.
           </p>
         </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginBottom:'24px' }}>
-          <HabitRow habit={{ key:'wake',     label:'Wake before 7:30 AM',     points:100, icon:'🌅' }} checked={!!habitState['wake']}     disabled={isSubmitted} onToggle={toggleHabit} />
-          <HabitRow habit={{ key:'no_phone', label:'No phone after 10:30 PM', points:100, icon:'📵' }} checked={!!habitState['no_phone']} disabled={isSubmitted} onToggle={toggleHabit} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          <HabitRow habit={{ key: 'wake', label: 'Wake before 7:30 AM', points: 100, icon: '🌅' }} checked={!!habitState['wake']} disabled={isSubmitted} onToggle={toggleHabit} />
+          <HabitRow habit={{ key: 'no_phone', label: 'No phone after 10:30 PM', points: 100, icon: '📵' }} checked={!!habitState['no_phone']} disabled={isSubmitted} onToggle={toggleHabit} />
 
           {/* Steps */}
           <div>
-            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-              <div style={{ display:'flex', alignItems:'flex-start', gap:'12px', flex:1 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1 }}>
                 <input type="checkbox" checked={!!habitState['steps']} onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked) }} disabled={isSubmitted}
-                  style={{ width:'18px', height:'18px', marginTop:'2px', cursor:isSubmitted?'default':'pointer', accentColor:'var(--theme-primary)', flexShrink:0 }} />
-                <div style={{ flex:1 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'6px', marginBottom:'4px' }}>
-                    <span style={{ fontSize:'14px' }}>👟</span>
-                    <span style={{ fontSize:'14px', color:habitState['steps']?'var(--theme-text)':'var(--theme-text-secondary)' }}>Steps / physical activity</span>
+                  style={{ width: '18px', height: '18px', marginTop: '2px', cursor: isSubmitted ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '14px' }}>👟</span>
+                    <span style={{ fontSize: '14px', color: habitState['steps'] ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>Steps / physical activity</span>
                   </div>
-                  <p style={{ fontSize:'11px', color:stepsColor }}>{stepsLabel}</p>
-                  <div style={{ display:'flex', gap:'6px', marginTop:'8px' }}>
-                    {[{label:'5,000',pts:50,min:5000},{label:'7,500',pts:75,min:7500},{label:'10,000',pts:100,min:10000}].map(t => (
-                      <div key={t.min} style={{ padding:'3px 8px', borderRadius:'6px', background:stepCount>=t.min?'var(--theme-primary)':'var(--theme-primary-light)', border:`1px solid ${stepCount>=t.min?'var(--theme-primary)':'var(--theme-border)'}` }}>
-                        <span style={{ fontSize:'10px', fontWeight:'600', color:stepCount>=t.min?'white':'var(--theme-text-muted)' }}>{t.label} · +{t.pts}</span>
+                  <p style={{ fontSize: '11px', color: stepsColor }}>{stepsLabel}</p>
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                    {[{ label: '5,000', pts: 50, min: 5000 }, { label: '7,500', pts: 75, min: 7500 }, { label: '10,000', pts: 100, min: 10000 }].map(t => (
+                      <div key={t.min} style={{ padding: '3px 8px', borderRadius: '6px', background: stepCount >= t.min ? 'var(--theme-primary)' : 'var(--theme-primary-light)', border: `1px solid ${stepCount >= t.min ? 'var(--theme-primary)' : 'var(--theme-border)'}` }}>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: stepCount >= t.min ? 'white' : 'var(--theme-text-muted)' }}>{t.label} · +{t.pts}</span>
                       </div>
                     ))}
                   </div>
                   {!isSubmitted && (
-                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginTop:'10px' }}>
-                      <input type="number" placeholder="Enter your step count..." value={stepCount||''} onChange={e => setStepCount(parseInt(e.target.value)||0)} min="0" max="99999"
-                        style={{ flex:1, padding:'8px 12px', border:'1px solid var(--theme-border)', borderRadius:'8px', fontSize:'14px', color:'var(--theme-text)', background:'var(--theme-bg)', outline:'none' }} />
-                      <span style={{ fontSize:'12px', color:'var(--theme-text-muted)', whiteSpace:'nowrap' }}>steps</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                      <input type="number" placeholder="Enter your step count..." value={stepCount || ''} onChange={e => setStepCount(parseInt(e.target.value) || 0)} min="0" max="99999"
+                        style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--theme-border)', borderRadius: '8px', fontSize: '14px', color: 'var(--theme-text)', background: 'var(--theme-bg)', outline: 'none' }} />
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)', whiteSpace: 'nowrap' }}>steps</span>
                     </div>
                   )}
-                  {isSubmitted && stepCount>0 && <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'6px' }}>{stepCount.toLocaleString()} steps logged</p>}
+                  {isSubmitted && stepCount > 0 && <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '6px' }}>{stepCount.toLocaleString()} steps logged</p>}
                 </div>
               </div>
-              <span style={{ fontSize:'12px', color:'var(--theme-primary)', fontWeight:'600', flexShrink:0, marginLeft:'8px', marginTop:'2px' }}>
-                {availableStepsPoints>0?`+${availableStepsPoints}`:'+0–100'}
+              <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px', marginTop: '2px' }}>
+                {availableStepsPoints > 0 ? `+${availableStepsPoints}` : '+0–100'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Library habits */}
-        <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>Your habits</p>
-        <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginBottom:customHabits.length>0?'24px':'0' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Your habits</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: customHabits.length > 0 ? '24px' : '0' }}>
           {libraryHabits.map(habit => (
             <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
           ))}
         </div>
 
         {/* Custom habits */}
-        {customHabits.length>0 && (
+        {customHabits.length > 0 && (
           <>
-            <p style={{ fontSize:'11px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>Custom habits</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Custom habits</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {customHabits.map(habit => (
                 <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
               ))}
@@ -553,133 +553,127 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         )}
 
         {/* Points bar */}
-        <div style={{ marginTop:'20px', paddingTop:'16px', borderTop:'1px solid var(--theme-border)' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'13px', color:'var(--theme-text-secondary)' }}>Today's points</span>
-            <span style={{ fontSize:'22px', fontWeight:'700', color:'var(--theme-text)' }}>{todayPoints}</span>
+        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--theme-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Today's points</span>
+            <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>{todayPoints}</span>
           </div>
-          <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'8px' }}>
-            <div style={{ background:'var(--theme-primary)', borderRadius:'4px', height:'8px', width:`${(todayPoints/POINTS.daily_max)*100}%`, transition:'width 0.3s' }} />
+          <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
+            <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${(todayPoints / POINTS.daily_max) * 100}%`, transition: 'width 0.3s' }} />
           </div>
-          <div style={{ display:'flex', justifyContent:'space-between', marginTop:'4px' }}>
-            <span style={{ fontSize:'11px', color:'var(--theme-text-muted)' }}>0</span>
-            <span style={{ fontSize:'11px', color:'var(--theme-text-muted)' }}>{POINTS.daily_max} max</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>0</span>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>{POINTS.daily_max} max</span>
           </div>
         </div>
 
         {/* Successful day badge */}
         {daySuccessful && !isSubmitted && (
-          <div style={{ marginTop:'16px', background:'var(--theme-primary-light)', border:'2px solid var(--theme-primary)', borderRadius:'12px', padding:'14px', textAlign:'center' }}>
-            <p style={{ fontSize:'22px', marginBottom:'4px' }}>{dayPerfect?'🏆':'✅'}</p>
-            <p style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-primary)' }}>
-              {dayPerfect?`Perfect day — all ${totalHabitCount} habits!`:'Successful day — 5+ habits with 2+ core!'}
+          <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', border: '2px solid var(--theme-primary)', borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+            <p style={{ fontSize: '22px', marginBottom: '4px' }}>{dayPerfect ? '🏆' : '✅'}</p>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-primary)' }}>
+              {dayPerfect ? `Perfect day — all ${totalHabitCount} habits!` : 'Successful day — 5+ habits with 2+ core!'}
             </p>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', marginTop:'4px' }}>Submit before midnight to lock it in</p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginTop: '4px' }}>Submit before midnight to lock it in</p>
           </div>
         )}
 
         {/* Submit */}
         {isSubmitted ? (
-          <div style={{ marginTop:'16px', background:'var(--theme-primary-light)', borderRadius:'8px', padding:'12px', textAlign:'center' }}>
-            <p style={{ fontSize:'14px', fontWeight:'500', color:'var(--theme-primary)' }}>✓ Submitted for today</p>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'4px' }}>
-              {dayPerfect?'Perfect day! 🏆':daySuccessful?'Successful day! 🎉':'Keep going tomorrow 💪'}
+          <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--theme-primary)' }}>✓ Submitted for today</p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '4px' }}>
+              {dayPerfect ? 'Perfect day! 🏆' : daySuccessful ? 'Successful day! 🎉' : 'Keep going tomorrow 💪'}
             </p>
             {todayMood && (
-              <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'4px' }}>
-                Mood: {MOODS[todayMood-1]} · {['Rough day','Not great','Okay','Good day','Amazing'][todayMood-1]}
+              <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '4px' }}>
+                Mood: {MOODS[todayMood - 1]} · {['Rough day', 'Not great', 'Okay', 'Good day', 'Amazing'][todayMood - 1]}
               </p>
             )}
           </div>
         ) : (
           <>
-            <div style={{ borderLeft:'4px solid var(--theme-primary)', background:'var(--theme-primary-light)', borderRadius:'0 8px 8px 0', padding:'10px 12px', marginTop:'16px' }}>
-              <p style={{ fontSize:'12px', color:'var(--theme-text)', lineHeight:'1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final.</p>
+            <div style={{ borderLeft: '4px solid var(--theme-primary)', background: 'var(--theme-primary-light)', borderRadius: '0 8px 8px 0', padding: '10px 12px', marginTop: '16px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--theme-text)', lineHeight: '1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final.</p>
             </div>
             <button onClick={submitDay} disabled={saving}
-              style={{ width:'100%', marginTop:'12px', background:'var(--theme-secondary)', color:'white', fontWeight:'600', padding:'14px', borderRadius:'10px', cursor:saving?'not-allowed':'pointer', fontSize:'15px', border:'none', opacity:saving?0.7:1 }}>
-              {saving?'Submitting...':'Submit today'}
+              style={{ width: '100%', marginTop: '12px', background: 'var(--theme-secondary)', color: 'white', fontWeight: '600', padding: '14px', borderRadius: '10px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '15px', border: 'none', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Submitting...' : 'Submit today'}
             </button>
           </>
         )}
       </div>
 
-      {/* Social sharing */}
-      <SocialShareCard
-        session={session} profile={profile} streak={streak}
-        todaySummary={todaySummary} todayPoints={todayPoints} isMinor={isMinor}
-      />
-
       {/* Reward eligibility */}
       <div style={card}>
         {isFreeExpired ? (
           <div>
-            <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', marginBottom:'8px' }}>Reward eligibility</p>
-            <div style={{ background:'#fffbeb', borderRadius:'8px', padding:'10px 12px' }}>
-              <p style={{ fontSize:'12px', color:'#92400e', lineHeight:'1.5' }}>Upgrade to Basic or above to qualify for monthly rewards.</p>
+            <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', marginBottom: '8px' }}>Reward eligibility</p>
+            <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '10px 12px' }}>
+              <p style={{ fontSize: '12px', color: '#92400e', lineHeight: '1.5' }}>Upgrade to Basic or above to qualify for monthly rewards.</p>
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
-              <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)' }}>Progress to reward eligibility</p>
-              <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-primary)' }}>{successfulDays}/{minDays}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Progress to reward eligibility</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-primary)' }}>{successfulDays}/{minDays}</p>
             </div>
-            <div style={{ background:'var(--theme-primary-light)', borderRadius:'4px', height:'8px' }}>
-              <div style={{ background:'var(--theme-primary)', borderRadius:'4px', height:'8px', width:`${minDays>0?Math.min(successfulDays/minDays*100,100):0}%`, transition:'width 0.3s' }} />
+            <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
+              <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${minDays > 0 ? Math.min(successfulDays / minDays * 100, 100) : 0}%`, transition: 'width 0.3s' }} />
             </div>
             {isEligible
-              ? <p style={{ fontSize:'12px', color:'var(--theme-primary)', marginTop:'8px' }}>✓ Eligible for rewards this month 🎉</p>
-              : <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', marginTop:'6px' }}>{minDays-successfulDays} more successful {minDays-successfulDays===1?'day':'days'} needed</p>
+              ? <p style={{ fontSize: '12px', color: 'var(--theme-primary)', marginTop: '8px' }}>✓ Eligible for rewards this month 🎉</p>
+              : <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginTop: '6px' }}>{minDays - successfulDays} more successful {minDays - successfulDays === 1 ? 'day' : 'days'} needed</p>
             }
           </div>
         )}
       </div>
 
       {/* Stats grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         {[
-          { label:'Monthly points',    value:profile?.monthly_points||0,          sub:'max 22,500'  },
-          { label:'Successful days',   value:successfulDays,                       sub:'this month'  },
-          { label:'Overall successful',value:profile?.overall_successful_days||0, sub:'all time'    },
-          { label:'Days logged',       value:profile?.total_days_logged||0,        sub:'all time'    },
+          { label: 'Monthly points', value: profile?.monthly_points || 0, sub: 'max 22,500' },
+          { label: 'Successful days', value: successfulDays, sub: 'this month' },
+          { label: 'Overall successful', value: profile?.overall_successful_days || 0, sub: 'all time' },
+          { label: 'Days logged', value: profile?.total_days_logged || 0, sub: 'all time' },
         ].map(stat => (
-          <div key={stat.label} style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'16px', padding:'16px' }}>
-            <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', marginBottom:'4px' }}>{stat.label}</p>
+          <div key={stat.label} style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '16px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>{stat.label}</p>
             {isFirstTimeUser
-              ? <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', fontStyle:'italic', lineHeight:'1.5' }}>Submit your first day to see this</p>
-              : <><p style={{ fontSize:'26px', fontWeight:'700', color:'var(--theme-text)' }}>{stat.value}</p><p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginTop:'2px' }}>{stat.sub}</p></>
+              ? <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', fontStyle: 'italic', lineHeight: '1.5' }}>Submit your first day to see this</p>
+              : <><p style={{ fontSize: '26px', fontWeight: '700', color: 'var(--theme-text)' }}>{stat.value}</p><p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '2px' }}>{stat.sub}</p></>
             }
           </div>
         ))}
       </div>
 
       {/* Monthly points motivator */}
-      <div style={{ background:'var(--theme-primary)', borderRadius:'16px', padding:'20px', marginBottom:'16px', color:'white' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
+      <div style={{ background: 'var(--theme-primary)', borderRadius: '16px', padding: '20px', marginBottom: '16px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
           <div>
-            <p style={{ fontSize:'13px', opacity:'0.8', marginBottom:'4px' }}>Points this month</p>
-            <p style={{ fontSize:'36px', fontWeight:'800', lineHeight:1 }}>{(profile?.monthly_points||0).toLocaleString()}</p>
-            <p style={{ fontSize:'12px', opacity:'0.7', marginTop:'4px' }}>of 22,500 possible</p>
+            <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '4px' }}>Points this month</p>
+            <p style={{ fontSize: '36px', fontWeight: '800', lineHeight: 1 }}>{(profile?.monthly_points || 0).toLocaleString()}</p>
+            <p style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>of 22,500 possible</p>
           </div>
-          <div style={{ textAlign:'right' }}>
-            <p style={{ fontSize:'28px', fontWeight:'800' }}>{Math.round(((profile?.monthly_points||0)/22500)*100)}%</p>
-            <p style={{ fontSize:'11px', opacity:'0.7' }}>of max</p>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '28px', fontWeight: '800' }}>{Math.round(((profile?.monthly_points || 0) / 22500) * 100)}%</p>
+            <p style={{ fontSize: '11px', opacity: '0.7' }}>of max</p>
           </div>
         </div>
-        <div style={{ background:'rgba(255,255,255,0.2)', borderRadius:'4px', height:'8px', marginBottom:'10px' }}>
-          <div style={{ background:'white', borderRadius:'4px', height:'8px', width:`${Math.min(((profile?.monthly_points||0)/22500)*100,100)}%`, transition:'width 0.3s' }} />
+        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '4px', height: '8px', marginBottom: '10px' }}>
+          <div style={{ background: 'white', borderRadius: '4px', height: '8px', width: `${Math.min(((profile?.monthly_points || 0) / 22500) * 100, 100)}%`, transition: 'width 0.3s' }} />
         </div>
         {(() => {
-          const pts = profile?.monthly_points||0
-          const pct = Math.round((pts/22500)*100)
-          const msg = pct===0?'Start logging habits to earn points 💪'
-            :pct<25?'Good start — keep the momentum going 🔥'
-            :pct<50?"You're building a great habit streak! 🌟"
-            :pct<75?"Halfway there — you're crushing it! 💥"
-            :pct<100?'Almost at your peak — incredible month! 🏆'
-            :'Perfect month — maximum points! 🎯'
-          return <p style={{ fontSize:'13px', opacity:'0.9', fontWeight:'600' }}>{msg}</p>
+          const pts = profile?.monthly_points || 0
+          const pct = Math.round((pts / 22500) * 100)
+          const msg = pct === 0 ? 'Start logging habits to earn points 💪'
+            : pct < 25 ? 'Good start — keep the momentum going 🔥'
+              : pct < 50 ? "You're building a great habit streak! 🌟"
+                : pct < 75 ? "Halfway there — you're crushing it! 💥"
+                  : pct < 100 ? 'Almost at your peak — incredible month! 🏆'
+                    : 'Perfect month — maximum points! 🎯'
+          return <p style={{ fontSize: '13px', opacity: '0.9', fontWeight: '600' }}>{msg}</p>
         })()}
       </div>
     </>
@@ -688,22 +682,22 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
 function HabitRow({ habit, checked, disabled, onToggle }) {
   return (
-    <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:disabled?'default':'pointer' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: disabled ? 'default' : 'pointer' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <input type="checkbox" checked={checked} onChange={e => { if (!disabled) onToggle(habit.key, e.target.checked) }} disabled={disabled}
-          style={{ width:'18px', height:'18px', cursor:disabled?'default':'pointer', accentColor:'var(--theme-primary)', flexShrink:0 }} />
-        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-          <span style={{ fontSize:'14px' }}>{habit.icon}</span>
-          <span style={{ fontSize:'14px', color:checked?'var(--theme-text)':'var(--theme-text-secondary)' }}>{habit.label}</span>
+          style={{ width: '18px', height: '18px', cursor: disabled ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '14px' }}>{habit.icon}</span>
+          <span style={{ fontSize: '14px', color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>{habit.label}</span>
         </div>
       </div>
-      <span style={{ fontSize:'12px', color:'var(--theme-primary)', fontWeight:'600', flexShrink:0, marginLeft:'8px' }}>+{habit.points}</span>
+      <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>+{habit.points}</span>
     </label>
   )
 }
 
 export function SocialShareCard({ session, profile, streak, todaySummary, todayPoints, isMinor }) {
-  const [shared, setShared]   = useState(false)
+  const [shared, setShared] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (!todaySummary?.submitted || !todaySummary?.day_successful) return null
@@ -714,10 +708,10 @@ export function SocialShareCard({ session, profile, streak, todaySummary, todayP
 
   async function handleShare(platform) {
     setLoading(true)
-    const text = `Day ${streak?.current_streak||1} streak 🔥 | ${todayPoints} pts today | Niyama is rewarding my discipline daily. Join me: https://app.niyamalife.com`
+    const text = `Day ${streak?.current_streak || 1} streak 🔥 | ${todayPoints} pts today | Niyama is rewarding my discipline daily. Join me: https://app.niyamalife.com`
     try {
-      if (platform==='share' && navigator.share) {
-        await navigator.share({ title:'My Niyama streak', text })
+      if (platform === 'share' && navigator.share) {
+        await navigator.share({ title: 'My Niyama streak', text })
       } else {
         await navigator.clipboard.writeText(text)
       }
@@ -728,43 +722,43 @@ export function SocialShareCard({ session, profile, streak, todaySummary, todayP
   }
 
   if (shared) return (
-    <div style={{ background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', borderRadius:'16px', padding:'16px', marginBottom:'16px', textAlign:'center' }}>
-      <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-primary)' }}>🎉 +20 points for sharing!</p>
-      <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', marginTop:'4px' }}>Thanks for spreading the word.</p>
+    <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '16px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+      <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-primary)' }}>🎉 +20 points for sharing!</p>
+      <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginTop: '4px' }}>Thanks for spreading the word.</p>
     </div>
   )
 
   return (
-    <div style={{ background:'var(--theme-card)', border:'1px solid var(--theme-border)', borderRadius:'16px', padding:'20px', marginBottom:'16px' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px' }}>
-        <span style={{ fontSize:'24px' }}>🔥</span>
+    <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <span style={{ fontSize: '24px' }}>🔥</span>
         <div>
-          <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-text)' }}>Share your streak — earn 20 pts</p>
-          <p style={{ fontSize:'12px', color:'var(--theme-text-muted)' }}>{streak?.current_streak||1} day streak · {todayPoints} pts today · Once per day</p>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-text)' }}>Share your streak — earn 20 pts</p>
+          <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>{streak?.current_streak || 1} day streak · {todayPoints} pts today · Once per day</p>
         </div>
       </div>
-      <div style={{ background:'linear-gradient(135deg, #5A8A78, #3D6B5A)', borderRadius:'12px', padding:'16px', marginBottom:'12px', color:'white' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
+      <div style={{ background: 'linear-gradient(135deg, #5A8A78, #3D6B5A)', borderRadius: '12px', padding: '16px', marginBottom: '12px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
           <div>
-            <p style={{ fontSize:'11px', opacity:'0.8', marginBottom:'2px' }}>NIYAMA</p>
-            <p style={{ fontSize:'13px', fontWeight:'600' }}>Daily Discipline. Rewarded.</p>
+            <p style={{ fontSize: '11px', opacity: '0.8', marginBottom: '2px' }}>NIYAMA</p>
+            <p style={{ fontSize: '13px', fontWeight: '600' }}>Daily Discipline. Rewarded.</p>
           </div>
-          <span style={{ fontSize:'20px' }}>🌿</span>
+          <span style={{ fontSize: '20px' }}>🌿</span>
         </div>
-        <div style={{ display:'flex', gap:'16px', marginBottom:'12px' }}>
-          <div><p style={{ fontSize:'28px', fontWeight:'800', lineHeight:1 }}>{streak?.current_streak||1}</p><p style={{ fontSize:'10px', opacity:'0.8' }}>day streak</p></div>
-          <div><p style={{ fontSize:'28px', fontWeight:'800', lineHeight:1 }}>{todayPoints}</p><p style={{ fontSize:'10px', opacity:'0.8' }}>pts today</p></div>
-          <div><p style={{ fontSize:'28px', fontWeight:'800', lineHeight:1 }}>✅</p><p style={{ fontSize:'10px', opacity:'0.8' }}>successful</p></div>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
+          <div><p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>{streak?.current_streak || 1}</p><p style={{ fontSize: '10px', opacity: '0.8' }}>day streak</p></div>
+          <div><p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>{todayPoints}</p><p style={{ fontSize: '10px', opacity: '0.8' }}>pts today</p></div>
+          <div><p style={{ fontSize: '28px', fontWeight: '800', lineHeight: 1 }}>✅</p><p style={{ fontSize: '10px', opacity: '0.8' }}>successful</p></div>
         </div>
-        <p style={{ fontSize:'11px', opacity:'0.7' }}>@NiyamaLife · app.niyamalife.com</p>
+        <p style={{ fontSize: '11px', opacity: '0.7' }}>@NiyamaLife · app.niyamalife.com</p>
       </div>
-      <div style={{ display:'flex', gap:'8px' }}>
+      <div style={{ display: 'flex', gap: '8px' }}>
         <button onClick={() => handleShare('share')} disabled={loading}
-          style={{ flex:1, background:'var(--theme-primary)', color:'white', fontWeight:'700', padding:'11px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'13px', opacity:loading?0.7:1 }}>
-          {loading?'...':'Share 📤'}
+          style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13px', opacity: loading ? 0.7 : 1 }}>
+          {loading ? '...' : 'Share 📤'}
         </button>
         <button onClick={() => handleShare('copy')} disabled={loading}
-          style={{ flex:1, background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', color:'var(--theme-primary)', fontWeight:'700', padding:'11px', borderRadius:'10px', cursor:'pointer', fontSize:'13px' }}>
+          style={{ flex: 1, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', color: 'var(--theme-primary)', fontWeight: '700', padding: '11px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}>
           Copy text
         </button>
       </div>

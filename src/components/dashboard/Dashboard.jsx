@@ -500,6 +500,9 @@ export default function Dashboard({ session }) {
               session={session}
               profile={profile}
               isMinor={isMinor}
+              streak={streak}
+              todaySummary={todaySummary}
+              todayPoints={todaySummary?.total_points || 0}
             />
           )}
           {activeTab === 'settings' && (

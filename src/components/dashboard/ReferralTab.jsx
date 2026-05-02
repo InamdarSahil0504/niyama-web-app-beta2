@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import { getEffectiveTier, TIER_CONFIG } from '../../config'
 
-export default function ReferralTab({ session, profile, isMinor }) {
+export default function ReferralTab({ session, profile, isMinor, streak, todaySummary, todayPoints }) {
   const [referralCode, setReferralCode] = useState(null)
   const [referrals, setReferrals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -217,6 +217,17 @@ export default function ReferralTab({ session, profile, isMinor }) {
         </div>
       )}
 
+      import {SocialShareCard} from './HomeTab'
+      {/* Social sharing */}
+      <SocialShareCard
+        session={session}
+        profile={profile}
+        streak={profile?.streak}
+        todaySummary={null}
+        todayPoints={0}
+        isMinor={isMinor}
+      />
+
       {/* Fine print */}
       <div style={{ ...card, background: 'var(--theme-bg)' }}>
         <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', lineHeight: '1.6' }}>
@@ -224,5 +235,6 @@ export default function ReferralTab({ session, profile, isMinor }) {
         </p>
       </div>
     </div>
+
   )
 }
