@@ -463,7 +463,7 @@ export default function Dashboard({ session }) {
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: '448px', position: 'relative' }}>
 
-        <div style={{ width: '100%', padding: '32px 16px 96px' }}>
+        <div key={activeTab} style={{ width: '100%', padding: '32px 16px 96px', animation: 'fadeInUp 0.2s ease' }}>
           {activeTab === 'home' && (
             <HomeTab
               session={session}

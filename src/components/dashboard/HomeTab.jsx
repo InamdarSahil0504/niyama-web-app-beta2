@@ -397,79 +397,122 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
       {/* Streak banner */}
       {!isFirstTimeUser && (
-        <div style={{ ...card, background: 'var(--theme-primary)', color: 'white', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{
-                fontSize: (streak?.current_streak || 0) >= 25 ? '48px' : (streak?.current_streak || 0) >= 10 ? '40px' : (streak?.current_streak || 0) >= 5 ? '34px' : '28px',
-                animation: (streak?.current_streak || 0) > 0 ? 'flame-pulse 1.5s ease-in-out infinite' : 'none', lineHeight: 1,
-              }}>🔥</span>
+        <div style={{
+          background: (streak?.current_streak || 0) >= 7
+            ? 'linear-gradient(135deg, #3D6B5A 0%, #5A8A78 50%, #4A7A68 100%)'
+            : 'linear-gradient(135deg, #4A7A68 0%, #5A8A78 100%)',
+          borderRadius: '20px', padding: '20px', marginBottom: '16px', color: 'white',
+          boxShadow: '0 4px 15px rgba(74, 122, 104, 0.3)',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Background glow for high streaks */}
+          {(streak?.current_streak || 0) >= 14 && (
+            <div style={{
+              position: 'absolute', top: '-20px', right: '-20px',
+              width: '120px', height: '120px', borderRadius: '50%',
+              background: 'rgba(201, 151, 58, 0.2)', filter: 'blur(20px)',
+              pointerEvents: 'none',
+            }} />
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  fontSize: (streak?.current_streak || 0) >= 30 ? '52px' : (streak?.current_streak || 0) >= 14 ? '46px' : (streak?.current_streak || 0) >= 7 ? '40px' : '34px',
+                  display: 'block', lineHeight: 1,
+                  animation: (streak?.current_streak || 0) > 0 ? 'flame-pulse 1.5s ease-in-out infinite' : 'none',
+                  filter: (streak?.current_streak || 0) >= 30 ? 'drop-shadow(0 0 8px rgba(255,165,0,0.8))' : 'none',
+                }}>🔥</span>
+              </div>
               <div>
-                <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '2px' }}>Current streak</p>
-                <p style={{ fontSize: '32px', fontWeight: '700', lineHeight: 1 }}>
-                  {streak?.current_streak || 0} <span style={{ fontSize: '16px', opacity: '0.8' }}>days</span>
-                </p>
+                <p style={{ fontSize: '12px', opacity: '0.75', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current streak</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <p style={{ fontSize: '44px', fontWeight: '900', lineHeight: 1, letterSpacing: '-0.02em' }}>
+                    {streak?.current_streak || 0}
+                  </p>
+                  <p style={{ fontSize: '16px', opacity: '0.75', fontWeight: '500' }}>days</p>
+                </div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '12px', opacity: '0.7' }}>Longest</p>
-              <p style={{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }}>{streak?.longest_streak || 0}</p>
+              <p style={{ fontSize: '11px', opacity: '0.6', marginBottom: '4px' }}>Best</p>
+              <p style={{ fontSize: '22px', fontWeight: '800' }}>{streak?.longest_streak || 0}</p>
+              <p style={{ fontSize: '10px', opacity: '0.6' }}>days</p>
             </div>
           </div>
 
-          <div>
-            <p style={{ fontSize: '11px', opacity: '0.7', marginBottom: '8px' }}>Last 7 days</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
+          {/* 7-day dots */}
+          <div style={{ marginBottom: (streak?.current_streak || 0) > 0 && (canUseFreeze || !canUseFreeze) ? '12px' : '0' }}>
+            <p style={{ fontSize: '10px', opacity: '0.6', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Last 7 days</p>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {Array.from({ length: 7 }, (_, i) => {
-                const dayOffset = 6 - i, isToday = dayOffset === 0, wasSuccess = dayOffset < (streak?.current_streak || 0)
+                const dayOffset = 6 - i
+                const isToday = dayOffset === 0
+                const wasSuccess = dayOffset < (streak?.current_streak || 0)
+                const dayLabel = isToday ? 'Today' : ['M', 'T', 'W', 'T', 'F', 'S', 'S'][(new Date().getDay() + 6 - dayOffset) % 7]
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                     <div style={{
                       width: '100%', aspectRatio: '1', borderRadius: '50%',
-                      background: isToday ? (daySuccessful ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)') : (wasSuccess ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)'),
-                      border: isToday ? '2px solid rgba(255,255,255,0.8)' : 'none',
+                      background: isToday
+                        ? (daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)')
+                        : (wasSuccess ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'),
+                      border: isToday ? '2px solid rgba(255,255,255,0.9)' : 'none',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      boxShadow: (wasSuccess || (isToday && daySuccessful)) ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
                     }}>
-                      {(wasSuccess || (isToday && daySuccessful)) && <span style={{ fontSize: '10px' }}>✓</span>}
+                      {(wasSuccess || (isToday && daySuccessful)) && (
+                        <span style={{ fontSize: '9px', color: wasSuccess ? 'var(--theme-primary)' : 'rgba(255,255,255,0.9)', fontWeight: '700' }}>✓</span>
+                      )}
                     </div>
-                    <p style={{ fontSize: '9px', opacity: '0.7' }}>
-                      {isToday ? 'Today' : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(new Date().getDay() + 6 - dayOffset) % 7]}
-                    </p>
+                    <p style={{ fontSize: '8px', opacity: '0.65', fontWeight: '500' }}>{dayLabel}</p>
                   </div>
                 )
               })}
             </div>
           </div>
 
+          {/* Milestone message */}
+          {(streak?.current_streak || 0) >= 7 && (
+            <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: '10px', padding: '8px 12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>
+                {(streak?.current_streak || 0) >= 30 ? '🏆' : (streak?.current_streak || 0) >= 14 ? '⚡' : '🌟'}
+              </span>
+              <p style={{ fontSize: '12px', fontWeight: '600', opacity: '0.95' }}>
+                {(streak?.current_streak || 0) >= 30 ? `${streak?.current_streak} days — legendary discipline!`
+                  : (streak?.current_streak || 0) >= 14 ? `${streak?.current_streak} days — you're unstoppable!`
+                    : `${streak?.current_streak} days — building real momentum!`}
+              </p>
+            </div>
+          )}
+
           {/* Streak freeze */}
           {(streak?.current_streak || 0) > 0 && canUseFreeze && (
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px 12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px', opacity: freezeUsed ? 0.4 : 1, filter: freezeUsed ? 'grayscale(1)' : 'none' }}>❄️</span>
+                <span style={{ fontSize: '18px', opacity: freezeUsed ? 0.4 : 1, filter: freezeUsed ? 'grayscale(1)' : 'none' }}>❄️</span>
                 <div>
-                  <p style={{ fontSize: '12px', fontWeight: '600', color: 'white' }}>{freezeUsed ? 'Streak freeze used' : 'Streak freeze available'}</p>
-                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>{freezeUsed ? 'Resets 1st of next month' : 'Protects your streak for 1 missed day'}</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600' }}>{freezeUsed ? 'Freeze used' : 'Freeze available'}</p>
+                  <p style={{ fontSize: '10px', opacity: '0.7' }}>{freezeUsed ? 'Resets 1st of month' : '1 missed day protection'}</p>
                 </div>
               </div>
               {!freezeUsed && !isSubmitted && (
-                <button onClick={applyStreakFreeze}
-                  style={{ background: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.5)', color: 'white', fontSize: '11px', fontWeight: '700', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer' }}>
-                  Use freeze
+                <button onClick={applyStreakFreeze} style={{
+                  background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+                  color: 'white', fontSize: '11px', fontWeight: '700', padding: '6px 12px',
+                  borderRadius: '8px', cursor: 'pointer',
+                }}>
+                  Use ❄️
                 </button>
               )}
             </div>
           )}
           {!canUseFreeze && (streak?.current_streak || 0) > 0 && (
-            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px', opacity: 0.5 }}>❄️</span>
-              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Streak freeze — available on Plus and Premium</p>
-            </div>
-          )}
-          {(streak?.current_streak || 0) >= 10 && (
-            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-              <p style={{ fontSize: '12px', opacity: '0.9' }}>
-                {(streak?.current_streak || 0) >= 25 ? '🏆 25 days strong!' : `🌟 ${streak?.current_streak} day streak! You're on fire!`}
-              </p>
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', opacity: 0.5 }}>❄️</span>
+              <p style={{ fontSize: '11px', opacity: '0.65' }}>Streak freeze available on Plus and Premium</p>
             </div>
           )}
         </div>
@@ -681,17 +724,68 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 }
 
 function HabitRow({ habit, checked, disabled, onToggle }) {
+  const [justChecked, setJustChecked] = useState(false)
+
+  function handleChange(e) {
+    if (disabled) return
+    const newVal = e.target.checked
+    if (newVal) {
+      setJustChecked(true)
+      setTimeout(() => setJustChecked(false), 400)
+    }
+    onToggle(habit.key, newVal)
+  }
+
   return (
-    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: disabled ? 'default' : 'pointer' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <input type="checkbox" checked={checked} onChange={e => { if (!disabled) onToggle(habit.key, e.target.checked) }} disabled={disabled}
-          style={{ width: '18px', height: '18px', cursor: disabled ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>{habit.icon}</span>
-          <span style={{ fontSize: '14px', color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>{habit.label}</span>
+    <label style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      cursor: disabled ? 'default' : 'pointer',
+      padding: '4px 0',
+      transition: 'opacity 0.2s',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+        {/* Custom checkbox */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <input
+            type="checkbox" checked={checked}
+            onChange={handleChange} disabled={disabled}
+            style={{ position: 'absolute', opacity: 0, width: '22px', height: '22px', cursor: disabled ? 'default' : 'pointer', zIndex: 1 }}
+          />
+          <div style={{
+            width: '22px', height: '22px', borderRadius: '6px',
+            background: checked ? 'var(--theme-primary)' : 'transparent',
+            border: `2px solid ${checked ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transform: justChecked ? 'scale(1.25)' : 'scale(1)',
+            boxShadow: checked ? '0 2px 6px rgba(74,122,104,0.3)' : 'none',
+          }}>
+            {checked && (
+              <span style={{ fontSize: '13px', color: 'white', fontWeight: '800', lineHeight: 1 }}>✓</span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+          <span style={{
+            fontSize: '18px',
+            filter: checked ? 'none' : 'grayscale(0.3)',
+            transition: 'filter 0.2s',
+          }}>{habit.icon}</span>
+          <span style={{
+            fontSize: '14px',
+            color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)',
+            fontWeight: checked ? '500' : '400',
+            textDecoration: checked ? 'none' : 'none',
+            transition: 'all 0.2s',
+          }}>{habit.label}</span>
         </div>
       </div>
-      <span style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>+{habit.points}</span>
+      <span style={{
+        fontSize: '12px', fontWeight: '700', flexShrink: 0, marginLeft: '8px',
+        color: checked ? 'var(--theme-primary)' : 'var(--theme-text-muted)',
+        transition: 'color 0.2s',
+      }}>+{habit.points}</span>
     </label>
   )
 }
