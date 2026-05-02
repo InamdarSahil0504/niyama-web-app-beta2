@@ -205,7 +205,82 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
       <div style={{ width: '28px', height: '28px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
+  // Empty state — no data yet
+  if (!loading && summaries.length === 0) return (
+    <div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Your analytics</h1>
+        <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)' }}>Your journey is just beginning</p>
+      </div>
 
+      {/* Hero empty state */}
+      <div style={{ background: 'var(--theme-primary)', borderRadius: '20px', padding: '32px 24px', marginBottom: '16px', color: 'white', textAlign: 'center' }}>
+        <p style={{ fontSize: '48px', marginBottom: '16px' }}>📊</p>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+          Your stats start today
+        </h2>
+        <p style={{ fontSize: '14px', opacity: '0.85', lineHeight: '1.6', marginBottom: '24px' }}>
+          Complete and submit your first day of habits to unlock your personal analytics dashboard.
+        </p>
+        <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '12px', padding: '16px' }}>
+          {[
+            { icon: '🔥', text: 'Streak tracking and history' },
+            { icon: '📈', text: 'Points trends over time' },
+            { icon: '✅', text: 'Habit completion rates' },
+            { icon: '😊', text: 'Mood vs discipline correlation' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: i < 3 ? '12px' : '0' }}>
+              <span style={{ fontSize: '18px', flexShrink: 0 }}>{item.icon}</span>
+              <p style={{ fontSize: '13px', opacity: '0.9', textAlign: 'left' }}>{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Preview cards — greyed out */}
+      <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', textAlign: 'center', marginBottom: '16px', fontStyle: 'italic' }}>
+        Preview of what you'll see after your first submission
+      </p>
+
+      {/* KPI preview */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px', opacity: 0.35, pointerEvents: 'none' }}>
+        {[
+          { label: 'Success rate', value: '—%' },
+          { label: 'Perfect days', value: '—' },
+          { label: 'Avg pts / day', value: '—' },
+          { label: 'Best streak', value: '— days' },
+        ].map(kpi => (
+          <div key={kpi.label} style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '14px', padding: '14px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '6px' }}>{kpi.label}</p>
+            <p style={{ fontSize: '24px', fontWeight: '800', color: 'var(--theme-text)' }}>{kpi.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar preview */}
+      <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '20px', marginBottom: '16px', opacity: 0.35, pointerEvents: 'none' }}>
+        <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '16px' }}>Habit calendar</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+            <p key={i} style={{ fontSize: '10px', color: 'var(--theme-text-muted)', textAlign: 'center', marginBottom: '6px' }}>{d}</p>
+          ))}
+          {Array.from({ length: 28 }, (_, i) => (
+            <div key={i} style={{ aspectRatio: '1', borderRadius: '4px', background: 'var(--theme-border)' }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Mood preview */}
+      <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '20px', opacity: 0.35, pointerEvents: 'none' }}>
+        <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '12px' }}>Mood tracker</p>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          {['😩', '😕', '😐', '😊', '🔥'].map((e, i) => (
+            <span key={i} style={{ fontSize: '24px' }}>{e}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
   return (
     <div>
       {/* ── Header ── */}
