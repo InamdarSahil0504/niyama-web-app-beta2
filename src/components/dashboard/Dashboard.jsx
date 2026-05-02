@@ -460,60 +460,62 @@ export default function Dashboard({ session }) {
 
   // ── Main app ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '448px', position: 'relative' }}>
 
-      <div style={{ maxWidth: '448px', margin: '0 auto', padding: '32px 16px 96px' }}>
+        <div style={{ width: '100%', padding: '32px 16px 96px' }}>
+          {activeTab === 'home' && (
+            <HomeTab
+              session={session}
+              profile={profile}
+              streak={streak}
+              streakFreeze={streakFreeze}
+              userHabits={userHabits}
+              todayLogs={todayLogs}
+              todaySummary={todaySummary}
+              isMinor={isMinor}
+              today={today}
+              onRefresh={fetchData}
+            />
+          )}
 
-        {activeTab === 'home' && (
-          <HomeTab
-            session={session}
-            profile={profile}
-            streak={streak}
-            streakFreeze={streakFreeze}
-            userHabits={userHabits}
-            todayLogs={todayLogs}
-            todaySummary={todaySummary}
-            isMinor={isMinor}
-            today={today}
-            onRefresh={fetchData}
-          />
-        )}
+          {activeTab === 'analytics' && (
+            <AnalyticsTab
+              session={session}
+              profile={profile}
+              streak={streak}
+              userHabits={userHabits}
+            />
+          )}
 
-        {activeTab === 'analytics' && (
-          <AnalyticsTab
-            session={session}
-            profile={profile}
-            streak={streak}
-            userHabits={userHabits}
-          />
-        )}
+          {activeTab === 'rewards' && (
+            <RewardsTab
+              session={session}
+              profile={profile}
+              isMinor={isMinor}
+            />
+          )}
+          {activeTab === 'referrals' && (
+            <ReferralTab
+              session={session}
+              profile={profile}
+              isMinor={isMinor}
+            />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              session={session}
+              profile={profile}
+              onSignOut={signOut}
+              onRefresh={fetchData}
+            />
+          )}
 
-        {activeTab === 'rewards' && (
-          <RewardsTab
-            session={session}
-            profile={profile}
-            isMinor={isMinor}
-          />
-        )}
-        {activeTab === 'referrals' && (
-          <ReferralTab
-            session={session}
-            profile={profile}
-            isMinor={isMinor}
-          />
-        )}
-        {activeTab === 'settings' && (
-          <SettingsTab
-            session={session}
-            profile={profile}
-            onSignOut={signOut}
-            onRefresh={fetchData}
-          />
-        )}
+        </div>
 
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
-
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
   )
+
 }
