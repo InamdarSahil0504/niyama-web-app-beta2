@@ -238,7 +238,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
         </div>
       </div>
 
-      {/* Preview cards — greyed out */}
+      {/* Preview cards — grayed out */}
       <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', textAlign: 'center', marginBottom: '16px', fontStyle: 'italic' }}>
         Preview of what you'll see after your first submission
       </p>
@@ -506,7 +506,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
           {habitRates.length > 0 && (
             <div style={card}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Habit completion</h3>
-              <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>All time · sorted best to worst</p>
+              <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>All time · Sorted best to worst</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {habitRates.map(h => (
                   <div key={h.key}>

@@ -323,7 +323,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     : stepCount >= 7500 ? `${stepCount.toLocaleString()} steps — 75 pts available`
       : stepCount >= 5000 ? `${stepCount.toLocaleString()} steps — 50 pts available`
         : stepCount > 0 ? `${stepCount.toLocaleString()} steps — need 5,000 minimum`
-          : 'Enter steps, then tick to log'
+          : 'Enter your step count to log'
   const stepsColor = stepCount >= 5000 ? 'var(--theme-primary)' : 'var(--theme-text-muted)'
   const availableStepsPoints = calcStepsPoints(stepCount)
 
@@ -640,7 +640,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         ) : (
           <>
             <div style={{ borderLeft: '4px solid var(--theme-primary)', background: 'var(--theme-primary-light)', borderRadius: '0 8px 8px 0', padding: '10px 12px', marginTop: '16px' }}>
-              <p style={{ fontSize: '12px', color: 'var(--theme-text)', lineHeight: '1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final.</p>
+              <p style={{ fontSize: '12px', color: 'var(--theme-text)', lineHeight: '1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final. No changes can be made.</p>
             </div>
             <button onClick={submitDay} disabled={saving || submitSuccess}
               style={{

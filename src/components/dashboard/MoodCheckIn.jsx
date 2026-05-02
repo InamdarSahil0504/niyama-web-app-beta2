@@ -43,7 +43,7 @@ export default function MoodCheckIn({ onSelect, onSkip }) {
             How was your day?
           </p>
           <p style={{ fontSize: '14px', color: 'var(--theme-text-muted)', lineHeight: '1.5' }}>
-            One tap — helps us understand how discipline affects your wellbeing.
+            One tap — helps us understand how discipline affects your well-being.
           </p>
         </div>
 
