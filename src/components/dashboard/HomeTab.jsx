@@ -46,6 +46,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [lastTotalCompleted, setLastTotalCompleted] = useState(0)
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
@@ -305,7 +306,8 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
       // Show mood check-in after successful submit
       setShowMoodCheckIn(true)
-
+      setSubmitSuccess(true)
+      setTimeout(() => setSubmitSuccess(false), 1500)
       await onRefresh()
     } catch (e) { console.error('Submit failed', e) }
     finally { setSaving(false) }
@@ -314,6 +316,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
     borderRadius: '16px', padding: '20px', marginBottom: '16px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
   }
 
   const stepsLabel = stepCount >= 10000 ? `${stepCount.toLocaleString()} steps — 100 pts available`
@@ -639,9 +642,25 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
             <div style={{ borderLeft: '4px solid var(--theme-primary)', background: 'var(--theme-primary-light)', borderRadius: '0 8px 8px 0', padding: '10px 12px', marginTop: '16px' }}>
               <p style={{ fontSize: '12px', color: 'var(--theme-text)', lineHeight: '1.5' }}>✏️ <strong>Heads up!</strong> Once submitted, today's log is final.</p>
             </div>
-            <button onClick={submitDay} disabled={saving}
-              style={{ width: '100%', marginTop: '12px', background: 'var(--theme-secondary)', color: 'white', fontWeight: '600', padding: '14px', borderRadius: '10px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '15px', border: 'none', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Submitting...' : 'Submit today'}
+            <button onClick={submitDay} disabled={saving || submitSuccess}
+              style={{
+                width: '100%', marginTop: '12px', color: 'white', fontWeight: '700',
+                padding: '14px', borderRadius: '10px', border: 'none',
+                fontSize: '15px', cursor: saving || submitSuccess ? 'default' : 'pointer',
+                background: submitSuccess
+                  ? '#22c55e'
+                  : saving
+                    ? 'var(--theme-text-muted)'
+                    : 'var(--theme-secondary)',
+                transform: submitSuccess ? 'scale(1.02)' : 'scale(1)',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                boxShadow: submitSuccess ? '0 4px 15px rgba(34, 197, 94, 0.4)' : 'none',
+              }}>
+              {submitSuccess
+                ? '✓ Day submitted!'
+                : saving
+                  ? 'Submitting...'
+                  : 'Submit today'}
             </button>
           </>
         )}

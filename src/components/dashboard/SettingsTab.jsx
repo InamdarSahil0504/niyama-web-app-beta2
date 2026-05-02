@@ -20,7 +20,8 @@ export default function SettingsTab({ session, profile, onSignOut, onRefresh }) 
 
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
-    borderRadius: '16px', padding: '20px', marginBottom: '12px',
+    borderRadius: '16px', padding: '20px', marginBottom: '16px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
   }
 
   const sections = [
@@ -104,6 +105,7 @@ export default function SettingsTab({ session, profile, onSignOut, onRefresh }) 
           saving={saving} setSaving={setSaving}
           showMessage={showMessage} onSignOut={onSignOut}
           effectiveTier={effectiveTier} tierConfig={tierConfig}
+          streak={profile?.streak}
         />
       )}
     </div>
@@ -507,7 +509,7 @@ function NotificationsSection({ profile, userId, card, saving, setSaving, showMe
 }
 
 // ─── Account Section ──────────────────────────────────────────────────────────
-function AccountSection({ profile, userId, card, saving, setSaving, showMessage, onSignOut, effectiveTier, tierConfig }) {
+function AccountSection({ profile, userId, card, saving, setSaving, showMessage, onSignOut, effectiveTier, tierConfig, streak }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInput, setDeleteInput] = useState('')
   const [showPauseConfirm, setShowPauseConfirm] = useState(false)
@@ -515,6 +517,7 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
   const [selectedTier, setSelectedTier] = useState(null)
   const [billing, setBilling] = useState('monthly')
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [deleteStep, setDeleteStep] = useState(0)
 
   const isFree = effectiveTier === 'free_trial' || effectiveTier === 'free_expired'
 
@@ -785,27 +788,75 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
       {/* Delete account */}
       <div style={{ ...card, border: '1px solid #fecaca' }}>
         <p style={{ fontSize: '13px', fontWeight: '700', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Delete account</p>
-        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', marginBottom: '12px' }}>
-          Your account will be deactivated immediately. All data is permanently deleted after 30 days. Financial records are kept for 7 years as required by law. To restore your account within 30 days, contact support@niyamalife.com
-        </p>
-        {!showDeleteConfirm ? (
-          <button onClick={() => setShowDeleteConfirm(true)}
-            style={{ width: '100%', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
-            Delete my account
-          </button>
-        ) : (
+
+        {deleteStep === 0 && (
+          <>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', marginBottom: '12px' }}>
+              Your account will be deactivated immediately and permanently deleted after 30 days.
+            </p>
+            <button onClick={() => setDeleteStep(1)}
+              style={{ width: '100%', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
+              I want to delete my account
+            </button>
+          </>
+        )}
+
+        {deleteStep === 1 && (
           <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '600', color: '#dc2626', marginBottom: '6px' }}>Type DELETE to confirm</p>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>Before you go...</p>
+            <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>
+              You've logged <strong>{profile?.total_days_logged || 0} days</strong> and built a <strong>{streak?.current_streak || 0}-day streak</strong>. That's real progress — are you sure you want to lose it?
+            </p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setDeleteStep(0)}
+                style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', border: 'none' }}>
+                Keep my account
+              </button>
+              <button onClick={() => setDeleteStep(2)}
+                style={{ flex: 1, background: 'none', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
+                Still delete
+              </button>
+            </div>
+          </div>
+        )}
+
+        {deleteStep === 2 && (
+          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>Did you know?</p>
+            <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>
+              You can <strong>pause your account</strong> for up to 1 month instead — no billing, streak preserved, data kept. Would you like to pause instead?
+            </p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => { setDeleteStep(0); setActiveSection('account') }}
+                style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', border: 'none' }}>
+                Pause instead
+              </button>
+              <button onClick={() => setDeleteStep(3)}
+                style={{ flex: 1, background: 'none', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
+                No, delete
+              </button>
+            </div>
+          </div>
+        )}
+
+        {deleteStep === 3 && (
+          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '600', color: '#dc2626', marginBottom: '6px' }}>
+              Type DELETE to confirm permanent deletion
+            </p>
+            <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '10px', lineHeight: '1.5' }}>
+              Account deactivated immediately · Data deleted after 30 days · To restore, email support@niyamalife.com
+            </p>
             <input type="text" value={deleteInput} onChange={e => setDeleteInput(e.target.value)} placeholder="Type DELETE"
               style={{ background: 'white', border: '1px solid #fecaca', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }} />
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput('') }}
+              <button onClick={() => { setDeleteStep(0); setDeleteInput('') }}
                 style={{ flex: 1, background: 'none', border: '1px solid var(--theme-border)', color: 'var(--theme-text-secondary)', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
                 Cancel
               </button>
               <button onClick={deleteAccount} disabled={deleteInput !== 'DELETE' || saving}
                 style={{ flex: 1, background: deleteInput === 'DELETE' ? '#dc2626' : 'var(--theme-border)', color: deleteInput === 'DELETE' ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: deleteInput === 'DELETE' ? 'pointer' : 'not-allowed', fontSize: '13px', border: 'none' }}>
-                {saving ? '...' : 'Delete account'}
+                {saving ? '...' : 'Delete forever'}
               </button>
             </div>
           </div>

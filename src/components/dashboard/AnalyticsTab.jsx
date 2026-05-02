@@ -198,6 +198,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
     borderRadius: '16px', padding: '20px', marginBottom: '16px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
   }
 
   if (loading) return (

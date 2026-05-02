@@ -11,6 +11,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isNewUser, setIsNewUser] = useState(false)
+  const [showPasswordLogin, setShowPasswordLogin] = useState(false)
 
   const inputStyle = {
     background: 'var(--theme-bg)', border: '1px solid var(--theme-border)',
@@ -289,7 +290,6 @@ export default function Auth() {
   if (screen === 'login') return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
-
         <button onClick={() => { setScreen('welcome'); setMessage('') }}
           style={{ ...btnGhost, width: 'auto', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--theme-text-muted)' }}>
           ← Back
@@ -302,18 +302,12 @@ export default function Auth() {
           Sign in to your Niyama account.
         </p>
 
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>Email address</label>
           <input type="email" placeholder="you@example.com" value={email}
-            onChange={e => setEmail(e.target.value)} style={inputStyle} autoFocus />
-        </div>
-
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>Password</label>
-          <input type="password" placeholder="••••••••" value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handlePasswordLogin()}
-            style={inputStyle} />
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && sendOTP('login')}
+            style={inputStyle} autoFocus />
         </div>
 
         {message && (
@@ -322,20 +316,33 @@ export default function Auth() {
           </div>
         )}
 
-        <button onClick={handlePasswordLogin} disabled={loading} style={btnPrimary}>
-          {loading ? 'Signing in...' : 'Sign in →'}
+        {/* Primary — OTP */}
+        <button onClick={() => sendOTP('login')} disabled={loading} style={btnPrimary}>
+          {loading ? 'Sending code...' : 'Send verification code →'}
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--theme-border)' }} />
-          <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>or</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--theme-border)' }} />
+        {/* Secondary — password */}
+        <div style={{ marginTop: '20px' }}>
+          {!showPasswordLogin ? (
+            <button
+              onClick={() => setShowPasswordLogin(true)}
+              style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--theme-text-muted)', padding: '8px', textAlign: 'center' }}>
+              Sign in with password instead
+            </button>
+          ) : (
+            <div style={{ borderTop: '1px solid var(--theme-border)', paddingTop: '20px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>Password</label>
+              <input type="password" placeholder="••••••••" value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handlePasswordLogin()}
+                style={{ ...inputStyle, marginBottom: '12px' }} />
+              <button onClick={handlePasswordLogin} disabled={loading}
+                style={{ ...btnPrimary, background: 'var(--theme-primary-light)', color: 'var(--theme-primary)', border: '1px solid var(--theme-primary)', marginTop: '0' }}>
+                {loading ? 'Signing in...' : 'Sign in with password'}
+              </button>
+            </div>
+          )}
         </div>
-
-        <button onClick={() => sendOTP('login')} disabled={loading}
-          style={{ ...btnPrimary, background: 'var(--theme-primary-light)', color: 'var(--theme-primary)', marginTop: '0' }}>
-          {loading ? 'Sending...' : 'Sign in with email code instead'}
-        </button>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>
