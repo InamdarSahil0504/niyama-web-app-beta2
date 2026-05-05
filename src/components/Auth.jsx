@@ -171,10 +171,9 @@ export default function Auth() {
       <div style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
         <div style={{ marginBottom: '48px' }}>
           <img src="/niyama-icon.svg" alt="Niyama Life"
-            style={{ width: '80px', height: '80px', borderRadius: '20px', margin: '0 auto 20px', display: 'block' }} />
-          <img src="/niyama-wordmark-light.svg" alt="Niyama Life"
-            style={{ height: '36px', margin: '0 auto 12px', display: 'block' }} />
-          <p style={{ fontSize: '16px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>Rewarding Discipline.</p>
+            style={{ width: '80px', height: '80px', borderRadius: '20px', margin: '0 auto 16px', display: 'block' }} />
+          <h1 style={{ fontSize: '36px', fontWeight: '800', color: 'var(--theme-text)', letterSpacing: '-0.03em', marginBottom: '8px', textAlign: 'center' }}>Niyama</h1>
+          <p style={{ fontSize: '16px', color: 'var(--theme-text-secondary)', lineHeight: '1.5', textAlign: 'center' }}>Rewarding Discipline.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '48px', textAlign: 'left' }}>
