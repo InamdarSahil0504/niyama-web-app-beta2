@@ -345,8 +345,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/niyama-icon.svg" alt="Niyama"
               style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
-            <img src="/niyama-wordmark-dark.svg" alt="Niyama Life"
-              style={{ height: '20px' }} />
+            <h1 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
             {todayMood && (
               <span style={{ fontSize: '20px' }}>
                 {MOODS[todayMood - 1]}
