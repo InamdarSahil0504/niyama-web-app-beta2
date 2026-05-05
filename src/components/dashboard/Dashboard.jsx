@@ -328,11 +328,10 @@ export default function Dashboard({ session }) {
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-        <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>Loading your data...</p>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+      <img src="/niyama-icon.svg" alt="Niyama Life"
+        style={{ width: '72px', height: '72px', borderRadius: '18px', animation: 'fadeIn 0.5s ease' }} />
+      <div style={{ width: '24px', height: '24px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
 

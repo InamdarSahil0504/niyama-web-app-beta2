@@ -342,14 +342,17 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)' }}>
-            Niyama
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/niyama-icon.svg" alt="Niyama"
+              style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
+            <img src="/niyama-wordmark-dark.svg" alt="Niyama Life"
+              style={{ height: '20px' }} />
             {todayMood && (
-              <span style={{ fontSize: '20px', marginLeft: '10px', verticalAlign: 'middle' }}>
+              <span style={{ fontSize: '20px' }}>
                 {MOODS[todayMood - 1]}
               </span>
             )}
-          </h1>
+          </div>
           <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginTop: '2px' }}>
             Hey, {profile?.full_name?.split(' ')[0] || 'there'} 👋
           </p>

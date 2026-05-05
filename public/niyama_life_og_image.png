@@ -1,0 +1,59 @@
+<svg width="100%" viewBox="0 0 1270 640" role="img" xmlns="http://www.w3.org/2000/svg" style="">
+  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Niyama Life OG image</title>
+  <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Niyama Life social preview card — Daily discipline. Backed by science. Rewarded financially.</desc>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#111B2B" style="fill:rgb(17, 27, 43);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Subtle grid texture -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.06"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="6" height="630" fill="#4A7A68" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Gold accent dot top right -->
+  <circle cx="1140" cy="80" r="120" fill="#C9973A" opacity="0.07" style="fill:rgb(201, 151, 58);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.07;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <circle cx="1140" cy="80" r="70" fill="#C9973A" opacity="0.08" style="fill:rgb(201, 151, 58);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.08;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Sprout icon — stem -->
+  <rect x="80" y="72" width="5" height="52" rx="2.5" fill="#4A7A68" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Sprout icon — left leaf -->
+  <ellipse cx="74" cy="82" rx="12" ry="7" fill="#F2F5F3" transform="rotate(-35 74 82)" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Sprout icon — right leaf -->
+  <ellipse cx="91" cy="88" rx="12" ry="7" fill="#F2F5F3" transform="rotate(35 91 88)" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Sprout icon — gold tip dot -->
+  <circle cx="82" cy="72" r="4" fill="#C9973A" style="fill:rgb(201, 151, 58);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Wordmark -->
+  <text x="108" y="102" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#F2F5F3" letter-spacing="1" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:38px;font-weight:700;text-anchor:start;dominant-baseline:auto">Niyama</text>
+  <text x="108" y="102" font-family="Georgia, serif" font-size="38" font-weight="400" fill="#4A7A68" letter-spacing="4" dx="152" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:38px;font-weight:400;text-anchor:start;dominant-baseline:auto"> LIFE</text>
+
+  <!-- Divider line under wordmark -->
+  <rect x="80" y="118" width="320" height="1.5" fill="#4A7A68" opacity="0.5" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.5;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Main headline -->
+  <text x="80" y="240" font-family="Georgia, serif" font-size="72" font-weight="700" fill="#F2F5F3" letter-spacing="-1" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:72px;font-weight:700;text-anchor:start;dominant-baseline:auto">Daily discipline.</text>
+  <text x="80" y="326" font-family="Georgia, serif" font-size="72" font-weight="700" fill="#F2F5F3" letter-spacing="-1" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:72px;font-weight:700;text-anchor:start;dominant-baseline:auto">Backed by science.</text>
+  <text x="80" y="412" font-family="Georgia, serif" font-size="72" font-weight="700" fill="#C96A52" letter-spacing="-1" style="fill:rgb(201, 106, 82);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:72px;font-weight:700;text-anchor:start;dominant-baseline:auto">Rewarded financially.</text>
+
+  <!-- Sub tagline -->
+  <text x="80" y="478" font-family="Georgia, serif" font-size="26" fill="#F2F5F3" opacity="0.55" letter-spacing="0.5" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.55;font-family:Georgia, serif;font-size:26px;font-weight:400;text-anchor:start;dominant-baseline:auto">9 science-backed habits · Real gift card rewards · Up to $45/month</text>
+
+  <!-- Bottom strip -->
+  <rect x="0" y="570" width="1200" height="60" fill="#4A7A68" opacity="0.15" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.15;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- URL left -->
+  <text x="80" y="608" font-family="Georgia, serif" font-size="22" fill="#4A7A68" opacity="0.9" font-weight="600" style="fill:rgb(74, 122, 104);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.9;font-family:Georgia, serif;font-size:22px;font-weight:600;text-anchor:start;dominant-baseline:auto">www.niyamalife.com</text>
+
+  <!-- CTA right -->
+  <rect x="960" y="578" width="180" height="44" rx="22" fill="#C96A52" style="fill:rgb(201, 106, 82);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <text x="1050" y="606" font-family="Georgia, serif" font-size="18" font-weight="600" fill="#F2F5F3" text-anchor="middle" style="fill:rgb(242, 245, 243);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:18px;font-weight:600;text-anchor:middle;dominant-baseline:auto">Start Free</text>
+</svg>

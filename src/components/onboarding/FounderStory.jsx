@@ -23,12 +23,14 @@ export default function FounderStory({ onContinue, minimal = false, showButton =
     const story = minimal ? longStory : shortStory
 
     return (
+
         <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '40px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
             {!minimal && (
                 <>
                     <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                        <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
-                        <h2 style={{ fontSize: '18px', fontWeight: '600', marginTop: '12px', color: 'var(--theme-primary)' }}>A message from the founder</h2>
+                        <img src="/niyama-icon.svg" alt="Niyama Life"
+                            style={{ width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 16px', display: 'block' }} />
+                        <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--theme-primary)' }}>A message from the founder</h2>
                     </div>
                 </>
             )}
