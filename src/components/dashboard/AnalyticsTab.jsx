@@ -181,20 +181,6 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
   const tierCfg = TIER_CONFIG[effectiveTier]
   const currentSuccessfulDays = profile?.successful_days || 0
 
-  const milestones = []
-  if (tierCfg?.milestones?.days_10_bonus) {
-    milestones.push({ label: '10-day milestone', days: 10, bonus: `+$${tierCfg.milestones.days_10_bonus.toFixed(2)}` })
-  }
-  if (tierCfg?.milestones?.days_20_bonus) {
-    milestones.push({ label: '20-day milestone', days: 20, bonus: `+$${tierCfg.milestones.days_20_bonus.toFixed(2)}` })
-  }
-  if (tierCfg?.milestones?.successful_month_bonus) {
-    milestones.push({ label: 'Successful month', days: null, bonus: `+$${tierCfg.milestones.successful_month_bonus.toFixed(2)}`, special: true })
-  }
-  if (tierCfg?.milestones?.perfect_month_bonus) {
-    milestones.push({ label: 'Perfect month', days: null, bonus: `+$${tierCfg.milestones.perfect_month_bonus.toFixed(2)}`, special: true, gold: true })
-  }
-
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
     borderRadius: '16px', padding: '20px', marginBottom: '16px',
@@ -290,6 +276,35 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
         <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)' }}>
           {summaries.length} day{summaries.length !== 1 ? 's' : ''} tracked total
         </p>
+      </div>
+
+      {/* ── Monthly points hero ── */}
+      <div style={{ background: 'var(--theme-primary)', borderRadius: '16px', padding: '20px', marginBottom: '16px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <div>
+            <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '4px' }}>Points this month</p>
+            <p style={{ fontSize: '36px', fontWeight: '800', lineHeight: 1 }}>{(profile?.monthly_points || 0).toLocaleString()}</p>
+            <p style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>of 22,500 possible</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '28px', fontWeight: '800' }}>{Math.round(((profile?.monthly_points || 0) / 22500) * 100)}%</p>
+            <p style={{ fontSize: '11px', opacity: '0.7' }}>of max</p>
+          </div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '4px', height: '8px', marginBottom: '10px' }}>
+          <div style={{ background: 'white', borderRadius: '4px', height: '8px', width: `${Math.min(((profile?.monthly_points || 0) / 22500) * 100, 100)}%`, transition: 'width 0.3s' }} />
+        </div>
+        {(() => {
+          const pts = profile?.monthly_points || 0
+          const pct = Math.round((pts / 22500) * 100)
+          const msg = pct === 0 ? 'Start logging habits to earn points 💪'
+            : pct < 25 ? 'Good start — keep the momentum going 🔥'
+              : pct < 50 ? "You're building a great habit streak! 🌟"
+                : pct < 75 ? "Halfway there — you're crushing it! 💥"
+                  : pct < 100 ? 'Almost at your peak — incredible month! 🏆'
+                    : 'Perfect month — maximum points! 🎯'
+          return <p style={{ fontSize: '13px', opacity: '0.9', fontWeight: '600' }}>{msg}</p>
+        })()}
       </div>
 
       {summaries.length === 0 ? (
@@ -541,79 +556,8 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
             </div>
           )}
 
-          {/* ── Milestone progress (Plus/Premium only) ── */}
-          {milestones.length > 0 && (
-            <div style={card}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Reward milestones</h3>
-              <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>
-                {currentSuccessfulDays} successful days this month
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {milestones.filter(m => m.days).map(m => {
-                  const reached = currentSuccessfulDays >= m.days
-                  const progress = Math.min((currentSuccessfulDays / m.days) * 100, 100)
-                  const daysLeft = Math.max(m.days - currentSuccessfulDays, 0)
-                  return (
-                    <div key={m.label}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '14px' }}>{reached ? '✅' : '🎯'}</span>
-                          <span style={{ fontSize: '13px', color: 'var(--theme-text)', fontWeight: reached ? '700' : '400' }}>{m.label}</span>
-                        </div>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: reached ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
-                          {m.bonus}
-                        </span>
-                      </div>
-                      <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
-                        <div style={{
-                          background: reached ? 'var(--theme-primary)' : '#C9973A',
-                          borderRadius: '4px', height: '8px', width: `${progress}%`, transition: 'width 0.4s',
-                        }} />
-                      </div>
-                      <p style={{ fontSize: '10px', color: reached ? 'var(--theme-primary)' : 'var(--theme-text-muted)', marginTop: '3px', fontWeight: reached ? '600' : '400' }}>
-                        {reached ? `✓ Unlocked — ${m.days} days reached!` : `${daysLeft} more successful ${daysLeft === 1 ? 'day' : 'days'} to unlock`}
-                      </p>
-                    </div>
-                  )
-                })}
-
-                {/* Successful month and perfect month — special */}
-                {milestones.filter(m => m.special).map(m => {
-                  const isSuccessfulMonth = currentSuccessfulDays > 0 && currentSuccessfulDays === (profile?.total_days_logged || 0)
-                  const reached = isSuccessfulMonth
-                  return (
-                    <div key={m.label} style={{ background: m.gold ? '#fffbeb' : 'var(--theme-primary-light)', borderRadius: '10px', padding: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '14px' }}>{m.gold ? '🏆' : '🌟'}</span>
-                          <span style={{ fontSize: '13px', fontWeight: '700', color: m.gold ? '#92400e' : 'var(--theme-primary)' }}>{m.label}</span>
-                        </div>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: m.gold ? '#C9973A' : 'var(--theme-primary)' }}>{m.bonus}</span>
-                      </div>
-                      <p style={{ fontSize: '11px', color: m.gold ? '#78350f' : 'var(--theme-text-secondary)', marginTop: '6px', lineHeight: '1.4' }}>
-                        {m.gold
-                          ? 'Complete every submitted day perfectly — all 9 habits — to earn this bonus.'
-                          : 'Make every submitted day a successful day this month to earn this bonus.'}
-                      </p>
-                      {reached && <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', marginTop: '4px' }}>✓ On track!</p>}
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Free/Basic upsell */}
-              {milestones.length === 0 && (
-                <div style={{ background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '14px', textAlign: 'center' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--theme-primary)', lineHeight: '1.6' }}>
-                    Upgrade to Plus or Premium to unlock milestone bonuses — earn up to <strong>$45/month</strong>.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Upsell for free/basic */}
-          {milestones.length === 0 && (
+          {effectiveTier !== 'plus' && effectiveTier !== 'premium' && (
             <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '8px' }}>🎯 Reward milestones</h3>
               <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>

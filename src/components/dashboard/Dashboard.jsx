@@ -508,6 +508,7 @@ export default function Dashboard({ session }) {
             <SettingsTab
               session={session}
               profile={profile}
+              streak={streak}
               onSignOut={signOut}
               onRefresh={fetchData}
             />

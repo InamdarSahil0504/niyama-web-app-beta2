@@ -448,28 +448,34 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
           </div>
 
           {/* 7-day dots */}
-          <div style={{ marginBottom: (streak?.current_streak || 0) > 0 && (canUseFreeze || !canUseFreeze) ? '12px' : '0' }}>
+          <div>
             <p style={{ fontSize: '10px', opacity: '0.6', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Last 7 days</p>
             <div style={{ display: 'flex', gap: '6px' }}>
               {Array.from({ length: 7 }, (_, i) => {
                 const dayOffset = 6 - i
                 const isToday = dayOffset === 0
-                const wasSuccess = dayOffset < (streak?.current_streak || 0)
-                const dayLabel = isToday ? 'Today' : ['M', 'T', 'W', 'T', 'F', 'S', 'S'][(new Date().getDay() + 6 - dayOffset) % 7]
+                const date = new Date()
+                date.setDate(date.getDate() - dayOffset)
+                const dateStr = date.toLocaleDateString('en-CA')
+                const dayLabel = isToday ? 'Today' : ['M', 'T', 'W', 'T', 'F', 'S', 'S'][(date.getDay() + 6) % 7]
+                // Check actual daily summaries for this date
+                const dayData = todaySummary && isToday ? todaySummary : null
+                const wasSuccessful = isToday ? daySuccessful : dayOffset < (streak?.current_streak || 0)
+                const wasSubmitted = isToday ? isSubmitted : dayOffset < (streak?.current_streak || 0)
                 return (
                   <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                     <div style={{
                       width: '100%', aspectRatio: '1', borderRadius: '50%',
                       background: isToday
                         ? (daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)')
-                        : (wasSuccess ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'),
+                        : (wasSuccessful ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'),
                       border: isToday ? '2px solid rgba(255,255,255,0.9)' : 'none',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.3s ease',
-                      boxShadow: (wasSuccess || (isToday && daySuccessful)) ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
+                      boxShadow: (wasSuccessful) ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
                     }}>
-                      {(wasSuccess || (isToday && daySuccessful)) && (
-                        <span style={{ fontSize: '9px', color: wasSuccess ? 'var(--theme-primary)' : 'rgba(255,255,255,0.9)', fontWeight: '700' }}>✓</span>
+                      {wasSuccessful && (
+                        <span style={{ fontSize: '9px', color: isToday ? 'rgba(255,255,255,0.9)' : 'var(--theme-primary)', fontWeight: '700' }}>✓</span>
                       )}
                     </div>
                     <p style={{ fontSize: '8px', opacity: '0.65', fontWeight: '500' }}>{dayLabel}</p>
@@ -710,35 +716,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
             }
           </div>
         ))}
-      </div>
-
-      {/* Monthly points motivator */}
-      <div style={{ background: 'var(--theme-primary)', borderRadius: '16px', padding: '20px', marginBottom: '16px', color: 'white' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <div>
-            <p style={{ fontSize: '13px', opacity: '0.8', marginBottom: '4px' }}>Points this month</p>
-            <p style={{ fontSize: '36px', fontWeight: '800', lineHeight: 1 }}>{(profile?.monthly_points || 0).toLocaleString()}</p>
-            <p style={{ fontSize: '12px', opacity: '0.7', marginTop: '4px' }}>of 22,500 possible</p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '28px', fontWeight: '800' }}>{Math.round(((profile?.monthly_points || 0) / 22500) * 100)}%</p>
-            <p style={{ fontSize: '11px', opacity: '0.7' }}>of max</p>
-          </div>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '4px', height: '8px', marginBottom: '10px' }}>
-          <div style={{ background: 'white', borderRadius: '4px', height: '8px', width: `${Math.min(((profile?.monthly_points || 0) / 22500) * 100, 100)}%`, transition: 'width 0.3s' }} />
-        </div>
-        {(() => {
-          const pts = profile?.monthly_points || 0
-          const pct = Math.round((pts / 22500) * 100)
-          const msg = pct === 0 ? 'Start logging habits to earn points 💪'
-            : pct < 25 ? 'Good start — keep the momentum going 🔥'
-              : pct < 50 ? "You're building a great habit streak! 🌟"
-                : pct < 75 ? "Halfway there — you're crushing it! 💥"
-                  : pct < 100 ? 'Almost at your peak — incredible month! 🏆'
-                    : 'Perfect month — maximum points! 🎯'
-          return <p style={{ fontSize: '13px', opacity: '0.9', fontWeight: '600' }}>{msg}</p>
-        })()}
       </div>
     </>
   )

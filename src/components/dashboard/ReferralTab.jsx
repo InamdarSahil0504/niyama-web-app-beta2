@@ -146,7 +146,7 @@ export default function ReferralTab({ session, profile, isMinor, streak, todaySu
                 </button>
                 <button onClick={shareCode}
                   style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13px' }}>
-                  Share →
+                  Share
                 </button>
               </div>
             </>

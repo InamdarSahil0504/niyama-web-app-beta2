@@ -220,13 +220,6 @@ export default function RewardsTab({ session, profile, isMinor }) {
               <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--theme-primary)' }}>${estimatedReward.toFixed(2)}</span>
             </div>
           </div>
-
-          {/* Beta notice */}
-          <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '10px 12px', marginTop: '12px' }}>
-            <p style={{ fontSize: '11px', color: '#92400e', lineHeight: '1.5' }}>
-              🧪 <strong>Beta:</strong> Rewards are tracked but not yet paid out. Gift card delivery activates at full launch.
-            </p>
-          </div>
         </div>
       )}
 
@@ -257,7 +250,7 @@ export default function RewardsTab({ session, profile, isMinor }) {
           ))}
         </div>
         <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '10px', textAlign: 'center' }}>
-          Gift card selection available at launch
+          Delivered to your email on the 1st of each month
         </p>
       </div>
 
@@ -330,27 +323,6 @@ export default function RewardsTab({ session, profile, isMinor }) {
           </button>
         </div>
       )}
-
-      {/* How rewards work */}
-      <div style={card}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '14px' }}>How rewards work</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {[
-            { icon: '📊', title: 'Earn points daily', desc: 'Complete your habits each day to earn up to 750 points.' },
-            { icon: '📅', title: 'Hit your minimum days', desc: `Reach ${minDays || 10} successful days this month to qualify for your reward.` },
-            { icon: '🎁', title: 'Gift card on the 1st', desc: 'Your reward is automatically delivered as a gift card on the 1st of each month.' },
-            { icon: '🔒', title: 'No cash transfers', desc: 'All rewards are electronic gift cards only — Amazon, Starbucks, Nike, and more.' },
-          ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '20px', flexShrink: 0 }}>{item.icon}</span>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '2px' }}>{item.title}</p>
-                <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', lineHeight: '1.4' }}>{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
