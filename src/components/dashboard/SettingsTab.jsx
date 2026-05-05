@@ -442,23 +442,6 @@ function RewardsSection({ profile, card, effectiveTier, tierConfig }) {
         </div>
       </div>
 
-      {/* Terms & Privacy */}
-      <div style={card}>
-        <p style={{ fontSize:'13px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'14px' }}>Legal</p>
-        <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-          {[
-            { label:'Terms of Service', url:'https://www.niyamalife.com/terms' },
-            { label:'Privacy Policy',   url:'https://www.niyamalife.com/privacy' },
-            { label:'Cookie Policy',    url:'https://www.niyamalife.com/privacy#cookies' },
-          ].map((item,i) => (
-            <button key={i} onClick={() => window.open(item.url, '_blank')}
-              style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', background:'none', border:'none', borderBottom:i<2?'1px solid var(--theme-border)':'none', cursor:'pointer', width:'100%' }}>
-              <span style={{ fontSize:'13px', color:'var(--theme-text)' }}>{item.label}</span>
-              <span style={{ fontSize:'13px', color:'var(--theme-text-muted)' }}>↗</span>
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
@@ -692,6 +675,52 @@ function AccountSection({ profile, userId, card, saving, setSaving, showMessage,
           </div>
         </div>
       )}
+
+      {/* Reward milestones summary */}
+      <div style={card}>
+        <p style={{ fontSize:'13px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'4px' }}>Reward milestones</p>
+        <p style={{ fontSize:'11px', color:'var(--theme-text-muted)', marginBottom:'12px' }}>Based on your current plan: <strong style={{ color:'var(--theme-primary)' }}>{tierConfig?.label||'Free'}</strong></p>
+        <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+          {[
+            { key:'free_trial', label:'Free',    max:'$2.50', min:'10 days', price:'Free trial' },
+            { key:'basic',      label:'Basic',   max:'$5.00', min:'10 days', price:'$0.99/mo' },
+            { key:'plus',       label:'Plus',    max:'$17.50',min:'7 days',  price:'$4.99/mo' },
+            { key:'premium',    label:'Premium', max:'$45.00',min:'5 days',  price:'$14.99/mo' },
+          ].map((t,i) => {
+            const isCurrent = effectiveTier===t.key||(effectiveTier==='free_expired'&&t.key==='free_trial')
+            return (
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 12px', borderRadius:'10px', background:isCurrent?'var(--theme-primary-light)':'var(--theme-bg)', border:`1px solid ${isCurrent?'var(--theme-primary)':'var(--theme-border)'}` }}>
+                <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                  <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-text)' }}>{t.label}</p>
+                  {isCurrent&&<span style={{ fontSize:'10px', background:'var(--theme-primary)', color:'white', padding:'1px 6px', borderRadius:'8px', fontWeight:'700' }}>You</span>}
+                </div>
+                <div style={{ textAlign:'right' }}>
+                  <p style={{ fontSize:'12px', fontWeight:'700', color:isCurrent?'var(--theme-primary)':'var(--theme-text)' }}>Up to {t.max}/mo</p>
+                  <p style={{ fontSize:'10px', color:'var(--theme-text-muted)' }}>{t.price} · {t.min} min</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Legal */}
+      <div style={card}>
+        <p style={{ fontSize:'13px', fontWeight:'700', color:'var(--theme-text-secondary)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'12px' }}>Legal</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:'0' }}>
+          {[
+            { label:'Terms of Service', url:'https://www.niyamalife.com/terms' },
+            { label:'Privacy Policy',   url:'https://www.niyamalife.com/privacy' },
+            { label:'Cookie Policy',    url:'https://www.niyamalife.com/privacy#cookies' },
+          ].map((item,i) => (
+            <button key={i} onClick={() => window.open(item.url, '_blank')}
+              style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', background:'none', border:'none', borderBottom:i<2?'1px solid var(--theme-border)':'none', cursor:'pointer', width:'100%' }}>
+              <span style={{ fontSize:'13px', color:'var(--theme-text)' }}>{item.label}</span>
+              <span style={{ fontSize:'13px', color:'var(--theme-text-muted)' }}>↗</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Sign out */}
       <div style={card}>

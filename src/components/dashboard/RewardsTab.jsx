@@ -3,16 +3,16 @@ import { supabase } from '../../supabase'
 import { TIER_CONFIG, getEffectiveTier, getMemberMonths } from '../../config'
 
 const GIFT_CARD_BRANDS = [
-  { name: 'Amazon', icon: '📦' },
-  { name: 'Target', icon: '🎯' },
-  { name: 'Starbucks', icon: '☕' },
-  { name: 'Walmart', icon: '🛒' },
-  { name: 'Whole Foods', icon: '🥗' },
-  { name: 'Nike', icon: '👟' },
-  { name: 'Sephora', icon: '💄' },
-  { name: 'Apple', icon: '🍎' },
-  { name: 'Uber Eats', icon: '🍔' },
-  { name: 'Google Play', icon: '🎮' },
+  { name: 'Amazon',      icon: '📦', color: '#FF9900' },
+  { name: 'Starbucks',   icon: '☕', color: '#00704A' },
+  { name: 'Nike',        icon: '👟', color: '#111111' },
+  { name: 'Apple',       icon: '🍎', color: '#555555' },
+  { name: 'Target',      icon: '🎯', color: '#CC0000' },
+  { name: 'Walmart',     icon: '🛒', color: '#0071CE' },
+  { name: 'Whole Foods', icon: '🥗', color: '#00674B' },
+  { name: 'Sephora',     icon: '💄', color: '#E2062C' },
+  { name: 'Uber Eats',   icon: '🍔', color: '#06C167' },
+  { name: 'Google Play', icon: '🎮', color: '#4285F4' },
 ]
 
 export default function RewardsTab({ session, profile, isMinor }) {
@@ -34,52 +34,33 @@ export default function RewardsTab({ session, profile, isMinor }) {
     setLoading(false)
   }
 
-  // ── Tier & reward info ─────────────────────────────────────────────────────
-  const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-  const tierConfig = TIER_CONFIG[effectiveTier]
-  const memberMonths = getMemberMonths(profile?.created_at)
-  const isFreeTrial = effectiveTier === 'free_trial'
-  const isFreeExpired = effectiveTier === 'free_expired'
-  const isFree = isFreeTrial || isFreeExpired
+  const effectiveTier  = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
+  const tierConfig     = TIER_CONFIG[effectiveTier]
+  const memberMonths   = getMemberMonths(profile?.created_at)
+  const isFreeTrial    = effectiveTier === 'free_trial'
+  const isFreeExpired  = effectiveTier === 'free_expired'
   const trialMonthsLeft = Math.max(3 - memberMonths, 0)
 
   const successfulDays = profile?.successful_days || 0
-  const monthlyPoints = profile?.monthly_points || 0
-  const minDays = tierConfig?.min_days || 0
-  const isInactive = (profile?.consecutive_inactive_days || 0) >= 5
-  const isEligible = minDays > 0 && successfulDays >= minDays && !isInactive && !isMinor
+  const monthlyPoints  = profile?.monthly_points  || 0
+  const minDays        = tierConfig?.min_days      || 0
+  const isInactive     = (profile?.consecutive_inactive_days || 0) >= 5
+  const isEligible     = minDays > 0 && successfulDays >= minDays && !isInactive && !isMinor
 
-  // Progressive reward calculation
-  const baseReward = Math.min(monthlyPoints / 1000, tierConfig?.reward_cap || 0)
-  const milestones = tierConfig?.milestones || {}
-  let unlockedBonus = 0
+  const milestones    = tierConfig?.milestones || {}
+  const baseReward    = Math.min(monthlyPoints / 1000, tierConfig?.reward_cap || 0)
+  let unlockedBonus   = 0
   if (milestones.days_10_bonus && successfulDays >= 10) unlockedBonus += milestones.days_10_bonus
   if (milestones.days_20_bonus && successfulDays >= 20) unlockedBonus += milestones.days_20_bonus
-  const estimatedReward = isEligible ? Math.min(baseReward + unlockedBonus, tierConfig?.max_cap || tierConfig?.reward_cap || 0) : 0
-  const maxCap = tierConfig?.max_cap || tierConfig?.reward_cap || 0
+  const maxCap          = tierConfig?.max_cap || tierConfig?.reward_cap || 0
+  const estimatedReward = isEligible ? Math.min(baseReward + unlockedBonus, maxCap) : 0
 
-  // Current month
-  const now = new Date()
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const currentRewardRow = rewards.find(r => r.month === currentMonth)
+  const now          = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
 
-  // Milestone steps
-  const milestoneSteps = []
-  if (minDays > 0) {
-    milestoneSteps.push({ days: minDays, label: 'Reward eligibility', bonus: null, type: 'eligibility' })
-  }
-  if (milestones.days_10_bonus) {
-    milestoneSteps.push({ days: 10, label: '10-day milestone', bonus: milestones.days_10_bonus, type: 'bonus' })
-  }
-  if (milestones.days_20_bonus) {
-    milestoneSteps.push({ days: 20, label: '20-day milestone', bonus: milestones.days_20_bonus, type: 'bonus' })
-  }
-  if (milestones.successful_month_bonus) {
-    milestoneSteps.push({ days: null, label: 'Successful month', bonus: milestones.successful_month_bonus, type: 'special' })
-  }
-  if (milestones.perfect_month_bonus) {
-    milestoneSteps.push({ days: null, label: 'Perfect month', bonus: milestones.perfect_month_bonus, type: 'gold' })
-  }
+  // Days until next payout (1st of next month)
+  const nextPayout   = new Date(now.getFullYear(), now.getMonth()+1, 1)
+  const daysLeft     = Math.ceil((nextPayout - now) / (1000*60*60*24))
 
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
@@ -88,26 +69,26 @@ export default function RewardsTab({ session, profile, isMinor }) {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '80px' }}>
-      <div style={{ width: '28px', height: '28px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', paddingTop:'80px' }}>
+      <div style={{ width:'28px', height:'28px', border:'3px solid var(--theme-primary)', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
     </div>
   )
 
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Rewards</h1>
-        <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)' }}>
-          Gift cards delivered on the 1st of each month
+      <div style={{ marginBottom:'20px' }}>
+        <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'4px' }}>Rewards</h1>
+        <p style={{ fontSize:'13px', color:'var(--theme-text-muted)' }}>
+          Real gift cards, delivered automatically
         </p>
       </div>
 
       {/* Minor notice */}
       {isMinor && (
-        <div style={{ ...card, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)' }}>
-          <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--theme-primary)', marginBottom: '4px' }}>Rewards available at 18</p>
-          <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
+        <div style={{ ...card, background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)' }}>
+          <p style={{ fontSize:'14px', fontWeight:'600', color:'var(--theme-primary)', marginBottom:'4px' }}>Rewards available at 18</p>
+          <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.5' }}>
             You're building great habits. Your rewards will be waiting when you turn 18.
           </p>
         </div>
@@ -115,192 +96,209 @@ export default function RewardsTab({ session, profile, isMinor }) {
 
       {/* Free expired */}
       {isFreeExpired && !isMinor && (
-        <div style={{ ...card, background: '#fffbeb', border: '1px solid #fcd34d' }}>
-          <p style={{ fontSize: '14px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>Your free trial has ended</p>
-          <p style={{ fontSize: '13px', color: '#78350f', lineHeight: '1.6', marginBottom: '12px' }}>
-            You've completed your 3-month free trial. Upgrade to keep earning real financial rewards every month.
+        <div style={{ ...card, background:'#fffbeb', border:'1px solid #fcd34d' }}>
+          <p style={{ fontSize:'14px', fontWeight:'700', color:'#92400e', marginBottom:'6px' }}>Your free trial has ended</p>
+          <p style={{ fontSize:'13px', color:'#78350f', lineHeight:'1.6', marginBottom:'12px' }}>
+            Upgrade to keep earning real financial rewards every month.
           </p>
-          <button
-            onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
-            style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
-            View pricing — starts at $0.99/mo →
+          <button onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
+            style={{ width:'100%', background:'var(--theme-primary)', color:'white', fontWeight:'700', padding:'12px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'14px' }}>
+            View pricing — starts at $0.99/mo
           </button>
         </div>
       )}
 
-      {/* This month's reward */}
+      {/* Hero reward card */}
       {!isFreeExpired && !isMinor && (
-        <div style={card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #3D6B5A 0%, #4A7A68 60%, #5A8A78 100%)',
+          borderRadius: '20px', padding: '24px', marginBottom: '16px', color: 'white',
+          boxShadow: '0 4px 20px rgba(74,122,104,0.35)', position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Gold glow for eligible users */}
+          {isEligible && (
+            <div style={{ position:'absolute', top:'-30px', right:'-30px', width:'150px', height:'150px', borderRadius:'50%', background:'rgba(201,151,58,0.15)', filter:'blur(30px)', pointerEvents:'none' }} />
+          )}
+
+          {/* Payout countdown */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'20px' }}>
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>
-                {now.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              <p style={{ fontSize:'11px', opacity:'0.7', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'6px' }}>
+                {now.toLocaleString('default', { month:'long', year:'numeric' })}
               </p>
-              <h2 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)' }}>This month's reward</h2>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--theme-primary)', lineHeight: 1 }}>
+              <p style={{ fontSize:'13px', opacity:'0.85', marginBottom:'4px' }}>Your reward this month</p>
+              <p style={{ fontSize:'48px', fontWeight:'900', lineHeight:1, letterSpacing:'-0.02em' }}>
                 ${estimatedReward.toFixed(2)}
               </p>
-              <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '2px' }}>
-                of ${maxCap.toFixed(2)} max
-              </p>
+              <p style={{ fontSize:'12px', opacity:'0.6', marginTop:'4px' }}>of ${maxCap.toFixed(2)} possible</p>
+            </div>
+            <div style={{ textAlign:'center', background:'rgba(255,255,255,0.12)', borderRadius:'14px', padding:'12px 16px' }}>
+              <p style={{ fontSize:'28px', fontWeight:'900', lineHeight:1 }}>{daysLeft}</p>
+              <p style={{ fontSize:'10px', opacity:'0.8', marginTop:'3px' }}>days to</p>
+              <p style={{ fontSize:'10px', opacity:'0.8' }}>payout</p>
             </div>
           </div>
 
-          {/* Eligibility status */}
+          {/* Eligibility / progress */}
           {isInactive ? (
-            <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
-              <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: '600' }}>⚠️ Ineligible — 5+ consecutive inactive days</p>
-              <p style={{ fontSize: '12px', color: '#dc2626', marginTop: '2px', lineHeight: '1.4' }}>Submit your habits to restore eligibility.</p>
+            <div style={{ background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px' }}>
+              <p style={{ fontSize:'13px', fontWeight:'600' }}>⚠️ Ineligible this month</p>
+              <p style={{ fontSize:'11px', opacity:'0.8', marginTop:'2px' }}>5+ consecutive inactive days. Submit your habits to restore eligibility.</p>
             </div>
-          ) : !isEligible ? (
-            <div style={{ background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '12px', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <p style={{ fontSize: '13px', color: 'var(--theme-primary)', fontWeight: '600' }}>
-                  {minDays - successfulDays} more successful {minDays - successfulDays === 1 ? 'day' : 'days'} needed
-                </p>
-                <p style={{ fontSize: '12px', color: 'var(--theme-primary)', fontWeight: '700' }}>{successfulDays}/{minDays}</p>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.08)', borderRadius: '4px', height: '6px' }}>
-                <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '6px', width: `${Math.min((successfulDays / minDays) * 100, 100)}%`, transition: 'width 0.3s' }} />
+          ) : isEligible ? (
+            <div style={{ background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px' }}>
+              <span style={{ fontSize:'22px' }}>🎁</span>
+              <div>
+                <p style={{ fontSize:'13px', fontWeight:'700' }}>You're eligible for your gift card!</p>
+                <p style={{ fontSize:'11px', opacity:'0.8', marginTop:'2px' }}>Delivered to your email on the 1st.</p>
               </div>
             </div>
           ) : (
-            <div style={{ background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '20px' }}>✅</span>
-              <div>
-                <p style={{ fontSize: '13px', color: 'var(--theme-primary)', fontWeight: '700' }}>Eligible for rewards this month</p>
-                <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginTop: '1px' }}>Keep going — you're on track for your gift card.</p>
+            <div style={{ marginBottom:'16px' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
+                <p style={{ fontSize:'13px', fontWeight:'600', opacity:'0.9' }}>
+                  {minDays - successfulDays} more successful {minDays - successfulDays===1?'day':'days'} to unlock
+                </p>
+                <p style={{ fontSize:'12px', fontWeight:'700', opacity:'0.9' }}>{successfulDays}/{minDays}</p>
+              </div>
+              <div style={{ background:'rgba(255,255,255,0.2)', borderRadius:'6px', height:'8px' }}>
+                <div style={{ background:'white', borderRadius:'6px', height:'8px', width:`${Math.min((successfulDays/minDays)*100,100)}%`, transition:'width 0.3s' }} />
               </div>
             </div>
           )}
 
-          {/* Points progress */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>Points this month</span>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text)' }}>{monthlyPoints.toLocaleString()} pts</span>
-            </div>
-            <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
-              <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${Math.min((monthlyPoints / 22500) * 100, 100)}%`, transition: 'width 0.3s' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-              <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>0</span>
-              <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>22,500 max</span>
-            </div>
-          </div>
-
           {/* Reward breakdown */}
-          <div style={{ borderTop: '1px solid var(--theme-border)', paddingTop: '14px' }}>
-            {[
-              { label: 'Base reward', value: `$${baseReward.toFixed(2)}`, muted: false },
-              ...(milestones.days_10_bonus ? [{ label: '10-day bonus', value: `+$${milestones.days_10_bonus.toFixed(2)}`, unlocked: successfulDays >= 10 }] : []),
-              ...(milestones.days_20_bonus ? [{ label: '20-day bonus', value: `+$${milestones.days_20_bonus.toFixed(2)}`, unlocked: successfulDays >= 20 }] : []),
-              ...(milestones.successful_month_bonus ? [{ label: 'Successful month bonus', value: `+$${milestones.successful_month_bonus.toFixed(2)}`, special: true }] : []),
-              ...(milestones.perfect_month_bonus ? [{ label: 'Perfect month bonus', value: `+$${milestones.perfect_month_bonus.toFixed(2)}`, gold: true }] : []),
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {item.gold && <span style={{ fontSize: '12px' }}>🏆</span>}
-                  {item.special && !item.gold && <span style={{ fontSize: '12px' }}>🌟</span>}
-                  <span style={{ fontSize: '13px', color: item.unlocked === false ? 'var(--theme-text-muted)' : 'var(--theme-text-secondary)' }}>
-                    {item.label}
-                  </span>
-                </div>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: item.unlocked === false ? 'var(--theme-text-muted)' : item.gold ? '#C9973A' : 'var(--theme-primary)' }}>
-                  {item.value}
-                  {item.unlocked === false && <span style={{ fontSize: '10px', marginLeft: '4px' }}>🔒</span>}
-                  {item.unlocked === true && <span style={{ fontSize: '10px', marginLeft: '4px' }}>✓</span>}
-                </span>
+          <div style={{ background:'rgba(255,255,255,0.1)', borderRadius:'12px', padding:'14px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
+              <span style={{ fontSize:'12px', opacity:'0.8' }}>Base reward</span>
+              <span style={{ fontSize:'13px', fontWeight:'700' }}>${baseReward.toFixed(2)}</span>
+            </div>
+            {milestones.days_10_bonus && (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:successfulDays>=10?1:0.45 }}>
+                <span style={{ fontSize:'12px' }}>{successfulDays>=10?'✓':''} 10-day bonus</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.days_10_bonus.toFixed(2)}</span>
               </div>
-            ))}
-            <div style={{ borderTop: '1px solid var(--theme-border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-text)' }}>Estimated total</span>
-              <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--theme-primary)' }}>${estimatedReward.toFixed(2)}</span>
+            )}
+            {milestones.days_20_bonus && (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:successfulDays>=20?1:0.45 }}>
+                <span style={{ fontSize:'12px' }}>{successfulDays>=20?'✓':''} 20-day bonus</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.days_20_bonus.toFixed(2)}</span>
+              </div>
+            )}
+            {milestones.successful_month_bonus && (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:0.45 }}>
+                <span style={{ fontSize:'12px' }}>🌟 Successful month</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.successful_month_bonus.toFixed(2)}</span>
+              </div>
+            )}
+            {milestones.perfect_month_bonus && (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:0.45 }}>
+                <span style={{ fontSize:'12px' }}>🏆 Perfect month</span>
+                <span style={{ fontSize:'13px', fontWeight:'700', color:'#C9973A' }}>+${milestones.perfect_month_bonus.toFixed(2)}</span>
+              </div>
+            )}
+            <div style={{ borderTop:'1px solid rgba(255,255,255,0.2)', paddingTop:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontSize:'13px', fontWeight:'700' }}>Total this month</span>
+              <span style={{ fontSize:'18px', fontWeight:'900' }}>${estimatedReward.toFixed(2)}</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Free trial context */}
+      {/* Free trial banner */}
       {isFreeTrial && !isMinor && (
-        <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-primary)', marginBottom: '4px' }}>
-            🎁 {trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} left in your free trial
+        <div style={{ background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)', borderRadius:'12px', padding:'14px 16px', marginBottom:'16px' }}>
+          <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-primary)', marginBottom:'4px' }}>
+            🎁 {trialMonthsLeft} month{trialMonthsLeft!==1?'s':''} left in your free trial
           </p>
-          <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', lineHeight: '1.5' }}>
-            After your trial, upgrade to Basic for $0.99/month to keep earning rewards up to $5.00/month.
+          <p style={{ fontSize:'12px', color:'var(--theme-text-secondary)', lineHeight:'1.5' }}>
+            After your trial, upgrade to Basic for $0.99/month to keep earning rewards.
           </p>
         </div>
       )}
 
-      {/* Gift card brands */}
+      {/* Upgrade CTA for basic */}
+      {effectiveTier === 'basic' && (
+        <div style={{ ...card, background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)' }}>
+          <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-primary)', marginBottom:'6px' }}>Unlock milestone bonuses</p>
+          <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.6', marginBottom:'12px' }}>
+            Upgrade to Plus — earn bonus rewards at 20 days and for a successful month. Up to $17.50/month.
+          </p>
+          <button onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
+            style={{ width:'100%', background:'var(--theme-primary)', color:'white', fontWeight:'700', padding:'12px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'14px' }}>
+            Upgrade to Plus — $4.99/mo
+          </button>
+        </div>
+      )}
+
+      {/* Gift card catalog */}
       <div style={card}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Your gift card</h3>
-        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '14px' }}>
-          Choose from 10 top brands — delivered to your email on the 1st of each month.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'14px' }}>
+          <div>
+            <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'2px' }}>Choose your gift card</h3>
+            <p style={{ fontSize:'12px', color:'var(--theme-text-muted)' }}>10 top brands — pick your favorite at redemption</p>
+          </div>
+          <div style={{ background:'var(--theme-primary-light)', borderRadius:'8px', padding:'4px 10px' }}>
+            <p style={{ fontSize:'10px', fontWeight:'700', color:'var(--theme-primary)' }}>via Tremendous</p>
+          </div>
+        </div>
+
+        {/* Brand grid — larger cards */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'8px', marginBottom:'12px' }}>
           {GIFT_CARD_BRANDS.map(brand => (
-            <div key={brand.name} style={{ background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '10px 4px', textAlign: 'center' }}>
-              <p style={{ fontSize: '20px', marginBottom: '3px' }}>{brand.icon}</p>
-              <p style={{ fontSize: '9px', color: 'var(--theme-text-secondary)', fontWeight: '600', lineHeight: '1.2' }}>{brand.name}</p>
+            <div key={brand.name} style={{
+              background: 'var(--theme-bg)', border:'1px solid var(--theme-border)',
+              borderRadius:'12px', padding:'10px 4px', textAlign:'center',
+              transition:'transform 0.15s',
+            }}>
+              <p style={{ fontSize:'24px', marginBottom:'4px', lineHeight:1 }}>{brand.icon}</p>
+              <p style={{ fontSize:'9px', color:'var(--theme-text-secondary)', fontWeight:'600', lineHeight:'1.2' }}>{brand.name}</p>
             </div>
           ))}
         </div>
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '10px', textAlign: 'center' }}>
-          Delivered to your email on the 1st of each month
-        </p>
+
+        <div style={{ background:'var(--theme-primary-light)', borderRadius:'10px', padding:'10px 14px', display:'flex', alignItems:'center', gap:'10px' }}>
+          <span style={{ fontSize:'16px' }}>✉️</span>
+          <p style={{ fontSize:'12px', color:'var(--theme-primary)', lineHeight:'1.5' }}>
+            <strong>Delivered instantly to your email</strong> on the 1st of each month. No account needed — just click and redeem.
+          </p>
+        </div>
       </div>
 
       {/* Reward history */}
       {rewards.length > 0 && (
         <div style={card}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '14px' }}>Reward history</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h3 style={{ fontSize:'15px', fontWeight:'700', color:'var(--theme-text)', marginBottom:'14px' }}>Reward history</h3>
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             {rewards.map(r => {
-              const monthDate = new Date(r.month + '-01')
-              const monthLabel = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' })
-              const isRedeemed = r.redeemed
-              const isCurrent = r.month === currentMonth
+              const monthLabel = new Date(r.month+'-01').toLocaleString('default', { month:'long', year:'numeric' })
+              const isCurrent  = r.month === currentMonth
+              const isDelivered = r.redeemed || r.delivered
 
               return (
                 <div key={r.id} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 14px', borderRadius: '12px',
+                  display:'flex', justifyContent:'space-between', alignItems:'center',
+                  padding:'12px 14px', borderRadius:'12px',
                   background: isCurrent ? 'var(--theme-primary-light)' : 'var(--theme-bg)',
                   border: `1px solid ${isCurrent ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
                 }}>
                   <div>
-                    <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '2px' }}>
-                      {monthLabel} {isCurrent && <span style={{ fontSize: '10px', background: 'var(--theme-primary)', color: 'white', padding: '1px 6px', borderRadius: '8px', marginLeft: '4px' }}>Current</span>}
-                    </p>
-                    <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>
-                      {(r.points_earned || 0).toLocaleString()} pts
-                      {r.cap_utilisation > 0 && ` · ${r.cap_utilisation}% of cap used`}
-                    </p>
-                    {r.tremendous_id && (
-                      <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', marginTop: '2px', fontFamily: 'monospace' }}>
-                        ID: {r.tremendous_id}
-                      </p>
-                    )}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '16px', fontWeight: '800', color: (r.reward_value || 0) > 0 ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
-                      ${(r.reward_value || 0).toFixed(2)}
-                    </p>
-                    <div style={{ marginTop: '4px' }}>
-                      {isCurrent ? (
-                        <span style={{ fontSize: '10px', color: 'var(--theme-primary)', fontWeight: '600' }}>In progress</span>
-                      ) : isRedeemed ? (
-                        <span style={{ fontSize: '10px', color: 'var(--theme-primary)', fontWeight: '600' }}>✓ Delivered</span>
-                      ) : (r.reward_value || 0) === 0 ? (
-                        <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>Not eligible</span>
-                      ) : (
-                        <span style={{ fontSize: '10px', color: '#C9973A', fontWeight: '600' }}>Pending</span>
-                      )}
+                    <div style={{ display:'flex', alignItems:'center', gap:'6px', marginBottom:'2px' }}>
+                      <p style={{ fontSize:'13px', fontWeight:'600', color:'var(--theme-text)' }}>{monthLabel}</p>
+                      {isCurrent && <span style={{ fontSize:'10px', background:'var(--theme-primary)', color:'white', padding:'1px 6px', borderRadius:'8px' }}>Current</span>}
                     </div>
+                    <p style={{ fontSize:'11px', color:'var(--theme-text-muted)' }}>
+                      {(r.points_earned||0).toLocaleString()} pts
+                      {r.cap_utilisation>0 && ` · ${r.cap_utilisation}% of cap`}
+                    </p>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <p style={{ fontSize:'16px', fontWeight:'800', color:(r.reward_value||0)>0?'var(--theme-primary)':'var(--theme-text-muted)' }}>
+                      ${(r.reward_value||0).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize:'10px', marginTop:'3px', fontWeight:'600', color: isCurrent?'var(--theme-primary)':isDelivered?'var(--theme-primary)':(r.reward_value||0)===0?'var(--theme-text-muted)':'#C9973A' }}>
+                      {isCurrent ? 'In progress' : isDelivered ? '✓ Delivered' : (r.reward_value||0)===0 ? 'Not eligible' : 'Pending'}
+                    </p>
                   </div>
                 </div>
               )
@@ -309,18 +307,14 @@ export default function RewardsTab({ session, profile, isMinor }) {
         </div>
       )}
 
-      {/* Upgrade CTA for basic */}
-      {effectiveTier === 'basic' && (
-        <div style={{ ...card, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)' }}>
-          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-primary)', marginBottom: '6px' }}>Unlock milestone bonuses</p>
-          <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>
-            Upgrade to Plus to earn bonus rewards at 20 days and for a successful month — up to $17.50/month total.
+      {/* Empty history state */}
+      {rewards.length === 0 && !isFreeExpired && !isMinor && (
+        <div style={{ ...card, textAlign:'center', padding:'28px 20px' }}>
+          <p style={{ fontSize:'32px', marginBottom:'12px' }}>🗓️</p>
+          <p style={{ fontSize:'14px', fontWeight:'600', color:'var(--theme-text)', marginBottom:'6px' }}>No rewards yet</p>
+          <p style={{ fontSize:'12px', color:'var(--theme-text-muted)', lineHeight:'1.6' }}>
+            Your first gift card will appear here after the 1st of next month, once you've hit your minimum successful days.
           </p>
-          <button
-            onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
-            style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
-            Upgrade to Plus — $4.99/mo →
-          </button>
         </div>
       )}
     </div>

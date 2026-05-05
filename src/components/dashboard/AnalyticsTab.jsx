@@ -274,7 +274,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
       <div style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Your analytics</h1>
         <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)' }}>
-          {summaries.length} day{summaries.length !== 1 ? 's' : ''} tracked total
+          {summaries.length} day{summaries.length !== 1 ? 's' : ''} logged
         </p>
       </div>
 
