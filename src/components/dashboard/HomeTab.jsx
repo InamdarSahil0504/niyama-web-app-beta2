@@ -481,12 +481,12 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                     ? '#C9973A'
                     : summary.day_successful
                       ? 'rgba(255,255,255,0.92)'
-                      : '#E05C5C'
+                      : 'transparent'
                   barOpacity = 1
                 } else {
-                  // No data / inactive — outlined bar
+                  // No data / inactive — red bar
                   barHeight = 8
-                  barColor = 'transparent'
+                  barColor = '#E05C5C'
                   barOpacity = 1
                 }
 
@@ -519,8 +519,8 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
               {[
                 { color: '#C9973A', label: 'Perfect', border: false },
                 { color: 'rgba(255,255,255,0.92)', label: 'Successful', border: false },
-                { color: '#E05C5C', label: 'Missed', border: false },
-                { color: 'transparent', label: 'Inactive', border: true },
+                { color: 'transparent', label: 'Missed', border: true },
+                { color: '#E05C5C', label: 'Inactive', border: false },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{
