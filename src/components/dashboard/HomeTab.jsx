@@ -480,13 +480,13 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                   barColor = summary.perfect_day
                     ? '#C9973A'
                     : summary.day_successful
-                      ? 'rgba(255,255,255,0.90)'
-                      : 'rgba(255,255,255,0.25)'
-                  barOpacity = summary.day_successful ? 1 : 0.7
+                      ? 'rgba(255,255,255,0.92)'
+                      : '#E05C5C'
+                  barOpacity = 1
                 } else {
-                  // No data / inactive
-                  barHeight = 3
-                  barColor = 'rgba(255,255,255,0.15)'
+                  // No data / inactive — outlined bar
+                  barHeight = 8
+                  barColor = 'transparent'
                   barOpacity = 1
                 }
 
@@ -500,6 +500,8 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                       opacity: barOpacity,
                       transition: 'height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s',
                       boxShadow: isToday && daySuccessful ? '0 0 6px rgba(255,255,255,0.4)' : 'none',
+                      border: barColor === 'transparent' ? '1px solid rgba(255,255,255,0.30)' : 'none',
+                      boxSizing: 'border-box',
                     }} />
                     <p style={{
                       fontSize: '9px',
@@ -515,13 +517,18 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
             {/* Legend */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
               {[
-                { color: '#C9973A', label: 'Perfect' },
-                { color: 'rgba(255,255,255,0.90)', label: 'Successful' },
-                { color: 'rgba(255,255,255,0.25)', label: 'Missed' },
-                { color: 'rgba(255,255,255,0.15)', label: 'Inactive' },
+                { color: '#C9973A', label: 'Perfect', border: false },
+                { color: 'rgba(255,255,255,0.92)', label: 'Successful', border: false },
+                { color: '#E05C5C', label: 'Missed', border: false },
+                { color: 'transparent', label: 'Inactive', border: true },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: l.color }} />
+                  <div style={{
+                    width: '8px', height: '8px', borderRadius: '2px',
+                    background: l.color,
+                    border: l.border ? '1px solid rgba(255,255,255,0.30)' : 'none',
+                    boxSizing: 'border-box',
+                  }} />
                   <span style={{ fontSize: '9px', opacity: '0.65', color: 'white' }}>{l.label}</span>
                 </div>
               ))}
