@@ -95,9 +95,9 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
   function calColor(status) {
     if (status === 'perfect') return '#C9973A'
     if (status === 'success') return 'var(--theme-primary)'
-    if (status === 'miss') return 'var(--theme-secondary)'
+    if (status === 'miss') return 'transparent'
     if (status === 'future') return 'transparent'
-    return 'var(--theme-border)' // inactive
+    return '#E05C5C' // inactive
   }
 
   function prevMonth() {
@@ -375,39 +375,48 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
 
             {/* Calendar grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-              {calDays.map((day, i) => (
-                <div key={i} style={{
-                  aspectRatio: '1', borderRadius: '6px',
-                  background: day ? calColor(day.status) : 'transparent',
-                  border: day?.date === today ? '2px solid var(--theme-primary)' : '1px solid transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: day?.status === 'inactive' ? 0.3 : 1,
-                  position: 'relative',
-                }}>
-                  {day && (
-                    <span style={{
-                      fontSize: '10px', fontWeight: '600',
-                      color: day.status === 'future' ? 'var(--theme-text-muted)'
-                        : (day.status === 'inactive') ? 'var(--theme-text-muted)'
-                          : 'white',
-                    }}>
-                      {day.day}
-                    </span>
-                  )}
-                </div>
+              <div key={i} style={{
+                aspectRatio: '1', borderRadius: '6px',
+                background: day ? calColor(day.status) : 'transparent',
+                border: day?.date === today
+                  ? '2px solid var(--theme-primary)'
+                  : day?.status === 'miss'
+                    ? '1px solid var(--theme-secondary)'
+                    : '1px solid transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: 1,
+                position: 'relative',
+                boxSizing: 'border-box',
+              }}>
+                {day && (
+                  <span style={{
+                    fontSize: '10px', fontWeight: '600',
+                    color: day.status === 'future' ? 'var(--theme-text-muted)'
+                      : (day.status === 'inactive') ? 'var(--theme-text-muted)'
+                        : 'white',
+                  }}>
+                    {day.day}
+                  </span>
+                )}
+              </div>
               ))}
             </div>
 
             {/* Legend */}
             <div style={{ display: 'flex', gap: '12px', marginTop: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
               {[
-                { color: '#C9973A', label: 'Perfect day' },
-                { color: 'var(--theme-primary)', label: 'Successful' },
-                { color: 'var(--theme-secondary)', label: 'Miss' },
-                { color: 'var(--theme-border)', label: 'Inactive' },
+                { color: '#C9973A', label: 'Perfect', border: false },
+                { color: 'var(--theme-primary)', label: 'Successful', border: false },
+                { color: 'transparent', label: 'Missed', border: true },
+                { color: '#E05C5C', label: 'Inactive', border: false },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: l.color }} />
+                  <div style={{
+                    width: '10px', height: '10px', borderRadius: '3px',
+                    background: l.color,
+                    border: l.border ? '1px solid var(--theme-secondary)' : 'none',
+                    boxSizing: 'border-box',
+                  }} />
                   <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>{l.label}</span>
                 </div>
               ))}
