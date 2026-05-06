@@ -403,7 +403,7 @@ function HowNiyamaWorksHub({ onBack, card }) {
   return (
     <SubScreen title="How Niyama Works" onBack={onBack}>
       <div style={{ background: 'var(--theme-primary)', borderRadius: '16px', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
-        <p style={{ fontSize: '32px', margin: '0 0 8px' }}>🌿</p>
+        <img src="/niyama-icon.svg" alt="Niyama Life" style={{ width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 8px', display: 'block' }} />
         <p style={{ fontSize: '16px', fontWeight: '700', color: 'white', margin: '0 0 4px' }}>Rewarding Discipline.</p>
         <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', margin: 0, lineHeight: '1.5' }}>Science-backed habits. Real financial rewards.</p>
       </div>
