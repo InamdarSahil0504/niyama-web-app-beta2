@@ -72,11 +72,6 @@ export default function Dashboard({ session }) {
   })
 
   const today = getTodayString()
-
-  // Reset habit state when date changes (midnight rollover)
-  useEffect(() => {
-    setPersistedHabitState({})
-  }, [today])
   const userId = session.user.id
 
   useEffect(() => {

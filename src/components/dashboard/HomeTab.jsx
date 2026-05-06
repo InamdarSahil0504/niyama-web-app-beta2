@@ -41,7 +41,8 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
   // Use persisted state from Dashboard (survives tab switches)
   // Fall back to building from todayLogs on first load
-  const habitState = Object.keys(persistedHabitState || {}).length > 0
+  const _realKeys = Object.keys(persistedHabitState || {}).filter(k => k !== '_date')
+  const habitState = _realKeys.length > 0
     ? persistedHabitState
     : buildHabitState()
 
