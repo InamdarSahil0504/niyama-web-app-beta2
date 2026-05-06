@@ -49,8 +49,14 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
   useEffect(() => {
-    if (todayLogs && todayLogs.length > 0) {
-      setHabitState(buildHabitState())
+    if (todayLogs !== null && todayLogs !== undefined) {
+      const newState = buildHabitState()
+      const hasAnyChecked = Object.values(newState).some(v => v)
+      const currentHasChecked = Object.values(habitState).some(v => v)
+      // Only reset if new state has data OR we have no current state
+      if (hasAnyChecked || !currentHasChecked) {
+        setHabitState(newState)
+      }
     }
   }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
