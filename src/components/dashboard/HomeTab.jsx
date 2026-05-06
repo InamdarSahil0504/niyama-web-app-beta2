@@ -30,7 +30,7 @@ function Confetti() {
   )
 }
 
-export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh }) {
+export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh, persistedHabitState, onHabitStateChange }) {
   const userId = session.user.id
 
   const buildHabitState = () => {
@@ -39,7 +39,17 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
     return state
   }
 
-  const [habitState, setHabitState] = useState(buildHabitState)
+  // Use persisted state from Dashboard (survives tab switches)
+  // Fall back to building from todayLogs on first load
+  const habitState = Object.keys(persistedHabitState || {}).length > 0
+    ? persistedHabitState
+    : buildHabitState()
+
+  function setHabitState(updater) {
+    const newState = typeof updater === 'function' ? updater(habitState) : updater
+    onHabitStateChange(newState)
+  }
+
   const [stepCount, setStepCount] = useState(0)
   const [saving, setSaving] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -47,14 +57,11 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const initialLoadDone = useRef(false)
 
+  // Seed persisted state from server logs on first load only
   useEffect(() => {
-    // Only load from server ONCE on initial mount when logs exist
-    // After that, local state is the source of truth until page reload
-    if (!initialLoadDone.current && todayLogs && todayLogs.length > 0) {
-      setHabitState(buildHabitState())
-      initialLoadDone.current = true
+    if (todayLogs && todayLogs.length > 0 && Object.keys(persistedHabitState || {}).length === 0) {
+      onHabitStateChange(buildHabitState())
     }
   }, [todayLogs])
 

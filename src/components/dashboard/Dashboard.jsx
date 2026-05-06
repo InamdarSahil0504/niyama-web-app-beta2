@@ -50,6 +50,7 @@ export default function Dashboard({ session }) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
+  const [persistedHabitState, setPersistedHabitState] = useState({})
 
   // Onboarding collected data — passed forward through screens
   const [onboardingData, setOnboardingData] = useState({
@@ -475,6 +476,8 @@ export default function Dashboard({ session }) {
               isMinor={isMinor}
               today={today}
               onRefresh={fetchData}
+              persistedHabitState={persistedHabitState}
+              onHabitStateChange={setPersistedHabitState}
             />
           )}
 
