@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../supabase'
 import MoodCheckIn from './MoodCheckIn'
 import {
@@ -47,22 +47,16 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [logsKey, setLogsKey] = useState(0)
+  const initialLoadDone = useRef(false)
 
   useEffect(() => {
-    // Only sync from server when logs actually have content
-    // This prevents tab-switch refreshes from clearing checked habits
-    if (todayLogs && todayLogs.length > 0) {
+    // Only load from server ONCE on initial mount when logs exist
+    // After that, local state is the source of truth until page reload
+    if (!initialLoadDone.current && todayLogs && todayLogs.length > 0) {
       setHabitState(buildHabitState())
+      initialLoadDone.current = true
     }
-  }, [logsKey])
-
-  useEffect(() => {
-    // When todayLogs gets real data (length > 0), trigger a sync
-    if (todayLogs && todayLogs.length > 0) {
-      setLogsKey(k => k + 1)
-    }
-  }, [JSON.stringify(todayLogs)])
+  }, [todayLogs])
 
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
