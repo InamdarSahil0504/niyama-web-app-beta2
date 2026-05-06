@@ -116,7 +116,7 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
       {/* Section 3 & 4 — Niyama */}
       <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Niyama</p>
       <SectionCard>
-        <SettingsRow icon="🌿" label="How Niyama Works" subtitle="Founder's story, the science, how it works" onPress={() => setScreen('how-niyama-works')} />
+        <SettingsRow icon={<img src="/niyama-icon.svg" alt="" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />} label="How Niyama Works" subtitle="Founder's story, the science, how it works" onPress={() => setScreen('how-niyama-works')} />
         <SettingsRow icon="🎁" label="Your Plan & Rewards" subtitle={`${tierConfig?.label || 'Free'} · ${isFree ? 'Upgrade to earn rewards' : `Up to $${(tierConfig?.max_cap || tierConfig?.reward_cap || 0).toFixed(2)}/month`}`} onPress={() => setScreen('plan-rewards')} style={{ borderBottom: 'none' }} />
       </SectionCard>
 
