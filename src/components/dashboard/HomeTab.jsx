@@ -48,7 +48,11 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
+  useEffect(() => {
+    if (todayLogs && todayLogs.length > 0) {
+      setHabitState(buildHabitState())
+    }
+  }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
