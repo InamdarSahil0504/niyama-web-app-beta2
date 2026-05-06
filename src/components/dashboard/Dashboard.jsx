@@ -49,6 +49,7 @@ export default function Dashboard({ session }) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
+  const [weekSummaries, setWeekSummaries] = useState([])
 
   const [onboardingData, setOnboardingData] = useState({
     wakeMinutes: 450,
@@ -231,6 +232,18 @@ export default function Dashboard({ session }) {
       .from('daily_summaries').select('*')
       .eq('user_id', userId).eq('date', today).maybeSingle()
     setTodaySummary(summaryData)
+
+    // ── Fetch last 7 days of summaries for the streak bar chart ──
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    const sevenDaysAgoStr = sevenDaysAgo.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    const { data: weekData } = await supabase
+      .from('daily_summaries')
+      .select('date, total_points, day_successful, perfect_day, submitted')
+      .eq('user_id', userId)
+      .gte('date', sevenDaysAgoStr)
+      .order('date', { ascending: true })
+    setWeekSummaries(weekData || [])
 
     setLoading(false)
   }
@@ -428,6 +441,7 @@ export default function Dashboard({ session }) {
               userHabits={userHabits}
               todayLogs={todayLogs}
               todaySummary={todaySummary}
+              weekSummaries={weekSummaries}
               isMinor={isMinor}
               today={today}
               onRefresh={fetchData}

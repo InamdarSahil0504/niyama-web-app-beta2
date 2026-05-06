@@ -30,7 +30,7 @@ function Confetti() {
   )
 }
 
-export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh }) {
+export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, weekSummaries, isMinor, today, onRefresh }) {
   const userId = session.user.id
 
   const buildHabitState = () => {
@@ -449,41 +449,82 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
             </div>
           </div>
 
-          {/* 7-day dots */}
-          <div>
-            <p style={{ fontSize: '10px', opacity: '0.6', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Last 7 days</p>
-            <div style={{ display: 'flex', gap: '6px' }}>
+          {/* 7-day bar chart */}
+          <div style={{ marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', opacity: '0.6', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Last 7 days</p>
+            <div style={{ display: 'flex', gap: '5px', alignItems: 'flex-end', height: '52px' }}>
               {Array.from({ length: 7 }, (_, i) => {
                 const dayOffset = 6 - i
                 const isToday = dayOffset === 0
                 const date = new Date()
                 date.setDate(date.getDate() - dayOffset)
-                const dateStr = date.toLocaleDateString('en-CA')
-                const dayLabel = isToday ? 'Today' : ['M', 'T', 'W', 'T', 'F', 'S', 'S'][(date.getDay() + 6) % 7]
-                // Check actual daily summaries for this date
-                const dayData = todaySummary && isToday ? todaySummary : null
-                const wasSuccessful = isToday ? daySuccessful : dayOffset < (streak?.current_streak || 0)
-                const wasSubmitted = isToday ? isSubmitted : dayOffset < (streak?.current_streak || 0)
+                const dateStr = date.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+                const dayLabel = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]
+
+                // Look up real data from weekSummaries
+                const summary = (weekSummaries || []).find(s => s.date === dateStr)
+
+                // Determine bar color and height
+                let barColor, barHeight, barOpacity
+                if (isToday) {
+                  // Today: partial fill based on live points, teal color
+                  const livePoints = todayPoints
+                  barHeight = isSubmitted
+                    ? (daySuccessful ? (dayPerfect ? 52 : Math.max((livePoints / 750) * 52, 6)) : Math.max((livePoints / 750) * 52, 6))
+                    : Math.max((livePoints / 750) * 52, 4)
+                  barColor = dayPerfect ? '#C9973A' : daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
+                  barOpacity = 1
+                } else if (summary?.submitted) {
+                  const pts = summary.total_points || 0
+                  barHeight = Math.max((pts / 750) * 52, 4)
+                  barColor = summary.perfect_day
+                    ? '#C9973A'
+                    : summary.day_successful
+                      ? 'rgba(255,255,255,0.90)'
+                      : 'rgba(255,255,255,0.25)'
+                  barOpacity = summary.day_successful ? 1 : 0.7
+                } else {
+                  // No data / inactive
+                  barHeight = 3
+                  barColor = 'rgba(255,255,255,0.15)'
+                  barOpacity = 1
+                }
+
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '52px', gap: '5px' }}>
                     <div style={{
-                      width: '100%', aspectRatio: '1', borderRadius: '50%',
-                      background: isToday
-                        ? (daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)')
-                        : (wasSuccessful ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'),
-                      border: isToday ? '2px solid rgba(255,255,255,0.9)' : 'none',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.3s ease',
-                      boxShadow: (wasSuccessful) ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
-                    }}>
-                      {wasSuccessful && (
-                        <span style={{ fontSize: '9px', color: isToday ? 'rgba(255,255,255,0.9)' : 'var(--theme-primary)', fontWeight: '700' }}>✓</span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: '8px', opacity: '0.65', fontWeight: '500' }}>{dayLabel}</p>
+                      width: '100%',
+                      height: `${barHeight}px`,
+                      background: barColor,
+                      borderRadius: '3px 3px 2px 2px',
+                      opacity: barOpacity,
+                      transition: 'height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s',
+                      boxShadow: isToday && daySuccessful ? '0 0 6px rgba(255,255,255,0.4)' : 'none',
+                    }} />
+                    <p style={{
+                      fontSize: '9px',
+                      opacity: isToday ? 1 : 0.55,
+                      fontWeight: isToday ? '700' : '400',
+                      color: 'white',
+                      lineHeight: 1,
+                    }}>{isToday ? '·' : dayLabel}</p>
                   </div>
                 )
               })}
+            </div>
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
+              {[
+                { color: '#C9973A', label: 'Perfect' },
+                { color: 'rgba(255,255,255,0.90)', label: 'Successful' },
+                { color: 'rgba(255,255,255,0.25)', label: 'Missed' },
+                { color: 'rgba(255,255,255,0.15)', label: 'Inactive' },
+              ].map(l => (
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: l.color }} />
+                  <span style={{ fontSize: '9px', opacity: '0.65', color: 'white' }}>{l.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
