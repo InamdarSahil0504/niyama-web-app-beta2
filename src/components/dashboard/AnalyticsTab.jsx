@@ -375,30 +375,31 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
 
             {/* Calendar grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-              <div key={i} style={{
-                aspectRatio: '1', borderRadius: '6px',
-                background: day ? calColor(day.status) : 'transparent',
-                border: day?.date === today
-                  ? '2px solid var(--theme-primary)'
-                  : day?.status === 'miss'
-                    ? '1px solid var(--theme-secondary)'
-                    : '1px solid transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                opacity: 1,
-                position: 'relative',
-                boxSizing: 'border-box',
-              }}>
-                {day && (
-                  <span style={{
-                    fontSize: '10px', fontWeight: '600',
-                    color: day.status === 'future' ? 'var(--theme-text-muted)'
-                      : (day.status === 'inactive') ? 'var(--theme-text-muted)'
-                        : 'white',
-                  }}>
-                    {day.day}
-                  </span>
-                )}
-              </div>
+              {calDays.map((day, i) => (
+                <div key={i} style={{
+                  aspectRatio: '1', borderRadius: '6px',
+                  background: day ? calColor(day.status) : 'transparent',
+                  border: day?.date === today
+                    ? '2px solid var(--theme-primary)'
+                    : day?.status === 'miss'
+                      ? '1px solid var(--theme-secondary)'
+                      : '1px solid transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: 1,
+                  position: 'relative',
+                  boxSizing: 'border-box',
+                }}>
+                  {day && (
+                    <span style={{
+                      fontSize: '10px', fontWeight: '600',
+                      color: day.status === 'future' ? 'var(--theme-text-muted)'
+                        : (day.status === 'inactive') ? 'var(--theme-text-muted)'
+                          : 'white',
+                    }}>
+                      {day.day}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
 
