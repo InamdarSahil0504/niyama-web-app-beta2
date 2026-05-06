@@ -23,19 +23,18 @@ import SettingsTab from './SettingsTab'
 import BottomNav from './BottomNav'
 import ReferralTab from './ReferralTab'
 
-// Onboarding steps in order
 const STEPS = [
-  'founder-story',      // 1
-  'rules',              // 2 (rules page = screen 3 in spec, but kept as pre-signup context)
-  'personal-details',   // 3
-  'health-permission',  // 4
-  'tier-select',        // 5
-  'wake-time',          // 6
-  'movement',           // 7
-  'habit-select',       // 8
-  'custom-habits',      // 9
-  'notifications',      // 10
-  'ready',              // 11
+  'founder-story',
+  'rules',
+  'personal-details',
+  'health-permission',
+  'tier-select',
+  'wake-time',
+  'movement',
+  'habit-select',
+  'custom-habits',
+  'notifications',
+  'ready',
 ]
 
 export default function Dashboard({ session }) {
@@ -50,20 +49,9 @@ export default function Dashboard({ session }) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
-  const [habitStateDate, setHabitStateDate] = useState(getTodayString())
 
-  // Reset persisted habit state when date changes
-  useEffect(() => {
-    const currentDate = getTodayString()
-    if (habitStateDate !== currentDate) {
-      setPersistedHabitState({})
-      setHabitStateDate(currentDate)
-    }
-  }, [today])
-
-  // Onboarding collected data — passed forward through screens
   const [onboardingData, setOnboardingData] = useState({
-    wakeMinutes: 450,         // default 7:30am
+    wakeMinutes: 450,
     movementPreference: 'steps',
     libraryKeys: [],
     customHabits: [],
@@ -74,14 +62,12 @@ export default function Dashboard({ session }) {
   const userId = session.user.id
 
   useEffect(() => {
-    // Check for Stripe/redirect returns BEFORE fetching data
     const params = new URLSearchParams(window.location.search)
 
     if (params.get('onboarding') === 'continue') {
       window.history.replaceState({}, '', window.location.pathname)
       localStorage.removeItem('niyama_onboarding_pending')
       localStorage.removeItem('niyama_onboarding_step')
-      // Will be set after fetchData completes
       localStorage.setItem('niyama_restore_step', 'wake-time')
     }
 
@@ -97,7 +83,6 @@ export default function Dashboard({ session }) {
   async function fetchData() {
     setLoading(true)
 
-    // 1. Load profile
     const { data: profileData } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()
 
@@ -105,7 +90,6 @@ export default function Dashboard({ session }) {
       if (profileData.color_theme) applyTheme(profileData.color_theme)
       if (profileData.is_minor) setIsMinor(true)
 
-      // Sync timezone + email
       const updates = {}
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
       if (tz && profileData.timezone !== tz) updates.timezone = tz
@@ -114,7 +98,6 @@ export default function Dashboard({ session }) {
         await supabase.from('profiles').update(updates).eq('id', userId)
       }
 
-      // Month rollover
       const now = new Date()
       if (profileData.last_active_date) {
         const lastActive = new Date(profileData.last_active_date)
@@ -127,7 +110,7 @@ export default function Dashboard({ session }) {
         }
       }
     }
-    // Auto-submit yesterday if habits logged but not submitted
+
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayStr = yesterday.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
@@ -141,7 +124,6 @@ export default function Dashboard({ session }) {
       .eq('user_id', userId).eq('date', yesterdayStr)
 
     if (yesterdayLogs && yesterdayLogs.length > 0 && !yesterdaySummary?.submitted) {
-      // Has logs but not submitted — auto-submit
       const coreKeys = ['wake', 'no_phone', 'steps']
       const coreCompleted = yesterdayLogs.filter(l => coreKeys.includes(l.habit_key) && l.completed).length
       const totalCompleted = yesterdayLogs.filter(l => l.completed).length
@@ -170,7 +152,6 @@ export default function Dashboard({ session }) {
         await supabase.from('daily_summaries').insert(autoPayload)
       }
     } else if (!yesterdaySummary && (!yesterdayLogs || yesterdayLogs.length === 0)) {
-      // Nothing logged — mark as inactive
       await supabase.from('daily_summaries').upsert({
         user_id: userId, date: yesterdayStr,
         core_completed: 0, library_completed: 0, custom_completed: 0,
@@ -180,13 +161,11 @@ export default function Dashboard({ session }) {
         submitted: true, auto_submitted: true,
         submitted_at: new Date().toISOString(),
       }, { onConflict: 'user_id,date' })
-      // Increment consecutive inactive days
       await supabase.from('profiles').update({
         consecutive_inactive_days: (profileData?.consecutive_inactive_days || 0) + 1
       }).eq('id', userId)
     }
 
-    // 2. Reload profile
     const { data: updatedProfile } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(updatedProfile)
@@ -226,12 +205,10 @@ export default function Dashboard({ session }) {
       }
     }
 
-    // 3. Load streak
     const { data: streakData } = await supabase
       .from('streaks').select('*').eq('user_id', userId).single()
     setStreak(streakData)
 
-    // 3b. Load streak freeze status
     const now2 = new Date()
     const currentMonth2 = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}`
     const { data: freezeData } = await supabase
@@ -242,17 +219,14 @@ export default function Dashboard({ session }) {
       .maybeSingle()
     setStreakFreeze(freezeData || null)
 
-    // 4. Load habit selection (one row per habit)
     const { data: userHabitData } = await supabase
       .from('user_habits').select('*').eq('user_id', userId).eq('is_active', true)
     setUserHabits(userHabitData || [])
 
-    // 5. Load today's logs
     const { data: logsData } = await supabase
       .from('habit_logs').select('*').eq('user_id', userId).eq('date', today)
     setTodayLogs(logsData || [])
 
-    // 6. Load today's summary
     const { data: summaryData } = await supabase
       .from('daily_summaries').select('*')
       .eq('user_id', userId).eq('date', today).maybeSingle()
@@ -261,7 +235,6 @@ export default function Dashboard({ session }) {
     setLoading(false)
   }
 
-  // ── Onboarding step navigation ─────────────────────────────────────────────
   function nextStep(currentStep) {
     const idx = STEPS.indexOf(currentStep)
     if (idx < STEPS.length - 1) {
@@ -275,16 +248,13 @@ export default function Dashboard({ session }) {
     const idx = STEPS.indexOf(currentStep)
     if (idx <= 0) return
     const prevStepKey = STEPS[idx - 1]
-    // Can't go back past payment
     if (prevStepKey === 'tier-select' && profile?.stripe_subscription_id) return
     setOnboardingStep(prevStepKey)
   }
 
-  // ── Save user_habits row after onboarding ──────────────────────────────────
   async function saveUserHabits(data) {
     const { libraryKeys, customHabits, wakeMinutes, movementPreference } = data
 
-    // Build user_habits upsert
     const habitPayload = {
       user_id: userId,
       library_habit_1: libraryKeys[0] || null,
@@ -308,7 +278,6 @@ export default function Dashboard({ session }) {
     }
   }
 
-  // ── Complete onboarding ────────────────────────────────────────────────────
   async function completeOnboarding() {
     await saveUserHabits(onboardingData)
     await supabase.from('profiles').update({
@@ -322,7 +291,6 @@ export default function Dashboard({ session }) {
       library_habits: onboardingData.libraryKeys,
       wake_minutes: onboardingData.wakeMinutes,
     })
-    // Update local profile state directly to avoid re-triggering onboarding
     setProfile(prev => ({ ...prev, onboarding_complete: true }))
     setOnboardingStep(null)
   }
@@ -336,7 +304,6 @@ export default function Dashboard({ session }) {
     trackEvent(supabase, userId, 'page_visit', { page: tab })
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
       <img src="/niyama-icon.svg" alt="Niyama Life"
@@ -345,36 +312,28 @@ export default function Dashboard({ session }) {
     </div>
   )
 
-  // ── Onboarding flow ────────────────────────────────────────────────────────
-
-  // Screen 1 — Founder story
   if (onboardingStep === 'founder-story')
     return <FounderStory onContinue={() => nextStep('founder-story')} />
 
-  // Screen 2 — Rules (using RulesPage which covers the "how it works" context)
   if (onboardingStep === 'rules')
     return <RulesPage onBack={() => prevStep('rules')} onContinue={async () => {
       await supabase.from('profiles').update({ rules_acknowledged: true }).eq('id', userId)
       nextStep('rules')
     }} />
 
-  // Screen 3 — Personal details
   if (onboardingStep === 'personal-details')
     return <PersonalDetails userId={userId} onBack={() => prevStep('personal-details')} onContinue={async (minor, theme) => {
       setIsMinor(minor)
       applyTheme(theme)
       if (minor) {
-        // Minors skip tier select — set free tier automatically
         await supabase.from('profiles').update({ tier: 'free', tier_chosen: true }).eq('id', userId)
         setProfile(prev => ({ ...prev, tier: 'free', tier_chosen: true, is_minor: true }))
-        // Skip health-permission and tier-select, go straight to wake-time
         setOnboardingStep('health-permission')
       } else {
         nextStep('personal-details')
       }
     }} />
 
-  // Screen 4 — Health permission
   if (onboardingStep === 'health-permission')
     return <HealthPermission
       onBack={() => prevStep('health-permission')}
@@ -382,7 +341,6 @@ export default function Dashboard({ session }) {
       onSkip={() => nextStep('health-permission')}
     />
 
-  // Screen 5 — Tier select
   if (onboardingStep === 'tier-select') {
     if (isMinor) { nextStep('tier-select'); return null }
     return <TierSelect userId={userId}
@@ -393,7 +351,6 @@ export default function Dashboard({ session }) {
       }} />
   }
 
-  // Screen 6 — Wake time
   if (onboardingStep === 'wake-time')
     return <WakeTime
       onBack={() => prevStep('wake-time')}
@@ -402,7 +359,6 @@ export default function Dashboard({ session }) {
         nextStep('wake-time')
       }} />
 
-  // Screen 7 — Movement preference
   if (onboardingStep === 'movement')
     return <MovementPreference
       onBack={() => prevStep('movement')}
@@ -411,7 +367,6 @@ export default function Dashboard({ session }) {
         nextStep('movement')
       }} />
 
-  // Screen 8 — Library habit selection
   if (onboardingStep === 'habit-select')
     return <HabitSelect
       onBack={() => prevStep('habit-select')}
@@ -420,13 +375,10 @@ export default function Dashboard({ session }) {
         nextStep('habit-select')
       }} />
 
-  // Screen 9 — Custom habits (skipped for Free tier inside the component)
   if (onboardingStep === 'custom-habits') {
     const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-
     const slots = TIER_CONFIG[effectiveTier]?.custom_habit_slots || 0
     if (slots === 0) {
-      // Skip straight to next step for Free tier
       nextStep('custom-habits')
       return null
     }
@@ -440,7 +392,6 @@ export default function Dashboard({ session }) {
     />
   }
 
-  // Screen 10 — Notifications
   if (onboardingStep === 'notifications')
     return <NotificationsSetup
       onBack={() => prevStep('notifications')}
@@ -449,7 +400,6 @@ export default function Dashboard({ session }) {
         nextStep('notifications')
       }} />
 
-  // Screen 11 — Ready
   if (onboardingStep === 'ready')
     return <OnboardingReady
       profile={profile}
@@ -460,18 +410,14 @@ export default function Dashboard({ session }) {
       onComplete={completeOnboarding}
     />
 
-  // Fallback — if tier not chosen yet
   if (!profile?.tier_chosen)
     return <TierSelect userId={userId} onComplete={(tier) => {
       setProfile(prev => ({ ...prev, tier, tier_chosen: true }))
     }} />
 
-
-  // ── Main app ───────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', display: 'flex', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: '448px', position: 'relative' }}>
-
         <div key={activeTab} style={{ width: '100%', padding: '32px 16px 96px', animation: 'fadeInUp 0.2s ease' }}>
           {activeTab === 'home' && (
             <HomeTab
@@ -487,7 +433,6 @@ export default function Dashboard({ session }) {
               onRefresh={fetchData}
             />
           )}
-
           {activeTab === 'analytics' && (
             <AnalyticsTab
               session={session}
@@ -496,7 +441,6 @@ export default function Dashboard({ session }) {
               userHabits={userHabits}
             />
           )}
-
           {activeTab === 'rewards' && (
             <RewardsTab
               session={session}
@@ -523,12 +467,9 @@ export default function Dashboard({ session }) {
               onRefresh={fetchData}
             />
           )}
-
         </div>
-
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </div>
   )
-
 }
