@@ -50,7 +50,6 @@ export default function Dashboard({ session }) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
-  const [persistedHabitState, setPersistedHabitState] = useState({})
   const [habitStateDate, setHabitStateDate] = useState(getTodayString())
 
   // Reset persisted habit state when date changes
@@ -486,8 +485,6 @@ export default function Dashboard({ session }) {
               isMinor={isMinor}
               today={today}
               onRefresh={fetchData}
-              persistedHabitState={persistedHabitState}
-              onHabitStateChange={setPersistedHabitState}
             />
           )}
 

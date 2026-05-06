@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
 import MoodCheckIn from './MoodCheckIn'
 import {
@@ -30,7 +30,7 @@ function Confetti() {
   )
 }
 
-export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh, persistedHabitState, onHabitStateChange }) {
+export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, isMinor, today, onRefresh }) {
   const userId = session.user.id
 
   const buildHabitState = () => {
@@ -41,16 +41,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
 
   // Use persisted state from Dashboard (survives tab switches)
   // Fall back to building from todayLogs on first load
-  const _realKeys = Object.keys(persistedHabitState || {}).filter(k => k !== '_date')
-  const habitState = _realKeys.length > 0
-    ? persistedHabitState
-    : buildHabitState()
-
-  function setHabitState(updater) {
-    const newState = typeof updater === 'function' ? updater(habitState) : updater
-    onHabitStateChange(newState)
-  }
-
+  const [habitState, setHabitState] = useState(buildHabitState)
   const [stepCount, setStepCount] = useState(0)
   const [saving, setSaving] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -59,13 +50,7 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  // Seed persisted state from server logs on first load only
-  useEffect(() => {
-    if (todayLogs && todayLogs.length > 0 && Object.keys(persistedHabitState || {}).length === 0) {
-      onHabitStateChange(buildHabitState())
-    }
-  }, [todayLogs])
-
+  useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
