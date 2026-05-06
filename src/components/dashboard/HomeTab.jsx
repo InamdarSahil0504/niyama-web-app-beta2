@@ -47,18 +47,23 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [logsKey, setLogsKey] = useState(0)
 
   useEffect(() => {
-    if (todayLogs !== null && todayLogs !== undefined) {
-      const newState = buildHabitState()
-      const hasAnyChecked = Object.values(newState).some(v => v)
-      const currentHasChecked = Object.values(habitState).some(v => v)
-      // Only reset if new state has data OR we have no current state
-      if (hasAnyChecked || !currentHasChecked) {
-        setHabitState(newState)
-      }
+    // Only sync from server when logs actually have content
+    // This prevents tab-switch refreshes from clearing checked habits
+    if (todayLogs && todayLogs.length > 0) {
+      setHabitState(buildHabitState())
     }
-  }, [todayLogs])
+  }, [logsKey])
+
+  useEffect(() => {
+    // When todayLogs gets real data (length > 0), trigger a sync
+    if (todayLogs && todayLogs.length > 0) {
+      setLogsKey(k => k + 1)
+    }
+  }, [JSON.stringify(todayLogs)])
+
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
