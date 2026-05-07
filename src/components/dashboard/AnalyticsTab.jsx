@@ -381,7 +381,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
           {[
             { color: '#C9973A', label: 'Perfect', border: false },
             { color: 'var(--theme-primary)', label: 'Successful', border: false },
-            { color: 'transparent', label: 'Missed', border: true },
+            { color: 'transparent', label: 'Partial', border: true },
             { color: '#E05C5C', label: 'Inactive', border: false },
           ].map(l => (
             <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -643,7 +643,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                 <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
                   <p style={{ fontSize: '20px', marginBottom: '4px', margin: '0 0 4px' }}>{MOOD_EMOJIS[Math.round(avgMissedMood) - 1]}</p>
                   <p style={{ fontSize: '13px', fontWeight: '700', color: '#dc2626', margin: '0 0 2px' }}>{avgMissedMood.toFixed(1)}/5</p>
-                  <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Missed Days</p>
+                  <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Partial Days</p>
                 </div>
               </div>
             )}
@@ -665,7 +665,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
               ))}
             </div>
             <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', marginTop: '8px', textAlign: 'center', margin: '8px 0 0' }}>
-              Faded bars = missed days · Full bars = successful days
+              Faded bars = partial days · Full bars = successful days
             </p>
           </div>
         )
