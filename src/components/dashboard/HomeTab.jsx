@@ -272,10 +272,10 @@ export default function HomeTab({
         points: todayPoints, day_successful: daySuccessful, perfect_day: dayPerfect, tier: effectiveTier,
       })
 
-      setShowMoodCheckIn(true)
       setSubmitSuccess(true)
       setTimeout(() => setSubmitSuccess(false), 1500)
       await onRefresh()
+      setShowMoodCheckIn(true)
     } catch (e) { console.error('Submit failed', e) }
     finally { setSaving(false) }
   }
@@ -435,7 +435,7 @@ export default function HomeTab({
               {[
                 { color: '#C9973A', label: 'Perfect', border: false },
                 { color: 'rgba(255,255,255,0.92)', label: 'Successful', border: false },
-                { color: 'transparent', label: 'Missed', border: true },
+                { color: 'transparent', label: 'Partial', border: true },
                 { color: '#E05C5C', label: 'Inactive', border: false },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
