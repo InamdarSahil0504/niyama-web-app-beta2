@@ -30,19 +30,14 @@ function Confetti() {
   )
 }
 
-export default function HomeTab({ session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary, weekSummaries, isMinor, today, onRefresh }) {
+// habitState and stepCount are now props from Dashboard — they survive tab switches
+export default function HomeTab({
+  session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary,
+  weekSummaries, habitState, setHabitState, stepCount, setStepCount,
+  isMinor, today, onRefresh
+}) {
   const userId = session.user.id
 
-  const buildHabitState = () => {
-    const state = {}
-    if (todayLogs) todayLogs.forEach(log => { state[log.habit_key] = log.completed })
-    return state
-  }
-
-  // Use persisted state from Dashboard (survives tab switches)
-  // Fall back to building from todayLogs on first load
-  const [habitState, setHabitState] = useState(buildHabitState)
-  const [stepCount, setStepCount] = useState(0)
   const [saving, setSaving] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [lastTotalCompleted, setLastTotalCompleted] = useState(0)
@@ -50,7 +45,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  useEffect(() => { setHabitState(buildHabitState()) }, [todayLogs])
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
@@ -306,7 +300,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
         tier: effectiveTier,
       })
 
-      // Show mood check-in after successful submit
       setShowMoodCheckIn(true)
       setSubmitSuccess(true)
       setTimeout(() => setSubmitSuccess(false), 1500)
@@ -412,7 +405,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
           boxShadow: '0 4px 15px rgba(74, 122, 104, 0.3)',
           position: 'relative', overflow: 'hidden',
         }}>
-          {/* Background glow for high streaks */}
           {(streak?.current_streak || 0) >= 14 && (
             <div style={{
               position: 'absolute', top: '-20px', right: '-20px',
@@ -461,17 +453,11 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                 const dateStr = date.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
                 const dayLabel = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]
 
-                // Look up real data from weekSummaries
                 const summary = (weekSummaries || []).find(s => s.date === dateStr)
 
-                // Determine bar color and height
                 let barColor, barHeight, barOpacity
                 if (isToday) {
-                  // Today: partial fill based on live points, teal color
-                  const livePoints = todayPoints
-                  barHeight = isSubmitted
-                    ? (daySuccessful ? (dayPerfect ? 52 : Math.max((livePoints / 750) * 52, 6)) : Math.max((livePoints / 750) * 52, 6))
-                    : Math.max((livePoints / 750) * 52, 4)
+                  barHeight = Math.max((todayPoints / 750) * 52, 4)
                   barColor = dayPerfect ? '#C9973A' : daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
                   barOpacity = 1
                 } else if (summary?.submitted) {
@@ -484,7 +470,6 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                       : 'transparent'
                   barOpacity = 1
                 } else {
-                  // No data / inactive — red bar
                   barHeight = 8
                   barColor = '#E05C5C'
                   barOpacity = 1
@@ -705,20 +690,12 @@ export default function HomeTab({ session, profile, streak, streakFreeze, userHa
                 width: '100%', marginTop: '12px', color: 'white', fontWeight: '700',
                 padding: '14px', borderRadius: '10px', border: 'none',
                 fontSize: '15px', cursor: saving || submitSuccess ? 'default' : 'pointer',
-                background: submitSuccess
-                  ? '#22c55e'
-                  : saving
-                    ? 'var(--theme-text-muted)'
-                    : 'var(--theme-secondary)',
+                background: submitSuccess ? '#22c55e' : saving ? 'var(--theme-text-muted)' : 'var(--theme-secondary)',
                 transform: submitSuccess ? 'scale(1.02)' : 'scale(1)',
                 transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 boxShadow: submitSuccess ? '0 4px 15px rgba(34, 197, 94, 0.4)' : 'none',
               }}>
-              {submitSuccess
-                ? '✓ Day submitted!'
-                : saving
-                  ? 'Submitting...'
-                  : 'Submit today'}
+              {submitSuccess ? '✓ Day submitted!' : saving ? 'Submitting...' : 'Submit today'}
             </button>
           </>
         )}
@@ -792,7 +769,6 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
       transition: 'opacity 0.2s',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-        {/* Custom checkbox */}
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <input
             type="checkbox" checked={checked}
@@ -824,7 +800,6 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
             fontSize: '14px',
             color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)',
             fontWeight: checked ? '500' : '400',
-            textDecoration: checked ? 'none' : 'none',
             transition: 'all 0.2s',
           }}>{habit.label}</span>
         </div>

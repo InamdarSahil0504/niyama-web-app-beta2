@@ -43,13 +43,17 @@ export default function Dashboard({ session }) {
   const [userHabits, setUserHabits] = useState(null)
   const [todaySummary, setTodaySummary] = useState(null)
   const [todayLogs, setTodayLogs] = useState([])
+  const [weekSummaries, setWeekSummaries] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
   const [onboardingStep, setOnboardingStep] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
   const [isMinor, setIsMinor] = useState(false)
   const [streakFreeze, setStreakFreeze] = useState(null)
-  const [weekSummaries, setWeekSummaries] = useState([])
+
+  // ── Lifted state — survives tab switches ──────────────────────────────────
+  const [habitState, setHabitState] = useState({})
+  const [stepCount, setStepCount] = useState(0)
 
   const [onboardingData, setOnboardingData] = useState({
     wakeMinutes: 450,
@@ -192,6 +196,7 @@ export default function Dashboard({ session }) {
       await fetchData()
       return
     }
+
     if (updatedProfile) {
       if (!updatedProfile.onboarding_complete) {
         const restoreStep = localStorage.getItem('niyama_restore_step')
@@ -228,12 +233,26 @@ export default function Dashboard({ session }) {
       .from('habit_logs').select('*').eq('user_id', userId).eq('date', today)
     setTodayLogs(logsData || [])
 
+    // ── Build habitState from fresh DB logs — single source of truth ────────
+    // Stored in Dashboard so it survives tab switches without ever resetting
+    const freshHabitState = {}
+    if (logsData) {
+      logsData.forEach(log => {
+        freshHabitState[log.habit_key] = log.completed
+      })
+    }
+    setHabitState(freshHabitState)
+
+    // ── Reset stepCount only if no steps log exists for today ───────────────
+    const stepsLog = logsData?.find(l => l.habit_key === 'steps')
+    if (!stepsLog) setStepCount(0)
+
     const { data: summaryData } = await supabase
       .from('daily_summaries').select('*')
       .eq('user_id', userId).eq('date', today).maybeSingle()
     setTodaySummary(summaryData)
 
-    // ── Fetch last 7 days of summaries for the streak bar chart ──
+    // ── Last 7 days for streak bar chart ────────────────────────────────────
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
     const sevenDaysAgoStr = sevenDaysAgo.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
@@ -442,6 +461,10 @@ export default function Dashboard({ session }) {
               todayLogs={todayLogs}
               todaySummary={todaySummary}
               weekSummaries={weekSummaries}
+              habitState={habitState}
+              setHabitState={setHabitState}
+              stepCount={stepCount}
+              setStepCount={setStepCount}
               isMinor={isMinor}
               today={today}
               onRefresh={fetchData}
