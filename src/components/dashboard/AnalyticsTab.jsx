@@ -441,7 +441,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
         {[
           { label: 'Success Rate', value: `${successRate}%`, sub: `${successfulDays} of ${totalDays} days`, color: 'var(--theme-primary)' },
           { label: 'Perfect Days', value: perfectDays, sub: 'All habits completed', color: '#C9973A' },
-          { label: 'Avg Points / Day', value: avgPoints, sub: 'Out of 750 max', color: 'var(--theme-text)' },
+          { label: 'Avg Points / Day', value: avgPoints, sub: 'Daily average', color: 'var(--theme-text)' },
           { label: 'Best Streak', value: `${streak?.longest_streak || 0}d`, sub: `Current: ${streak?.current_streak || 0} days`, color: 'var(--theme-text)' },
         ].map(kpi => (
           <div key={kpi.label} style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '14px', padding: '14px' }}>
@@ -670,6 +670,24 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
           </div>
         )
       })()}
+
+      {/* Mobile app insight card */}
+      <div style={{ background: 'linear-gradient(135deg, #3D6B5A, #4A7A68)', borderRadius: '16px', padding: '20px', marginTop: '8px', boxShadow: '0 2px 8px rgba(74,122,104,0.25)' }}>
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>📱</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: '800', color: 'white', margin: '0 0 6px', lineHeight: 1.2 }}>Advanced health analytics — coming soon</p>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: '0 0 14px' }}>
+              Connect the Niyama mobile app for Circadian Consistency Score, HRV trends, and habit-biometric correlations — insights the web app can't access alone.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {['Circadian Score', 'HRV Trends', 'Sleep Depth', 'Recovery Index'].map(label => (
+                <span key={label} style={{ fontSize: '10px', fontWeight: '700', background: 'rgba(255,255,255,0.15)', color: 'white', padding: '3px 9px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.2)' }}>{label}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

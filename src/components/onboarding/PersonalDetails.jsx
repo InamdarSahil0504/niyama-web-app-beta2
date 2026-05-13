@@ -6,7 +6,7 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
     const [month, setMonth] = useState('')
     const [year, setYear] = useState('')
     const [gender, setGender] = useState('')
-    const [theme, setTheme] = useState('')
+    const [region, setRegion] = useState('')
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState('')
 
@@ -24,22 +24,17 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
         return age
     }
 
-    function handleGenderSelect(g) {
-        setGender(g)
-        setTheme(g === 'Female' ? 'salmon' : 'sage')
-    }
-
     async function handleContinue() {
         if (!day || !month || !year) { setMessage('Please enter your date of birth.'); return }
         if (!gender) { setMessage('Please select your gender.'); return }
-        if (!theme) { setMessage('Please select your preferred theme.'); return }
+        if (!region) { setMessage('Please select your region.'); return }
         const age = calculateAge(parseInt(day), parseInt(month), parseInt(year))
         if (age < 13) { setMessage('Sorry — Niyama is not available for users under 13 years of age.'); return }
         setSaving(true)
         const isMinor = age < 18
         const dob = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-        await supabase.from('profiles').update({ gender, date_of_birth: dob, age, is_minor: isMinor, color_theme: theme }).eq('id', userId)
-        onContinue(isMinor, theme)
+        await supabase.from('profiles').update({ gender, date_of_birth: dob, age, is_minor: isMinor, region }).eq('id', userId)
+        onContinue(isMinor)
         setSaving(false)
     }
 
@@ -51,7 +46,7 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
     const card = { background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', padding: '24px', marginBottom: '16px' }
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '40px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--theme-bg)', padding: '32px 24px 96px', maxWidth: '448px', margin: '0 auto' }}>
             {/* Back button */}
             {onBack && (
                 <button onClick={onBack} style={{
@@ -63,9 +58,12 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
                     ← Back
                 </button>
             )}
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--theme-text)' }}>Niyama</h1>
-                <h2 style={{ fontSize: '18px', fontWeight: '600', marginTop: '12px', color: 'var(--theme-text)' }}>Tell us about yourself</h2>
+
+            {/* Progress bar */}
+            <ProgressBar step={3} total={9} />
+
+            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>Tell us about yourself</h2>
                 <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', marginTop: '6px' }}>This helps us personalise your experience</p>
             </div>
 
@@ -104,7 +102,7 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
                 <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>Helps us understand our users better</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     {['Male', 'Female', 'Other', 'Prefer not to say'].map(g => (
-                        <button key={g} onClick={() => handleGenderSelect(g)}
+                        <button key={g} onClick={() => setGender(g)}
                             style={{
                                 padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s',
                                 background: gender === g ? 'var(--theme-primary)' : 'var(--theme-bg)',
@@ -117,52 +115,25 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
                 </div>
             </div>
 
-            {/* Theme */}
+            {/* Region */}
             <div style={card}>
-                <h3 style={{ fontWeight: '600', color: 'var(--theme-text)', marginBottom: '4px' }}>Choose your theme</h3>
-                <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>You can change this anytime in Settings</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-
-                    {/* Sage */}
-                    <button onClick={() => setTheme('sage')}
-                        style={{ borderRadius: '12px', overflow: 'hidden', border: theme === 'sage' ? '2px solid var(--theme-primary)' : '1px solid var(--theme-border)', cursor: 'pointer', background: 'none' }}>
-                        <div style={{ background: '#F4F7F5', padding: '12px' }}>
-                            <div style={{ background: '#5A8A78', borderRadius: '8px', padding: '8px', marginBottom: '8px' }}>
-                                <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}></div>
-                                <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.4)', width: '75%' }}></div>
-                            </div>
-                            <div style={{ background: '#FFFFFF', border: '1px solid #D9E5DF', borderRadius: '8px', padding: '8px' }}>
-                                <div style={{ height: '6px', borderRadius: '3px', background: '#5A8A78', width: '60%', marginBottom: '4px' }}></div>
-                                <div style={{ height: '6px', borderRadius: '3px', background: '#5A8A78', width: '80%', marginBottom: '8px' }}></div>
-                                <div style={{ height: '20px', borderRadius: '6px', background: '#D4735F' }}></div>
-                            </div>
-                        </div>
-                        <div style={{ background: '#F4F7F5', borderTop: '1px solid #D9E5DF', padding: '8px' }}>
-                            <p style={{ fontSize: '13px', fontWeight: '500', textAlign: 'center', color: '#1A1A1A', margin: 0 }}>Sage</p>
-                            <p style={{ fontSize: '11px', textAlign: 'center', color: '#6B7280', margin: 0 }}>Green dominant</p>
-                        </div>
-                    </button>
-
-                    {/* Salmon */}
-                    <button onClick={() => setTheme('salmon')}
-                        style={{ borderRadius: '12px', overflow: 'hidden', border: theme === 'salmon' ? '2px solid var(--theme-secondary)' : '1px solid var(--theme-border)', cursor: 'pointer', background: 'none' }}>
-                        <div style={{ background: '#F7F4F4', padding: '12px' }}>
-                            <div style={{ background: '#D4735F', borderRadius: '8px', padding: '8px', marginBottom: '8px' }}>
-                                <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}></div>
-                                <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.4)', width: '75%' }}></div>
-                            </div>
-                            <div style={{ background: '#FFFFFF', border: '1px solid #E5D9D5', borderRadius: '8px', padding: '8px' }}>
-                                <div style={{ height: '6px', borderRadius: '3px', background: '#D4735F', width: '60%', marginBottom: '4px' }}></div>
-                                <div style={{ height: '6px', borderRadius: '3px', background: '#D4735F', width: '80%', marginBottom: '8px' }}></div>
-                                <div style={{ height: '20px', borderRadius: '6px', background: '#5A8A78' }}></div>
-                            </div>
-                        </div>
-                        <div style={{ background: '#F7F4F4', borderTop: '1px solid #E5D9D5', padding: '8px' }}>
-                            <p style={{ fontSize: '13px', fontWeight: '500', textAlign: 'center', color: '#1A1A1A', margin: 0 }}>Salmon</p>
-                            <p style={{ fontSize: '11px', textAlign: 'center', color: '#6B7280', margin: 0 }}>Pink dominant</p>
-                        </div>
-                    </button>
-
+                <h3 style={{ fontWeight: '600', color: 'var(--theme-text)', marginBottom: '4px' }}>Your region</h3>
+                <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '16px' }}>Used to send rewards in your local currency</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {[
+                        { key: 'USA', label: '🇺🇸 United States' },
+                        { key: 'India', label: '🇮🇳 India' },
+                    ].map(r => (
+                        <button key={r.key} onClick={() => setRegion(r.key)}
+                            style={{
+                                padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s',
+                                background: region === r.key ? 'var(--theme-primary)' : 'var(--theme-bg)',
+                                border: region === r.key ? '2px solid var(--theme-primary)' : '1px solid var(--theme-border)',
+                                color: region === r.key ? 'white' : 'var(--theme-text-secondary)',
+                            }}>
+                            {r.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -173,10 +144,23 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
             )}
 
             <button onClick={handleContinue} disabled={saving}
-                style={{ background: 'var(--theme-primary)', color: 'white', width: '100%', fontWeight: '600', padding: '14px', borderRadius: '8px', fontSize: '15px', cursor: 'pointer' }}>
+                style={{ background: 'var(--theme-primary)', color: 'white', width: '100%', fontWeight: '600', padding: '14px', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', border: 'none' }}>
                 {saving ? 'Saving...' : 'Continue'}
             </button>
+        </div>
+    )
+}
 
+function ProgressBar({ step, total }) {
+    return (
+        <div style={{ marginBottom: '28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>Step {step} of {total}</span>
+                <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>{Math.round((step / total) * 100)}%</span>
+            </div>
+            <div style={{ background: 'var(--theme-border)', borderRadius: '4px', height: '4px' }}>
+                <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '4px', width: `${(step / total) * 100}%`, transition: 'width 0.3s' }} />
+            </div>
         </div>
     )
 }

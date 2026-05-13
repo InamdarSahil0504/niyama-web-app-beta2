@@ -16,11 +16,11 @@ const TIERS = [
     minDays: 10,
     customSlots: 0,
     features: [
-      '3 core + 4 library habits (9 total)',
+      '3 core + 7 fixed library habits (10 total)',
+      'Unlimited custom habit tracking (0 pts)',
       'Streak tracking and analytics',
       'No credit card required',
       'Earn up to $2.50/mo for first 3 months',
-      'After 3 months — full access, no rewards',
     ],
   },
   {
@@ -35,10 +35,10 @@ const TIERS = [
     badge: null,
     description: 'Start earning real rewards',
     minDays: 10,
-    customSlots: 1,
+    customSlots: 0,
     features: [
       'Everything in Free',
-      '1 custom habit slot',
+      'Track unlimited custom habits (0 pts)',
       'Up to $5.00 reward per month',
       'Qualify with 10 successful days',
     ],
@@ -55,15 +55,16 @@ const TIERS = [
     badge: 'Popular',
     badgeBg: 'var(--theme-primary-light)',
     badgeColor: 'var(--theme-primary)',
-    description: 'Milestone bonuses unlock more rewards',
+    description: 'Milestone bonuses + custom habit points',
     minDays: 7,
     customSlots: 2,
     features: [
       'Everything in Basic',
-      '2 custom habit slots',
+      'Up to 2 custom habits earn 25 pts each',
       'Base reward up to $10.00/mo',
       '+$2.50 at 20 successful days',
       '+$5.00 for a successful month',
+      '+$7.50 for a perfect month',
       'Max $17.50/mo total',
     ],
   },
@@ -74,21 +75,22 @@ const TIERS = [
     annualPrice: '$149.99',
     annualSaving: '$29.89',
     priceNote: '/month',
-    maxCap: '$45.00',
+    maxCap: '$35.00',
     capNote: 'with all bonuses',
     badge: 'Best value',
-    badgeBg: 'var(--theme-secondary-light)',
-    badgeColor: 'var(--theme-secondary)',
-    description: 'Maximum rewards + perfect month bonus',
+    badgeBg: '#FEF3E2',
+    badgeColor: '#C9973A',
+    description: 'Maximum rewards + 4 custom habit point slots',
     minDays: 5,
-    customSlots: 2,
+    customSlots: 4,
     features: [
       'Everything in Plus',
-      'Base reward up to $22.50/mo',
+      'Up to 4 custom habits earn 25 pts each',
+      'Base reward up to $25.00/mo',
       '+$2.50 at 10 days, +$5.00 at 20 days',
       '+$7.50 for a successful month',
-      '+$7.50 for a perfect month',
-      'Max $45.00/mo total',
+      '+$10.00 for a perfect month',
+      'Max $35.00/mo total',
     ],
   },
 ]
@@ -174,7 +176,7 @@ export default function TierSelect({ userId, onComplete, onBack }) {
       )}
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
 
-        <ProgressBar step={5} total={11} />
+        <ProgressBar step={5} total={9} />
 
         {/* Header */}
         <div style={{ marginBottom: '24px' }}>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabase'
-import { applyTheme, getEffectiveTier, getTodayString, trackEvent, TIER_CONFIG } from '../../config'
+import { getEffectiveTier, getTodayString, trackEvent, TIER_CONFIG } from '../../config'
 
 // Onboarding screens
 import FounderStory from '../onboarding/FounderStory'
@@ -9,8 +9,6 @@ import PersonalDetails from '../onboarding/PersonalDetails'
 import HealthPermission from '../onboarding/HealthPermission'
 import TierSelect from '../onboarding/TierSelect'
 import WakeTime from '../onboarding/WakeTime'
-import MovementPreference from '../onboarding/MovementPreference'
-import HabitSelect from '../onboarding/HabitSelect'
 import CustomHabits from '../onboarding/CustomHabits'
 import NotificationsSetup from '../onboarding/NotificationsSetup'
 import OnboardingReady from '../onboarding/OnboardingReady'
@@ -21,7 +19,7 @@ import AnalyticsTab from './AnalyticsTab'
 import RewardsTab from './RewardsTab'
 import SettingsTab from './SettingsTab'
 import BottomNav from './BottomNav'
-import ReferralTab from './ReferralTab'
+import HistoryTab from './HistoryTab'
 
 const STEPS = [
   'founder-story',
@@ -30,8 +28,6 @@ const STEPS = [
   'health-permission',
   'tier-select',
   'wake-time',
-  'movement',
-  'habit-select',
   'custom-habits',
   'notifications',
   'ready',
@@ -57,8 +53,6 @@ export default function Dashboard({ session }) {
 
   const [onboardingData, setOnboardingData] = useState({
     wakeMinutes: 450,
-    movementPreference: 'steps',
-    libraryKeys: [],
     customHabits: [],
     notificationPrefs: {},
   })
@@ -92,7 +86,6 @@ export default function Dashboard({ session }) {
       .from('profiles').select('*').eq('id', userId).maybeSingle()
 
     if (profileData) {
-      if (profileData.color_theme) applyTheme(profileData.color_theme)
       if (profileData.is_minor) setIsMinor(true)
 
       const updates = {}
@@ -129,11 +122,12 @@ export default function Dashboard({ session }) {
       .eq('user_id', userId).eq('date', yesterdayStr)
 
     if (yesterdayLogs && yesterdayLogs.length > 0 && !yesterdaySummary?.submitted) {
-      const coreKeys = ['wake', 'no_phone', 'steps']
+      const coreKeys = ['wake', 'sleep', 'steps']
       const coreCompleted = yesterdayLogs.filter(l => coreKeys.includes(l.habit_key) && l.completed).length
+      const libraryCompleted = yesterdayLogs.filter(l => l.habit_type === 'library' && l.completed).length
       const totalCompleted = yesterdayLogs.filter(l => l.completed).length
-      const daySuccessful = totalCompleted >= 5 && coreCompleted >= 2
-      const dayPerfect = totalCompleted >= 9
+      const daySuccessful = coreCompleted >= 2 && libraryCompleted >= 3
+      const dayPerfect = coreCompleted >= 3 && libraryCompleted >= 7
       const totalPoints = yesterdayLogs.reduce((s, l) => s + (l.points_earned || 0), 0)
 
       const autoPayload = {
@@ -145,7 +139,7 @@ export default function Dashboard({ session }) {
         total_habits: 9,
         day_successful: daySuccessful,
         perfect_day: dayPerfect,
-        total_points: Math.min(totalPoints, 750),
+        total_points: totalPoints,
         submitted: true,
         auto_submitted: true,
         submitted_at: new Date().toISOString(),
@@ -285,29 +279,10 @@ export default function Dashboard({ session }) {
   }
 
   async function saveUserHabits(data) {
-    const { libraryKeys, customHabits, wakeMinutes, movementPreference } = data
-
-    const habitPayload = {
-      user_id: userId,
-      library_habit_1: libraryKeys[0] || null,
-      library_habit_2: libraryKeys[1] || null,
-      library_habit_3: libraryKeys[2] || null,
-      library_habit_4: libraryKeys[3] || null,
-      custom_habit_1_label: customHabits[0] || null,
-      custom_habit_2_label: customHabits[1] || null,
+    const { wakeMinutes } = data
+    await supabase.from('profiles').update({
       wake_time_minutes: wakeMinutes,
-      movement_preference: movementPreference,
-      updated_at: new Date().toISOString(),
-    }
-
-    const { data: existing } = await supabase
-      .from('user_habits').select('id').eq('user_id', userId).single()
-
-    if (existing) {
-      await supabase.from('user_habits').update(habitPayload).eq('user_id', userId)
-    } else {
-      await supabase.from('user_habits').insert(habitPayload)
-    }
+    }).eq('id', userId)
   }
 
   async function completeOnboarding() {
@@ -319,8 +294,6 @@ export default function Dashboard({ session }) {
     }).eq('id', userId)
     trackEvent(supabase, userId, 'onboarding_completed', {
       tier: profile?.tier || 'free',
-      movement: onboardingData.movementPreference,
-      library_habits: onboardingData.libraryKeys,
       wake_minutes: onboardingData.wakeMinutes,
     })
     setProfile(prev => ({ ...prev, onboarding_complete: true }))
@@ -354,9 +327,8 @@ export default function Dashboard({ session }) {
     }} />
 
   if (onboardingStep === 'personal-details')
-    return <PersonalDetails userId={userId} onBack={() => prevStep('personal-details')} onContinue={async (minor, theme) => {
+    return <PersonalDetails userId={userId} onBack={() => prevStep('personal-details')} onContinue={async (minor) => {
       setIsMinor(minor)
-      applyTheme(theme)
       if (minor) {
         await supabase.from('profiles').update({ tier: 'free', tier_chosen: true }).eq('id', userId)
         setProfile(prev => ({ ...prev, tier: 'free', tier_chosen: true, is_minor: true }))
@@ -369,7 +341,13 @@ export default function Dashboard({ session }) {
   if (onboardingStep === 'health-permission')
     return <HealthPermission
       onBack={() => prevStep('health-permission')}
-      onContinue={() => nextStep('health-permission')}
+      onContinue={async (researchConsent) => {
+        await supabase.from('profiles').update({
+          research_consent: researchConsent,
+          research_consent_at: new Date().toISOString(),
+        }).eq('id', userId)
+        nextStep('health-permission')
+      }}
       onSkip={() => nextStep('health-permission')}
     />
 
@@ -391,29 +369,7 @@ export default function Dashboard({ session }) {
         nextStep('wake-time')
       }} />
 
-  if (onboardingStep === 'movement')
-    return <MovementPreference
-      onBack={() => prevStep('movement')}
-      onContinue={(movementPreference) => {
-        setOnboardingData(prev => ({ ...prev, movementPreference }))
-        nextStep('movement')
-      }} />
-
-  if (onboardingStep === 'habit-select')
-    return <HabitSelect
-      onBack={() => prevStep('habit-select')}
-      onContinue={(libraryKeys) => {
-        setOnboardingData(prev => ({ ...prev, libraryKeys }))
-        nextStep('habit-select')
-      }} />
-
-  if (onboardingStep === 'custom-habits') {
-    const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
-    const slots = TIER_CONFIG[effectiveTier]?.custom_habit_slots || 0
-    if (slots === 0) {
-      nextStep('custom-habits')
-      return null
-    }
+  if (onboardingStep === 'custom-habits')
     return <CustomHabits
       profile={profile}
       onContinue={(customHabits) => {
@@ -422,7 +378,6 @@ export default function Dashboard({ session }) {
       }}
       onSkip={() => nextStep('custom-habits')}
     />
-  }
 
   if (onboardingStep === 'notifications')
     return <NotificationsSetup
@@ -435,10 +390,8 @@ export default function Dashboard({ session }) {
   if (onboardingStep === 'ready')
     return <OnboardingReady
       profile={profile}
-      libraryKeys={onboardingData.libraryKeys}
       customHabits={onboardingData.customHabits}
       wakeMinutes={onboardingData.wakeMinutes}
-      movementPreference={onboardingData.movementPreference}
       onComplete={completeOnboarding}
     />
 
@@ -485,14 +438,10 @@ export default function Dashboard({ session }) {
               isMinor={isMinor}
             />
           )}
-          {activeTab === 'referrals' && (
-            <ReferralTab
+          {activeTab === 'history' && (
+            <HistoryTab
               session={session}
               profile={profile}
-              isMinor={isMinor}
-              streak={streak}
-              todaySummary={todaySummary}
-              todayPoints={todaySummary?.total_points || 0}
             />
           )}
           {activeTab === 'settings' && (

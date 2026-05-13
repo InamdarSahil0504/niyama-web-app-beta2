@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../supabase'
-import { applyTheme, TIER_CONFIG, getEffectiveTier, LIBRARY_HABITS, trackEvent } from '../../config'
+import { TIER_CONFIG, getEffectiveTier, trackEvent } from '../../config'
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 function SubScreen({ title, onBack, children }) {
@@ -76,7 +76,8 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
 
   // Sub-screen routing
   if (screen === 'profile') return <ProfileSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
-  if (screen === 'habits') return <HabitsSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} effectiveTier={effectiveTier} tierConfig={tierConfig} />
+  if (screen === 'habits') return <HabitsSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
+  if (screen === 'custom-habits') return <CustomHabitsSection onBack={() => setScreen('main')} userId={userId} card={card} effectiveTier={effectiveTier} tierConfig={tierConfig} />
   if (screen === 'how-niyama-works') return <HowNiyamaWorksHub onBack={() => setScreen('main')} card={card} />
   if (screen === 'founder-story') return <FounderStoryScreen onBack={() => setScreen('how-niyama-works')} card={card} />
   if (screen === 'the-science') return <TheScienceScreen onBack={() => setScreen('how-niyama-works')} card={card} />
@@ -84,6 +85,9 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
   if (screen === 'plan-rewards') return <PlanRewardsSection onBack={() => setScreen('main')} profile={profile} card={card} effectiveTier={effectiveTier} tierConfig={tierConfig} />
   if (screen === 'billing') return <BillingSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} effectiveTier={effectiveTier} tierConfig={tierConfig} />
   if (screen === 'preferences') return <PreferencesSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
+  if (screen === 'referrals') return <ReferralsSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} effectiveTier={effectiveTier} />
+  if (screen === 'contact') return <ContactSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} />
+  if (screen === 'data-research') return <DataResearchSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
   if (screen === 'legal') return <LegalSection onBack={() => setScreen('main')} card={card} profile={profile} />
   if (screen === 'account') return <AccountSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onSignOut={onSignOut} effectiveTier={effectiveTier} tierConfig={tierConfig} streak={streak} />
 
@@ -106,32 +110,41 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
         </div>
       )}
 
-      {/* Section 1 & 2 — Personal */}
+      {/* Personal */}
       <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px' }}>Personal</p>
       <SectionCard>
         <SettingsRow icon="👤" label="My Profile" subtitle="Personal info, stats, member since" onPress={() => setScreen('profile')} />
-        <SettingsRow icon="✅" label="My Habits" subtitle="Wake time, library habits, custom habits" onPress={() => setScreen('habits')} style={{ borderBottom: 'none' }} />
+        <SettingsRow icon="⏰" label="My Habits" subtitle="Wake time goal" onPress={() => setScreen('habits')} />
+        <SettingsRow icon="⭐" label="Custom Habits" subtitle="Add personal habits to track" onPress={() => setScreen('custom-habits')} />
       </SectionCard>
 
-      {/* Section 3 & 4 — Niyama */}
+      {/* Niyama */}
       <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Niyama</p>
       <SectionCard>
         <SettingsRow icon={<img src="/niyama-icon.svg" alt="" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />} label="How Niyama Works" subtitle="Founder's story, the science, how it works" onPress={() => setScreen('how-niyama-works')} />
-        <SettingsRow icon="🎁" label="Your Plan & Rewards" subtitle={`${tierConfig?.label || 'Free'} · ${isFree ? 'Upgrade to earn rewards' : `Up to $${(tierConfig?.max_cap || tierConfig?.reward_cap || 0).toFixed(2)}/month`}`} onPress={() => setScreen('plan-rewards')} style={{ borderBottom: 'none' }} />
+        <SettingsRow icon="🎁" label="Your Plan & Rewards" subtitle={`${tierConfig?.label || 'Free'} · ${isFree ? 'Upgrade to earn rewards' : `Up to $${(tierConfig?.max_cap || tierConfig?.reward_cap || 0).toFixed(2)}/month`}`} onPress={() => setScreen('plan-rewards')} />
       </SectionCard>
 
-      {/* Section 5 & 6 — Settings */}
+      {/* Community */}
+      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Community</p>
+      <SectionCard>
+        <SettingsRow icon="👥" label="Referrals" subtitle="Invite friends · earn $2.50 per referral" onPress={() => setScreen('referrals')} />
+        <SettingsRow icon="💬" label="Contact Us" subtitle="Chat with the Niyama team" onPress={() => setScreen('contact')} />
+      </SectionCard>
+
+      {/* App */}
       <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>App</p>
       <SectionCard>
         <SettingsRow icon="💳" label="Billing" subtitle={isFree ? 'Free plan · Upgrade anytime' : `${tierConfig?.label} · ${profile?.billing_cycle === 'annual' ? 'Annual' : 'Monthly'}`} onPress={() => setScreen('billing')} badge={profile?.subscription_status === 'past_due' ? 'Past due' : null} />
-        <SettingsRow icon="🔔" label="Preferences" subtitle="Notifications, theme, app version" onPress={() => setScreen('preferences')} style={{ borderBottom: 'none' }} />
+        <SettingsRow icon="🔔" label="Preferences" subtitle="Notifications, app version" onPress={() => setScreen('preferences')} />
+        <SettingsRow icon="🔬" label="Data & Research" subtitle="Health data, research consent" onPress={() => setScreen('data-research')} />
       </SectionCard>
 
-      {/* Section 7 & 8 — Other */}
+      {/* Other */}
       <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Other</p>
       <SectionCard>
         <SettingsRow icon="⚖️" label="Legal & Trust" subtitle="Terms, privacy, about Niyama Life Inc." onPress={() => setScreen('legal')} />
-        <SettingsRow icon="⚙️" label="Account" subtitle="Sign out, pause, delete account" onPress={() => setScreen('account')} style={{ borderBottom: 'none' }} />
+        <SettingsRow icon="⚙️" label="Account" subtitle="Sign out, pause, delete account" onPress={() => setScreen('account')} />
       </SectionCard>
 
       <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '28px', marginBottom: '8px' }}>
@@ -186,122 +199,59 @@ function ProfileSection({ onBack, profile, userId, card, saving, setSaving, show
 }
 
 // ─── 2. My Habits ──────────────────────────────────────────────────────────────
-function HabitsSection({ onBack, profile, userId, card, saving, setSaving, showMessage, onRefresh, effectiveTier, tierConfig }) {
-  const [wakeMinutes, setWakeMinutes] = useState(profile?.wake_time_minutes || 450)
-  const [wakeChanged, setWakeChanged] = useState(false)
-  const [movement, setMovement] = useState('steps')
-  const [selectedLibrary, setSelectedLibrary] = useState([])
-  const [custom1, setCustom1] = useState('')
-  const [custom2, setCustom2] = useState('')
-  const [loading, setLoading] = useState(true)
-  const customSlots = tierConfig?.custom_habit_slots || 0
+function HabitsSection({ onBack, profile, userId, card, saving, setSaving, showMessage, onRefresh }) {
+  const initMins = profile?.wake_time_minutes ?? 390
+  const initH24 = Math.floor(initMins / 60)
+  const initM = initMins % 60
+  const [hour, setHour] = useState(initH24 > 12 ? initH24 - 12 : initH24 === 0 ? 12 : initH24)
+  const [minute, setMinute] = useState(initM)
+  const [ampm, setAmpm] = useState(initH24 < 12 ? 'AM' : 'PM')
+  const [changed, setChanged] = useState(false)
 
-  useEffect(() => { loadHabits() }, [])
-
-  async function loadHabits() {
-    setLoading(true)
-    const { data } = await supabase.from('user_habits').select('*').eq('user_id', userId)
-    if (data && data.length > 0) {
-      const libraryRows = data.filter(h => h.habit_type === 'library')
-      setSelectedLibrary(libraryRows.map(h => h.habit_key))
-      const customRows = data.filter(h => h.habit_type === 'custom')
-      if (customRows[0]) setCustom1(customRows[0].habit_label || '')
-      if (customRows[1]) setCustom2(customRows[1].habit_label || '')
-      const stepsRow = data.find(h => h.habit_key === 'steps')
-      if (stepsRow?.habit_label === 'activity') setMovement('activity')
-    }
-    const { data: profileData } = await supabase.from('profiles').select('wake_time_minutes').eq('id', userId).single()
-    if (profileData?.wake_time_minutes) setWakeMinutes(profileData.wake_time_minutes)
-    setLoading(false)
-  }
-
-  function minutesToLabel(mins) {
-    const h = Math.floor(mins / 60), m = mins % 60
-    const ampm = h < 12 ? 'AM' : 'PM', hour = h > 12 ? h - 12 : h === 0 ? 12 : h
-    return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
-  }
-
-  function toggleLibrary(key) {
-    setSelectedLibrary(prev => {
-      if (prev.includes(key)) return prev.length <= 4 ? prev : prev.filter(k => k !== key)
-      if (prev.length >= 4) { const next = [...prev]; next[3] = key; return next }
-      return [...prev, key]
-    })
+  function toMinutes(h, m, ap) {
+    let h24 = ap === 'AM' ? (h === 12 ? 0 : h) : (h === 12 ? 12 : h + 12)
+    return h24 * 60 + m
   }
 
   async function saveWakeTime() {
     setSaving(true)
-    await supabase.from('profiles').update({ wake_time_minutes: wakeMinutes }).eq('id', userId)
-    setWakeChanged(false)
+    const mins = toMinutes(hour, minute, ampm)
+    await supabase.from('profiles').update({ wake_time_minutes: mins }).eq('id', userId)
+    setChanged(false)
     showMessage('Wake time updated.')
     onRefresh()
     setSaving(false)
   }
 
-  async function saveHabits() {
-    const { data: lockCheck } = await supabase.from('profiles').select('habits_last_changed').eq('id', userId).single()
-    if (lockCheck?.habits_last_changed) {
-      const daysSince = (Date.now() - new Date(lockCheck.habits_last_changed)) / (1000 * 60 * 60 * 24)
-      if (daysSince < 30) {
-        const daysLeft = Math.ceil(30 - daysSince)
-        showMessage(`Habits locked for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}.`, 'error')
-        return
-      }
-    }
-    setSaving(true)
-    try {
-      await supabase.from('user_habits').delete().eq('user_id', userId)
-      const rows = []
-      rows.push({ user_id: userId, habit_type: 'core', habit_key: 'wake', habit_label: 'Wake before chosen time', is_active: true, slot_index: 0 })
-      rows.push({ user_id: userId, habit_type: 'core', habit_key: 'no_phone', habit_label: 'No phone after 10:30pm', is_active: true, slot_index: 1 })
-      rows.push({ user_id: userId, habit_type: 'core', habit_key: 'steps', habit_label: movement === 'activity' ? 'activity' : 'steps', is_active: true, slot_index: 2 })
-      selectedLibrary.slice(0, 4).forEach((key, i) => {
-        const lib = LIBRARY_HABITS.find(h => h.key === key)
-        rows.push({ user_id: userId, habit_type: 'library', habit_key: key, habit_label: lib?.label || key, habit_icon: lib?.icon, is_active: true, slot_index: i })
-      })
-      if (customSlots >= 1 && custom1.trim()) rows.push({ user_id: userId, habit_type: 'custom', habit_key: 'custom_1', habit_label: custom1.trim(), is_active: true, slot_index: 0 })
-      if (customSlots >= 2 && custom2.trim()) rows.push({ user_id: userId, habit_type: 'custom', habit_key: 'custom_2', habit_label: custom2.trim(), is_active: true, slot_index: 1 })
-      await supabase.from('user_habits').insert(rows)
-      await supabase.from('profiles').update({ wake_time_minutes: wakeMinutes, habits_last_changed: new Date().toISOString() }).eq('id', userId)
-      showMessage('Habits updated.')
-      onRefresh()
-    } catch (e) { showMessage('Failed to save.', 'error') }
-    setSaving(false)
-  }
-
-  const habitsLocked = (() => {
-    if (!profile?.habits_last_changed) return false
-    return (Date.now() - new Date(profile.habits_last_changed)) / (1000 * 60 * 60 * 24) < 30
-  })()
-  const daysLeft = habitsLocked ? Math.ceil(30 - (Date.now() - new Date(profile.habits_last_changed)) / (1000 * 60 * 60 * 24)) : 0
-
-  if (loading) return (
-    <SubScreen title="My Habits" onBack={onBack}>
-      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '40px' }}>
-        <div style={{ width: '24px', height: '24px', border: '2px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    </SubScreen>
-  )
+  const displayTime = `${hour}:${minute.toString().padStart(2, '0')} ${ampm}`
 
   return (
     <SubScreen title="My Habits" onBack={onBack}>
       {/* Wake time */}
       <div style={card}>
         <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Wake goal</p>
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '14px', lineHeight: '1.5' }}>Wake time can be updated anytime — habit changes lock for 30 days.</p>
-        <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>Wake consistently at or before this time to earn the Wake Consistency habit. Can be updated anytime.</p>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <div style={{ background: 'var(--theme-primary)', borderRadius: '14px', padding: '12px 24px', display: 'inline-block' }}>
-            <p style={{ fontSize: '32px', fontWeight: '800', color: 'white', lineHeight: 1, margin: 0 }}>{minutesToLabel(wakeMinutes)}</p>
+            <p style={{ fontSize: '32px', fontWeight: '800', color: 'white', lineHeight: 1, margin: 0 }}>{displayTime}</p>
           </div>
         </div>
-        <input type="range" min={270} max={450} step={15} value={wakeMinutes}
-          onChange={e => { setWakeMinutes(parseInt(e.target.value)); setWakeChanged(true) }}
-          style={{ width: '100%', accentColor: 'var(--theme-primary)', cursor: 'pointer' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', marginBottom: '12px' }}>
-          <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>4:30 AM</span>
-          <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>7:30 AM</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+          {[
+            { label: 'Hour', value: hour, onChange: v => { setHour(parseInt(v)); setChanged(true) }, opts: [4,5,6,7,8,9,10,11].map(h => ({ val: h, label: String(h) })) },
+            { label: 'Minute', value: minute, onChange: v => { setMinute(parseInt(v)); setChanged(true) }, opts: [0,15,30,45].map(m => ({ val: m, label: m.toString().padStart(2,'0') })) },
+            { label: 'AM/PM', value: ampm, onChange: v => { setAmpm(v); setChanged(true) }, opts: [{ val: 'AM', label: 'AM' }, { val: 'PM', label: 'PM' }] },
+          ].map(sel => (
+            <div key={sel.label}>
+              <label style={{ fontSize: '11px', color: 'var(--theme-text-muted)', display: 'block', marginBottom: '4px', textAlign: 'center' }}>{sel.label}</label>
+              <select value={sel.value} onChange={e => sel.onChange(e.target.value)}
+                style={{ width: '100%', background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-text)', borderRadius: '8px', padding: '10px 4px', fontSize: '15px', fontWeight: '700', textAlign: 'center', outline: 'none', cursor: 'pointer' }}>
+                {sel.opts.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
+              </select>
+            </div>
+          ))}
         </div>
-        {wakeChanged && (
+        {changed && (
           <button onClick={saveWakeTime} disabled={saving}
             style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13px', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving...' : 'Save wake time'}
@@ -309,85 +259,24 @@ function HabitsSection({ onBack, profile, userId, card, saving, setSaving, showM
         )}
       </div>
 
-      {/* Lock notice */}
-      <div style={{ background: habitsLocked ? '#fffbeb' : 'var(--theme-primary-light)', border: `1px solid ${habitsLocked ? '#fcd34d' : 'var(--theme-primary)'}`, borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
-        <p style={{ fontSize: '12px', color: habitsLocked ? '#92400e' : 'var(--theme-primary)', lineHeight: '1.5', margin: 0 }}>
-          {habitsLocked
-            ? `🔒 Habits locked for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}. You can change your habits once every 30 days.`
-            : '✅ Your habits are unlocked. Make changes and save below.'}
-        </p>
-      </div>
-
-      {/* Movement */}
-      <div style={card}>
-        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Movement habit</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {[
-            { key: 'steps', label: 'Steps', icon: '👟', desc: '5k / 7.5k / 10k tiers' },
-            { key: 'activity', label: 'Physical activity', icon: '🏃', desc: '30 min active HR' },
-          ].map(opt => (
-            <button key={opt.key} onClick={() => !habitsLocked && setMovement(opt.key)}
-              style={{ padding: '12px', borderRadius: '12px', cursor: habitsLocked ? 'not-allowed' : 'pointer', textAlign: 'center', background: movement === opt.key ? 'var(--theme-primary)' : 'var(--theme-bg)', border: `2px solid ${movement === opt.key ? 'var(--theme-primary)' : 'var(--theme-border)'}`, opacity: habitsLocked ? 0.6 : 1 }}>
-              <p style={{ fontSize: '20px', marginBottom: '4px', margin: '0 0 4px' }}>{opt.icon}</p>
-              <p style={{ fontSize: '12px', fontWeight: '700', color: movement === opt.key ? 'white' : 'var(--theme-text)', margin: '0 0 2px' }}>{opt.label}</p>
-              <p style={{ fontSize: '10px', color: movement === opt.key ? 'rgba(255,255,255,0.7)' : 'var(--theme-text-muted)', margin: 0 }}>{opt.desc}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Library habits */}
-      <div style={card}>
-        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Your 4 library habits</p>
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '12px' }}>Select exactly 4 from the list below.</p>
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', alignItems: 'center' }}>
-          {[0, 1, 2, 3].map(i => (
-            <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: i < selectedLibrary.length ? 'var(--theme-primary)' : 'var(--theme-border)' }} />
-          ))}
-          <span style={{ fontSize: '11px', color: 'var(--theme-primary)', fontWeight: '700', marginLeft: '4px' }}>{selectedLibrary.length}/4</span>
-        </div>
+      <div style={{ ...card, background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)' }}>
+        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-primary)', marginBottom: '10px' }}>Phase 6 habit structure</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {LIBRARY_HABITS.map(habit => {
-            const isSelected = selectedLibrary.includes(habit.key)
-            return (
-              <button key={habit.key} onClick={() => !habitsLocked && toggleLibrary(habit.key)}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', cursor: habitsLocked ? 'not-allowed' : 'pointer', textAlign: 'left', background: isSelected ? 'var(--theme-primary)' : 'var(--theme-bg)', border: `1px solid ${isSelected ? 'var(--theme-primary)' : 'var(--theme-border)'}`, opacity: habitsLocked ? 0.7 : 1 }}>
-                <span style={{ fontSize: '16px', flexShrink: 0 }}>{habit.icon}</span>
-                <span style={{ fontSize: '13px', color: isSelected ? 'white' : 'var(--theme-text-secondary)', flex: 1 }}>{habit.label}</span>
-                {isSelected && <span style={{ fontSize: '12px', color: 'white' }}>✓</span>}
-              </button>
-            )
-          })}
+          {[
+            { icon: '🌅', label: '3 Core habits', desc: 'Wake Consistency, Sleep Duration, Steps — auto-verified via Health app' },
+            { icon: '📚', label: '7 Library habits', desc: 'Screen Time, No Phone, Stand, Sunlight, No Late Food, Recovery, Meditation — fixed for everyone' },
+            { icon: '⭐', label: 'Custom habits', desc: 'Add unlimited personal habits to track. Manage them under Custom Habits.' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.icon}</span>
+              <div>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-primary)', margin: '0 0 1px' }}>{item.label}</p>
+                <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: 0, lineHeight: '1.4' }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Custom habits */}
-      {customSlots > 0 && (
-        <div style={card}>
-          <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-            Custom habits ({customSlots} slot{customSlots > 1 ? 's' : ''})
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '4px' }}>Custom habit 1</label>
-              <input type="text" value={custom1} onChange={e => !habitsLocked && setCustom1(e.target.value)} maxLength={60} placeholder="e.g. Cold shower, No sugar..." disabled={habitsLocked}
-                style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', opacity: habitsLocked ? 0.6 : 1 }} />
-            </div>
-            {customSlots >= 2 && (
-              <div>
-                <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '4px' }}>Custom habit 2</label>
-                <input type="text" value={custom2} onChange={e => !habitsLocked && setCustom2(e.target.value)} maxLength={60} placeholder="e.g. Meal prep, Journaling..." disabled={habitsLocked}
-                  style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', opacity: habitsLocked ? 0.6 : 1 }} />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <button onClick={saveHabits} disabled={saving || selectedLibrary.length !== 4 || habitsLocked}
-        style={{ width: '100%', background: selectedLibrary.length === 4 && !habitsLocked ? 'var(--theme-primary)' : 'var(--theme-border)', color: selectedLibrary.length === 4 && !habitsLocked ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '14px', borderRadius: '10px', border: 'none', cursor: saving || selectedLibrary.length !== 4 || habitsLocked ? 'not-allowed' : 'pointer', fontSize: '15px', opacity: saving ? 0.7 : 1 }}>
-        {habitsLocked ? `Locked for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}` : saving ? 'Saving...' : selectedLibrary.length === 4 ? 'Save habit changes' : 'Select exactly 4 habits'}
-      </button>
     </SubScreen>
   )
 }
@@ -409,7 +298,7 @@ function HowNiyamaWorksHub({ onBack, card }) {
       </div>
       <SectionCard>
         <SettingsRow icon="💌" label="Founder's Story" subtitle="Why Sahil built Niyama" onPress={() => setScreen('founder')} />
-        <SettingsRow icon="🔬" label="The Science" subtitle="Research behind each of your 9 habits" onPress={() => setScreen('science')} />
+        <SettingsRow icon="🔬" label="The Science" subtitle="Research behind each of your 10 habits" onPress={() => setScreen('science')} />
         <SettingsRow icon="⚙️" label="How It Works" subtitle="Points, rewards, successful days explained" onPress={() => setScreen('how')} />
       </SectionCard>
     </SubScreen>
@@ -601,28 +490,28 @@ function HowItWorksScreen({ onBack, card }) {
     <SubScreen title="How It Works" onBack={onBack}>
       {[
         {
-          step: '1', icon: '✅', title: 'Track 9 daily habits',
-          body: 'Every day you track up to 9 habits: 3 core habits (always the same), 4 library habits (you choose from 10), and up to 2 custom habits depending on your tier.\n\nCore habits carry 100 points each. Library and custom habits carry 50 points each. The maximum you can earn in a single day is 750 points.',
+          step: '1', icon: '✅', title: 'Track 10 daily habits',
+          body: 'Every day you track 10 habits: 3 core habits (always the same, auto-verified via Health app), 7 fixed library habits (the same for everyone), plus any custom habits you add.\n\nCore habits carry 100 points each. Library habits carry 50 points each. Custom habits carry 25 points (up to 2 on Plus, up to 4 on Premium). The maximum you can earn in a single day is 750 points.',
         },
         {
           step: '2', icon: '🏆', title: 'What makes a successful day',
-          body: 'A successful day requires completing any 5 of your 9 habits, with at least 2 being core habits.\n\nA perfect day is all 9 habits completed. Perfect days unlock the Premium perfect month bonus.\n\nAn inactive day is when you don\'t open the app at all. 5 or more consecutive inactive days in a month makes you ineligible for that month\'s reward.',
+          body: 'A successful day requires completing at least 2 of 3 core habits AND at least 3 of 7 library habits. Custom habits don\'t count toward the threshold.\n\nA perfect day is all 10 habits (3 core + 7 library) completed. Perfect days unlock the Premium perfect month bonus.\n\nAn inactive day is when you don\'t open the app at all. 5 or more consecutive inactive days in a month makes you ineligible for that month\'s reward.',
         },
         {
           step: '3', icon: '📊', title: 'Points and your reward',
-          body: '1,000 points = $1.00 in rewards. Your reward is calculated at the end of each month based on your total points, subject to your tier\'s cap.\n\nPlus and Premium tiers unlock milestone bonuses: extra rewards for hitting 10 or 20 successful days, a successful month (every submitted day is successful), or a perfect month (every day is perfect).',
+          body: '1,000 points = $1.00 in rewards. Your reward is calculated at the end of each month based on your total points, subject to your tier\'s cap.\n\nPlus and Premium tiers unlock milestone bonuses: extra rewards for hitting 20 successful days (Plus) or 10 and 20 days (Premium), a successful month, or a perfect month.',
         },
         {
           step: '4', icon: '🎁', title: 'How you receive your reward',
-          body: 'On the 1st of each month, if you\'ve met your minimum days and earned at least 1 point, your reward is automatically calculated and sent as an electronic gift card to your email via Tremendous.\n\nAvailable brands include Amazon, Starbucks, Nike, Apple, Target, and more. All rewards are gift cards — no cash transfers, no bank details required.',
+          body: 'On the 1st of each month, if you\'ve earned at least 1 point, your reward is automatically calculated and sent as an electronic gift card to your email via Tremendous.\n\nAvailable brands include Amazon, Starbucks, Nike, Apple, Target, and more. All rewards are gift cards — no cash transfers, no bank details required.',
         },
         {
           step: '5', icon: '🧊', title: 'Streak freeze',
           body: 'Plus and Premium members get one streak freeze per month. Using a freeze on a day you miss preserves your streak as if you had submitted.\n\nStreak freezes do not count as a successful day — they only protect your streak number. They reset on the 1st of each month. Unused freezes do not roll over.',
         },
         {
-          step: '6', icon: '🔄', title: 'Changing your habits',
-          body: 'You can change your 4 library habits and custom habits once every 30 days. This lock exists because real habit formation requires consistency — changing habits too frequently undermines the process.\n\nYour wake time can be updated anytime. Your movement preference (steps vs activity) is part of the habit lock.',
+          step: '6', icon: '🔄', title: 'Custom habits',
+          body: 'You can add unlimited custom habits to track — all tiers can track as many as they want. Custom habits on Plus earn 25 pts each (up to 2). On Premium, up to 4 earn 25 pts each.\n\nYour wake time goal can be updated anytime. Library habits are fixed for all users in Phase 6.',
         },
       ].map((item, i) => (
         <div key={i} style={card}>
@@ -886,7 +775,6 @@ function BillingSection({ onBack, profile, userId, card, saving, setSaving, show
 
 // ─── 6. Preferences ────────────────────────────────────────────────────────────
 function PreferencesSection({ onBack, profile, userId, card, saving, setSaving, showMessage, onRefresh }) {
-  const [theme, setTheme] = useState(profile?.color_theme || 'sage')
   const [pushEnabled, setPushEnabled] = useState(false)
   const [middayNudge, setMiddayNudge] = useState(profile?.email_reminders ?? true)
   const [streakProtection, setStreakProtection] = useState(true)
@@ -895,15 +783,6 @@ function PreferencesSection({ onBack, profile, userId, card, saving, setSaving, 
   useEffect(() => {
     if ('Notification' in window) setPushEnabled(Notification.permission === 'granted')
   }, [])
-
-  async function saveTheme() {
-    setSaving(true)
-    await supabase.from('profiles').update({ color_theme: theme }).eq('id', userId)
-    applyTheme(theme)
-    showMessage('Theme updated.')
-    onRefresh()
-    setSaving(false)
-  }
 
   async function requestPush() {
     setRequesting(true)
@@ -922,28 +801,6 @@ function PreferencesSection({ onBack, profile, userId, card, saving, setSaving, 
 
   return (
     <SubScreen title="Preferences" onBack={onBack}>
-      {/* Theme */}
-      <div style={card}>
-        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>App theme</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-          {[
-            { key: 'sage', label: 'Sage Green', bg: '#F4F7F5', primary: '#4A7A68' },
-            { key: 'salmon', label: 'Salmon Pink', bg: '#F7F4F4', primary: '#C96A52' },
-          ].map(t => (
-            <button key={t.key} onClick={() => setTheme(t.key)}
-              style={{ padding: '14px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center', background: t.bg, border: `2px solid ${theme === t.key ? t.primary : 'var(--theme-border)'}` }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: t.primary, margin: '0 auto 8px' }} />
-              <p style={{ fontSize: '12px', fontWeight: '600', color: theme === t.key ? t.primary : 'var(--theme-text-secondary)', margin: '0 0 2px' }}>{t.label}</p>
-              {theme === t.key && <p style={{ fontSize: '10px', color: t.primary, margin: 0 }}>✓ Active</p>}
-            </button>
-          ))}
-        </div>
-        <button onClick={saveTheme} disabled={saving}
-          style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '13px', opacity: saving ? 0.7 : 1 }}>
-          {saving ? 'Saving...' : 'Save theme'}
-        </button>
-      </div>
-
       {/* Push notifications */}
       <div style={card}>
         <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Push notifications</p>
@@ -1219,6 +1076,443 @@ function AccountSection({ onBack, profile, userId, card, saving, setSaving, show
             </div>
           </div>
         )}
+      </div>
+    </SubScreen>
+  )
+}
+
+// ─── NEW: Custom Habits ────────────────────────────────────────────────────────
+function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }) {
+  const [habits, setHabits] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showAdd, setShowAdd] = useState(false)
+  const [newLabel, setNewLabel] = useState('')
+  const [newEmoji, setNewEmoji] = useState('⭐')
+  const [adding, setAdding] = useState(false)
+
+  const slots = tierConfig?.custom_habit_slots || 0
+  const QUICK_EMOJIS = ['⭐','💪','🧘','📚','🥗','🚿','🎯','✍️','🏃','💤','🎵','🌿','🙏','💡','🧠','🎨','🌊','🔥','🧊','☕','🫁','📝','🎸','🪴','🏊','🚴','🥊','🕯️','🌙','🛁']
+
+  useEffect(() => { loadHabits() }, [])
+
+  async function loadHabits() {
+    const { data } = await supabase.from('custom_habits').select('*').eq('user_id', userId).order('sort_order')
+    setHabits(data || [])
+    setLoading(false)
+  }
+
+  async function addHabit() {
+    if (!newLabel.trim()) return
+    setAdding(true)
+    await supabase.from('custom_habits').insert({ user_id: userId, label: newLabel.trim(), emoji: newEmoji, sort_order: habits.length, is_active: true })
+    setNewLabel(''); setNewEmoji('⭐'); setShowAdd(false)
+    await loadHabits()
+    setAdding(false)
+  }
+
+  async function deleteHabit(id) {
+    await supabase.from('custom_habits').delete().eq('id', id)
+    setHabits(prev => prev.filter(h => h.id !== id))
+  }
+
+  return (
+    <SubScreen title="Custom Habits" onBack={onBack}>
+      <div style={{ ...card, background: slots > 0 ? 'var(--theme-primary-light)' : '#fffbeb', border: `1px solid ${slots > 0 ? 'var(--theme-primary)' : '#fcd34d'}` }}>
+        <p style={{ fontSize: '13px', color: slots > 0 ? 'var(--theme-primary)' : '#92400e', fontWeight: '600', margin: 0, lineHeight: '1.5' }}>
+          {slots > 0
+            ? `✅ ${tierConfig?.label} plan: up to ${slots} custom habit${slots > 1 ? 's' : ''} earn 25 pts each. You can track unlimited habits — only the first ${slots} earn points.`
+            : '🎁 Free/Basic plan: track unlimited custom habits. Upgrade to Plus or Premium to earn 25 pts each.'}
+        </p>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <div style={{ width: '24px', height: '24px', border: '2px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : (
+        <div style={card}>
+          <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+            Your custom habits ({habits.length})
+          </p>
+          {habits.length === 0 && !showAdd && (
+            <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)', textAlign: 'center', padding: '16px 0', marginBottom: '12px' }}>No custom habits yet. Add your first below.</p>
+          )}
+          {habits.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              {habits.map((h, i) => (
+                <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'var(--theme-bg)', borderRadius: '10px', border: '1px solid var(--theme-border)' }}>
+                  <span style={{ fontSize: '18px', flexShrink: 0 }}>{h.emoji || '⭐'}</span>
+                  <p style={{ flex: 1, fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{h.label}</p>
+                  {i < slots && <span style={{ fontSize: '10px', fontWeight: '700', background: 'var(--theme-primary)', color: 'white', padding: '2px 7px', borderRadius: '8px', flexShrink: 0 }}>+25 pts</span>}
+                  <button onClick={() => deleteHabit(h.id)}
+                    style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '4px 9px', cursor: 'pointer', fontSize: '12px', color: '#dc2626', flexShrink: 0 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showAdd ? (
+            <div style={{ background: 'var(--theme-bg)', borderRadius: '12px', padding: '14px', border: '1px solid var(--theme-border)' }}>
+              <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', marginBottom: '8px' }}>Choose emoji</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '12px' }}>
+                {QUICK_EMOJIS.map(e => (
+                  <button key={e} onClick={() => setNewEmoji(e)}
+                    style={{ fontSize: '18px', padding: '4px 6px', borderRadius: '8px', border: `2px solid ${newEmoji === e ? 'var(--theme-primary)' : 'transparent'}`, background: newEmoji === e ? 'var(--theme-primary-light)' : 'transparent', cursor: 'pointer' }}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', marginBottom: '6px' }}>Habit name</p>
+              <input type="text" value={newLabel} onChange={e => setNewLabel(e.target.value)} maxLength={60} placeholder="e.g. Cold shower, Journaling..." autoFocus
+                style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => { setShowAdd(false); setNewLabel(''); setNewEmoji('⭐') }}
+                  style={{ flex: 1, background: 'none', border: '1px solid var(--theme-border)', color: 'var(--theme-text-secondary)', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Cancel</button>
+                <button onClick={addHabit} disabled={!newLabel.trim() || adding}
+                  style={{ flex: 1, background: newLabel.trim() ? 'var(--theme-primary)' : 'var(--theme-border)', color: newLabel.trim() ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '10px', borderRadius: '8px', border: 'none', cursor: newLabel.trim() ? 'pointer' : 'not-allowed', fontSize: '13px' }}>
+                  {adding ? 'Adding...' : 'Add habit'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowAdd(true)}
+              style={{ width: '100%', background: 'var(--theme-primary-light)', border: '1px dashed var(--theme-primary)', color: 'var(--theme-primary)', fontWeight: '700', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px' }}>
+              + Add custom habit
+            </button>
+          )}
+        </div>
+      )}
+
+      <div style={{ ...card, background: 'var(--theme-bg)' }}>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', lineHeight: '1.6', margin: 0 }}>
+          Custom habits appear on your daily check-in. They don't count toward Successful Day or Perfect Day thresholds — only your 3 core and 7 library habits count for those.
+        </p>
+      </div>
+    </SubScreen>
+  )
+}
+
+// ─── NEW: Referrals ────────────────────────────────────────────────────────────
+function ReferralsSection({ onBack, profile, userId, card, effectiveTier }) {
+  const [referralCode, setReferralCode] = useState(null)
+  const [referrals, setReferrals] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+  const [generating, setGenerating] = useState(false)
+
+  const isFree = effectiveTier === 'free_trial' || effectiveTier === 'free_expired'
+  const isMinor = profile?.is_minor
+
+  useEffect(() => { fetchData() }, [])
+
+  async function fetchData() {
+    setLoading(true)
+    const { data: pData } = await supabase.from('profiles').select('referral_code').eq('id', userId).single()
+    setReferralCode(pData?.referral_code || null)
+    const { data: rData } = await supabase.from('referrals').select('*').eq('referrer_id', userId).order('created_at', { ascending: false })
+    setReferrals(rData || [])
+    setLoading(false)
+  }
+
+  async function generateCode() {
+    setGenerating(true)
+    const { data, error } = await supabase.rpc('generate_referral_code', { p_user_id: userId })
+    if (!error) setReferralCode(data)
+    setGenerating(false)
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(referralCode)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+    window.posthog?.capture('referral_code_copied')
+  }
+
+  function shareCode() {
+    const text = `Join me on Niyama — the habit app that pays you real rewards for daily discipline. Use my code ${referralCode} to get started: https://app.niyamalife.com`
+    window.posthog?.capture('referral_shared', { method: navigator.share ? 'native_share' : 'clipboard' })
+    if (navigator.share) navigator.share({ title: 'Join Niyama', text })
+    else { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+  }
+
+  const confirmedReferrals = referrals.filter(r => r.status === 'confirmed').length
+  const pendingReferrals = referrals.filter(r => r.status === 'pending').length
+  const bonusEarned = confirmedReferrals * 2.50
+
+  if (loading) return (
+    <SubScreen title="Referrals" onBack={onBack}>
+      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '60px' }}>
+        <div style={{ width: '28px', height: '28px', border: '3px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    </SubScreen>
+  )
+
+  return (
+    <SubScreen title="Referrals" onBack={onBack}>
+      <div style={card}>
+        <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>How it works</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[
+            { icon: '📤', title: 'Share your code', desc: 'Send your unique referral code to a friend.' },
+            { icon: '✅', title: 'They sign up on a paid plan', desc: 'Your friend creates an account and selects a paid tier.' },
+            { icon: '🎯', title: 'They hit a successful day', desc: 'Once they complete their first successful day, referral is confirmed.' },
+            { icon: '🎁', title: 'Both of you earn', desc: 'Your monthly reward cap increases by $2.50. Max 20 referrals/year.' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '20px', flexShrink: 0 }}>{item.icon}</span>
+              <div>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', marginBottom: '2px' }}>{item.title}</p>
+                <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', lineHeight: '1.4' }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {isMinor ? (
+        <div style={{ ...card, background: '#fffbeb', border: '1px solid #fcd34d' }}>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>Referrals available at 18</p>
+          <p style={{ fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>Referral bonuses are only available to users aged 18 and above.</p>
+        </div>
+      ) : (
+        <div style={card}>
+          <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Your referral code</p>
+          {referralCode ? (
+            <>
+              {isFree && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
+                  <p style={{ fontSize: '12px', color: '#92400e', lineHeight: '1.5' }}>🎁 <strong>Free plan:</strong> You can refer friends but won't earn referral bonuses. Upgrade to Basic or above to earn $2.50 per referral.</p>
+                </div>
+              )}
+              <div style={{ background: 'var(--theme-bg)', border: '2px dashed var(--theme-primary)', borderRadius: '12px', padding: '16px', textAlign: 'center', marginBottom: '12px' }}>
+                <p style={{ fontSize: '28px', fontWeight: '800', color: 'var(--theme-primary)', letterSpacing: '0.15em', fontFamily: 'monospace' }}>{referralCode}</p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={copyCode} style={{ flex: 1, background: copied ? 'var(--theme-primary)' : 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', color: copied ? 'white' : 'var(--theme-primary)', fontWeight: '700', padding: '11px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                  {copied ? '✓ Copied!' : 'Copy code'}
+                </button>
+                <button onClick={shareCode} style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13px' }}>Share</button>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)', marginBottom: '14px', lineHeight: '1.5' }}>Generate your unique referral code to start inviting friends.</p>
+              <button onClick={generateCode} disabled={generating} style={{ background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '12px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: generating ? 0.7 : 1 }}>
+                {generating ? 'Generating...' : 'Generate my code'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isMinor && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+          {[
+            { label: 'Confirmed', value: confirmedReferrals, color: 'var(--theme-primary)' },
+            { label: 'Pending', value: pendingReferrals, color: '#C9973A' },
+            { label: 'Cap bonus', value: `$${bonusEarned.toFixed(2)}`, color: 'var(--theme-primary)' },
+          ].map(stat => (
+            <div key={stat.label} style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '14px', padding: '14px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <p style={{ fontSize: '20px', fontWeight: '800', color: stat.color, lineHeight: 1 }}>{stat.value}</p>
+              <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', marginTop: '3px' }}>{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {referrals.length > 0 && (
+        <div style={card}>
+          <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Your referrals</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {referrals.map(r => (
+              <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--theme-bg)', borderRadius: '10px' }}>
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)' }}>{r.referred_email || 'Pending sign-up'}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '1px' }}>
+                    {r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                  </p>
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '8px', background: r.status === 'confirmed' ? 'var(--theme-primary-light)' : '#fffbeb', color: r.status === 'confirmed' ? 'var(--theme-primary)' : '#92400e' }}>
+                  {r.status === 'confirmed' ? '✓ +$2.50' : '⏳ Pending'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ ...card, background: 'var(--theme-bg)' }}>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', lineHeight: '1.6' }}>
+          Max 20 referrals per year · Paid tier required · Self-referrals not allowed · Niyama may terminate the referral program at any time.
+        </p>
+      </div>
+    </SubScreen>
+  )
+}
+
+// ─── NEW: Data & Research ──────────────────────────────────────────────────────
+function DataResearchSection({ onBack, profile, userId, card, saving, setSaving, showMessage, onRefresh }) {
+  const [consent, setConsent] = useState(profile?.research_consent ?? false)
+
+  async function toggleConsent() {
+    const next = !consent
+    setConsent(next)
+    setSaving(true)
+    await supabase.from('profiles').update({ research_consent: next }).eq('id', userId)
+    showMessage(next ? 'Research consent enabled.' : 'Research consent withdrawn.')
+    onRefresh()
+    setSaving(false)
+  }
+
+  return (
+    <SubScreen title="Data & Research" onBack={onBack}>
+      <div style={card}>
+        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Research participation</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--theme-text)', margin: '0 0 4px' }}>Contribute to health research</p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', margin: 0 }}>Allow anonymized habit and health data to be used in longitudinal wellness research. Your identity is never shared.</p>
+          </div>
+          <button onClick={toggleConsent} disabled={saving}
+            style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: consent ? 'var(--theme-primary)' : 'var(--theme-border)', position: 'relative', flexShrink: 0, marginTop: '2px', transition: 'background 0.15s' }}>
+            <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', position: 'absolute', top: '3px', left: consent ? '23px' : '3px', transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+          </button>
+        </div>
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', lineHeight: '1.5', margin: 0 }}>You can withdraw consent at any time. This does not affect your rewards or habit tracking.</p>
+      </div>
+
+      <div style={card}>
+        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Health data we access</p>
+        <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', lineHeight: '1.5', marginBottom: '12px' }}>
+          Via Apple Health (HealthKit) on the native app. Web app uses self-reported data for verified habits.
+        </p>
+        {[
+          { icon: '😴', label: 'Sleep Analysis', desc: 'Sleep duration and quality for the Sleep habit' },
+          { icon: '👟', label: 'Step Count', desc: 'Daily steps for tiered points (5k / 7.5k / 10k)' },
+          { icon: '🧍', label: 'Stand Hours', desc: 'Hourly stand data for Stand Consistency' },
+          { icon: '❤️', label: 'Heart Rate Variability (HRV)', desc: 'HRV trends for recovery and stress insights' },
+          { icon: '🩸', label: 'Blood Oxygen (SPO2)', desc: 'Resting SpO2 for sleep quality analysis' },
+          { icon: '🌅', label: 'Wakeup Time', desc: 'First movement time for Wake Consistency habit' },
+        ].map((item, i, arr) => (
+          <div key={i} style={{ display: 'flex', gap: '12px', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--theme-border)' : 'none' }}>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>{item.icon}</span>
+            <div>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: '0 0 1px' }}>{item.label}</p>
+              <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ ...card, background: 'var(--theme-bg)' }}>
+        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Coming soon</p>
+        {[
+          { icon: '📊', label: 'Circadian Consistency Score', desc: 'A single daily score summarizing your circadian patterns' },
+          { icon: '🧠', label: 'Habit-Biometric Correlations', desc: 'How your habits affect your HRV, sleep, and energy over time' },
+          { icon: '🔬', label: 'Longitudinal Health Reports', desc: 'Monthly reports showing habit trends and health outcomes' },
+          { icon: '🔌', label: 'Disconnect Apple Health', desc: 'Coming soon — native app required' },
+          { icon: '📤', label: 'Export my data', desc: 'Coming soon — download all your habit history as CSV' },
+        ].map((item, i, arr) => (
+          <div key={i} style={{ display: 'flex', gap: '12px', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--theme-border)' : 'none', opacity: 0.6 }}>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>{item.icon}</span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1px' }}>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{item.label}</p>
+                <span style={{ fontSize: '9px', fontWeight: '700', background: 'var(--theme-border)', color: 'var(--theme-text-muted)', padding: '1px 6px', borderRadius: '6px' }}>SOON</span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SubScreen>
+  )
+}
+
+// ─── NEW: Contact Us ───────────────────────────────────────────────────────────
+function ContactSection({ onBack, profile, userId, card }) {
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const bottomRef = useRef(null)
+
+  useEffect(() => {
+    loadMessages()
+    const channel = supabase.channel(`contact_${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contact_messages', filter: `user_id=eq.${userId}` }, payload => {
+        setMessages(prev => [...prev, payload.new])
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [])
+
+  async function loadMessages() {
+    const { data } = await supabase.from('contact_messages').select('*').eq('user_id', userId).order('created_at')
+    setMessages(data || [])
+    setLoading(false)
+    setTimeout(() => bottomRef.current?.scrollIntoView(), 100)
+    if (data?.length) {
+      const unread = data.filter(m => m.sender === 'admin' && !m.read_by_user).map(m => m.id)
+      if (unread.length) await supabase.from('contact_messages').update({ read_by_user: true }).in('id', unread)
+    }
+  }
+
+  async function sendMessage() {
+    if (!input.trim() || sending) return
+    setSending(true)
+    const text = input.trim()
+    setInput('')
+    await supabase.from('contact_messages').insert({ user_id: userId, sender: 'user', message: text, user_email: profile?.email, user_name: profile?.full_name })
+    window.posthog?.capture('contact_message_sent')
+    setSending(false)
+  }
+
+  return (
+    <SubScreen title="Contact Us" onBack={onBack}>
+      <div style={{ ...card, marginBottom: '8px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', margin: 0 }}>
+          💬 Send us a message and we'll respond within 24 hours. For urgent issues email <strong>support@niyamalife.com</strong>
+        </p>
+      </div>
+      <div style={{ background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        <div style={{ height: '360px', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <div style={{ width: '24px', height: '24px', border: '2px solid var(--theme-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          ) : messages.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px' }}>
+              <span style={{ fontSize: '32px' }}>💬</span>
+              <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)', textAlign: 'center', margin: 0 }}>Send us a message — we typically respond within 24 hours.</p>
+            </div>
+          ) : (
+            messages.map((msg, i) => {
+              const isUser = msg.sender === 'user'
+              return (
+                <div key={msg.id || i} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ maxWidth: '75%', padding: '10px 14px', borderRadius: isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: isUser ? 'var(--theme-primary)' : 'var(--theme-bg)', border: isUser ? 'none' : '1px solid var(--theme-border)' }}>
+                    {!isUser && <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--theme-primary)', margin: '0 0 4px' }}>Niyama Support</p>}
+                    <p style={{ fontSize: '13px', color: isUser ? 'white' : 'var(--theme-text)', lineHeight: '1.5', margin: 0 }}>{msg.message}</p>
+                    <p style={{ fontSize: '10px', color: isUser ? 'rgba(255,255,255,0.6)' : 'var(--theme-text-muted)', margin: '4px 0 0', textAlign: 'right' }}>
+                      {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}
+                    </p>
+                  </div>
+                </div>
+              )
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+        <div style={{ borderTop: '1px solid var(--theme-border)', padding: '12px', display: 'flex', gap: '8px' }}>
+          <input type="text" value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+            placeholder="Type a message..."
+            style={{ flex: 1, background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-text)', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none' }} />
+          <button onClick={sendMessage} disabled={!input.trim() || sending}
+            style={{ background: input.trim() ? 'var(--theme-primary)' : 'var(--theme-border)', color: input.trim() ? 'white' : 'var(--theme-text-muted)', border: 'none', borderRadius: '8px', padding: '10px 16px', cursor: input.trim() ? 'pointer' : 'not-allowed', fontWeight: '700', fontSize: '13px' }}>
+            {sending ? '...' : 'Send'}
+          </button>
+        </div>
       </div>
     </SubScreen>
   )

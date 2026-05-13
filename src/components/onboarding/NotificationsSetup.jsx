@@ -36,7 +36,7 @@ export default function NotificationsSetup({ onContinue, onBack }) {
       )}
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-        <ProgressBar step={10} total={11} />
+        <ProgressBar step={8} total={9} />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 

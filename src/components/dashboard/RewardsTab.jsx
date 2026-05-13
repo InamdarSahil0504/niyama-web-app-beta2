@@ -15,6 +15,23 @@ const GIFT_CARD_BRANDS = [
   { name: 'Google Play', icon: '🎮', color: '#4285F4' },
 ]
 
+// Phase 6 milestone values (used as display fallback if config doesn't have them)
+const PHASE6_MILESTONES = {
+  plus: {
+    days_20_bonus: 2.50,
+    successful_month_bonus: 5.00,
+    perfect_month_bonus: 7.50,
+    max: 17.50,
+  },
+  premium: {
+    days_10_bonus: 2.50,
+    days_20_bonus: 5.00,
+    successful_month_bonus: 7.50,
+    perfect_month_bonus: 10.00,
+    max: 35.00,
+  },
+}
+
 export default function RewardsTab({ session, profile, isMinor }) {
   const [rewards, setRewards] = useState([])
   const [loading, setLoading] = useState(true)
@@ -62,6 +79,16 @@ export default function RewardsTab({ session, profile, isMinor }) {
   const nextPayout   = new Date(now.getFullYear(), now.getMonth()+1, 1)
   const daysLeft     = Math.ceil((nextPayout - now) / (1000*60*60*24))
 
+  // 30-day account age gate
+  const accountCreatedAt = profile?.created_at ? new Date(profile.created_at) : null
+  const firstRewardDate = accountCreatedAt ? new Date(accountCreatedAt) : null
+  if (firstRewardDate) firstRewardDate.setDate(firstRewardDate.getDate() + 30)
+  const isInAgeGate = firstRewardDate && now < firstRewardDate
+
+  const firstRewardDateFormatted = firstRewardDate
+    ? firstRewardDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null
+
   const card = {
     background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
     borderRadius: '16px', padding: '20px', marginBottom: '16px',
@@ -108,15 +135,36 @@ export default function RewardsTab({ session, profile, isMinor }) {
         </div>
       )}
 
+      {/* 30-day age gate banner */}
+      {isInAgeGate && !isFreeExpired && !isMinor && (
+        <div style={{
+          background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
+          borderRadius: '12px', padding: '14px 16px', marginBottom: '16px',
+          display: 'flex', alignItems: 'center', gap: '12px',
+        }}>
+          <span style={{ fontSize: '20px' }}>🔒</span>
+          <div>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-text)', margin: '0 0 2px' }}>
+              Your first reward unlocks on {firstRewardDateFormatted}
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', margin: 0 }}>
+              Keep logging habits to maximize your first payout.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Hero reward card */}
       {!isFreeExpired && !isMinor && (
         <div style={{
           background: 'linear-gradient(135deg, #3D6B5A 0%, #4A7A68 60%, #5A8A78 100%)',
           borderRadius: '20px', padding: '24px', marginBottom: '16px', color: 'white',
           boxShadow: '0 4px 20px rgba(74,122,104,0.35)', position: 'relative', overflow: 'hidden',
+          opacity: isInAgeGate ? 0.7 : 1,
+          transition: 'opacity 0.3s',
         }}>
           {/* Gold glow for eligible users */}
-          {isEligible && (
+          {isEligible && !isInAgeGate && (
             <div style={{ position:'absolute', top:'-30px', right:'-30px', width:'150px', height:'150px', borderRadius:'50%', background:'rgba(201,151,58,0.15)', filter:'blur(30px)', pointerEvents:'none' }} />
           )}
 
@@ -127,7 +175,13 @@ export default function RewardsTab({ session, profile, isMinor }) {
                 {now.toLocaleString('default', { month:'long', year:'numeric' })}
               </p>
               <p style={{ fontSize:'13px', opacity:'0.85', marginBottom:'4px' }}>Your reward this month</p>
-              <p style={{ fontSize:'48px', fontWeight:'900', lineHeight:1, letterSpacing:'-0.02em' }}>
+              <p style={{
+                fontSize:'48px', fontWeight:'900', lineHeight:1, letterSpacing:'-0.02em',
+                opacity: isInAgeGate ? 0.6 : 1,
+                filter: isInAgeGate ? 'blur(4px)' : 'none',
+                transition: 'opacity 0.3s, filter 0.3s',
+                userSelect: isInAgeGate ? 'none' : 'auto',
+              }}>
                 ${estimatedReward.toFixed(2)}
               </p>
               <p style={{ fontSize:'12px', opacity:'0.6', marginTop:'4px' }}>of ${maxCap.toFixed(2)} possible</p>
@@ -144,6 +198,11 @@ export default function RewardsTab({ session, profile, isMinor }) {
             <div style={{ background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px' }}>
               <p style={{ fontSize:'13px', fontWeight:'600' }}>⚠️ Ineligible this month</p>
               <p style={{ fontSize:'11px', opacity:'0.8', marginTop:'2px' }}>5+ consecutive inactive days. Submit your habits to restore eligibility.</p>
+            </div>
+          ) : isInAgeGate ? (
+            <div style={{ background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px' }}>
+              <span style={{ fontSize:'20px' }}>🔒</span>
+              <p style={{ fontSize:'13px', fontWeight:'600', margin: 0 }}>Unlocks {firstRewardDateFormatted}</p>
             </div>
           ) : isEligible ? (
             <div style={{ background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 14px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px' }}>
@@ -173,28 +232,28 @@ export default function RewardsTab({ session, profile, isMinor }) {
               <span style={{ fontSize:'12px', opacity:'0.8' }}>Base reward</span>
               <span style={{ fontSize:'13px', fontWeight:'700' }}>${baseReward.toFixed(2)}</span>
             </div>
-            {milestones.days_10_bonus && (
+            {(milestones.days_10_bonus || (effectiveTier === 'premium' && PHASE6_MILESTONES.premium.days_10_bonus)) && (
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:successfulDays>=10?1:0.45 }}>
                 <span style={{ fontSize:'12px' }}>{successfulDays>=10?'✓':''} 10-day bonus</span>
-                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.days_10_bonus.toFixed(2)}</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${(milestones.days_10_bonus || PHASE6_MILESTONES.premium.days_10_bonus || 0).toFixed(2)}</span>
               </div>
             )}
-            {milestones.days_20_bonus && (
+            {(milestones.days_20_bonus || PHASE6_MILESTONES[effectiveTier]?.days_20_bonus) && (
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:successfulDays>=20?1:0.45 }}>
                 <span style={{ fontSize:'12px' }}>{successfulDays>=20?'✓':''} 20-day bonus</span>
-                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.days_20_bonus.toFixed(2)}</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${(milestones.days_20_bonus || PHASE6_MILESTONES[effectiveTier]?.days_20_bonus || 0).toFixed(2)}</span>
               </div>
             )}
-            {milestones.successful_month_bonus && (
+            {(milestones.successful_month_bonus || PHASE6_MILESTONES[effectiveTier]?.successful_month_bonus) && (
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:0.45 }}>
                 <span style={{ fontSize:'12px' }}>🌟 Successful month</span>
-                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${milestones.successful_month_bonus.toFixed(2)}</span>
+                <span style={{ fontSize:'13px', fontWeight:'700' }}>+${(milestones.successful_month_bonus || PHASE6_MILESTONES[effectiveTier]?.successful_month_bonus || 0).toFixed(2)}</span>
               </div>
             )}
-            {milestones.perfect_month_bonus && (
+            {(milestones.perfect_month_bonus || PHASE6_MILESTONES[effectiveTier]?.perfect_month_bonus) && (
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', opacity:0.45 }}>
                 <span style={{ fontSize:'12px' }}>🏆 Perfect month</span>
-                <span style={{ fontSize:'13px', fontWeight:'700', color:'#C9973A' }}>+${milestones.perfect_month_bonus.toFixed(2)}</span>
+                <span style={{ fontSize:'13px', fontWeight:'700', color:'#C9973A' }}>+${(milestones.perfect_month_bonus || PHASE6_MILESTONES[effectiveTier]?.perfect_month_bonus || 0).toFixed(2)}</span>
               </div>
             )}
             <div style={{ borderTop:'1px solid rgba(255,255,255,0.2)', paddingTop:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -222,11 +281,25 @@ export default function RewardsTab({ session, profile, isMinor }) {
         <div style={{ ...card, background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)' }}>
           <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-primary)', marginBottom:'6px' }}>Unlock milestone bonuses</p>
           <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.6', marginBottom:'12px' }}>
-            Upgrade to Plus — earn bonus rewards at 20 days and for a successful month. Up to $17.50/month.
+            Upgrade to Plus — earn $2.50 bonus at 20 days and $5.00 for a successful month. Up to $17.50/month.
           </p>
           <button onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
             style={{ width:'100%', background:'var(--theme-primary)', color:'white', fontWeight:'700', padding:'12px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'14px' }}>
             Upgrade to Plus — $4.99/mo
+          </button>
+        </div>
+      )}
+
+      {/* Upgrade CTA for plus */}
+      {effectiveTier === 'plus' && (
+        <div style={{ ...card, background:'var(--theme-primary-light)', border:'1px solid var(--theme-primary)' }}>
+          <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-primary)', marginBottom:'6px' }}>Go Premium for more</p>
+          <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.6', marginBottom:'12px' }}>
+            Premium unlocks a 10-day bonus ($2.50), larger milestone bonuses, and up to $35.00/month in rewards.
+          </p>
+          <button onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}
+            style={{ width:'100%', background:'var(--theme-primary)', color:'white', fontWeight:'700', padding:'12px', borderRadius:'10px', border:'none', cursor:'pointer', fontSize:'14px' }}>
+            Upgrade to Premium — $9.99/mo
           </button>
         </div>
       )}
@@ -243,7 +316,7 @@ export default function RewardsTab({ session, profile, isMinor }) {
           </div>
         </div>
 
-        {/* Brand grid — larger cards */}
+        {/* Brand grid */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'8px', marginBottom:'12px' }}>
           {GIFT_CARD_BRANDS.map(brand => (
             <div key={brand.name} style={{

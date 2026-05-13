@@ -8,9 +8,6 @@ import {
   trackEvent, getTodayString,
 } from '../../config'
 
-const DEFAULT_CUSTOM_1 = { key: 'custom_1', label: 'Stretching or Yoga (15+ min)', points: 50, icon: '🤸' }
-const DEFAULT_CUSTOM_2 = { key: 'custom_2', label: 'Gratitude Journaling', points: 50, icon: '📓' }
-
 const MOODS = ['😩', '😕', '😐', '😊', '🔥']
 
 function Confetti() {
@@ -30,6 +27,41 @@ function Confetti() {
   )
 }
 
+// Points breakdown modal
+function PointsModal({ corePoints, libPoints, custPoints, successBonus, perfectBonus, todayPoints, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--theme-card)', borderRadius: '20px', padding: '24px',
+        width: '100%', maxWidth: '340px', boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--theme-text)', margin: 0 }}>Points Breakdown</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--theme-text-muted)', padding: '4px' }}>×</button>
+        </div>
+        {[
+          { label: 'Core habits', value: corePoints },
+          { label: 'Library habits', value: libPoints },
+          { label: 'Personal habits', value: custPoints },
+          { label: 'Bonus (successful/perfect)', value: successBonus + perfectBonus },
+        ].map(row => (
+          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid var(--theme-border)' }}>
+            <span style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>{row.label}</span>
+            <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--theme-text)' }}>{row.value} pts</span>
+          </div>
+        ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px' }}>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-text)' }}>Total</span>
+          <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--theme-primary)' }}>{todayPoints} pts</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function HomeTab({
   session, profile, streak, streakFreeze, userHabits, todayLogs, todaySummary,
   weekSummaries, habitState, setHabitState, stepCount, setStepCount,
@@ -39,50 +71,52 @@ export default function HomeTab({
 
   const [saving, setSaving] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
-  const [lastTotalCompleted, setLastTotalCompleted] = useState(0)
+  const [prevDaySuccessful, setPrevDaySuccessful] = useState(false)
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false)
   const [todayMood, setTodayMood] = useState(todaySummary?.mood || null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [customHabits, setCustomHabits] = useState([])
+  const [showPointsModal, setShowPointsModal] = useState(false)
 
   useEffect(() => { setTodayMood(todaySummary?.mood || null) }, [todaySummary])
+
+  // ── Load custom habits from custom_habits table ────────────────────────────
+  useEffect(() => {
+    async function loadCustomHabits() {
+      const { data, error } = await supabase
+        .from('custom_habits')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('sort_order')
+      if (!error && data) {
+        setCustomHabits(data.map((row, i) => ({
+          id: row.id,
+          key: `custom_habit_${i}`,
+          label: row.label,
+          emoji: row.emoji || '⭐',
+          sort_order: row.sort_order,
+        })))
+      }
+    }
+    loadCustomHabits()
+  }, [userId])
 
   // ── Tier info ──────────────────────────────────────────────────────────────
   const effectiveTier = getEffectiveTier(profile?.tier || 'free', profile?.created_at)
   const tierConfig = TIER_CONFIG[effectiveTier]
-  const customSlots = tierConfig?.custom_habit_slots || 0
 
   // ── Build habit lists ──────────────────────────────────────────────────────
-  const libraryRows = userHabits?.filter(h => h.habit_type === 'library' && h.is_active) || []
-  const customRows = userHabits?.filter(h => h.habit_type === 'custom' && h.is_active) || []
-
-  const libraryHabits = libraryRows.length > 0
-    ? libraryRows.map(row => {
-      const lib = LIBRARY_HABITS.find(h => h.key === row.habit_key)
-      return lib || { key: row.habit_key, label: row.habit_label, points: 50, icon: row.habit_icon || '📌' }
-    })
-    : ['sunlight', 'hydration', 'meditation', 'no_late_food'].map(k => LIBRARY_HABITS.find(h => h.key === k)).filter(Boolean)
-
-  const customHabits = []
-  if (customSlots >= 1) {
-    customHabits.push(customRows[0]
-      ? { key: customRows[0].habit_key || 'custom_1', label: customRows[0].habit_label, points: 50, icon: customRows[0].habit_icon || '⭐' }
-      : DEFAULT_CUSTOM_1)
-  }
-  if (customSlots >= 2) {
-    customHabits.push(customRows[1]
-      ? { key: customRows[1].habit_key || 'custom_2', label: customRows[1].habit_label, points: 50, icon: customRows[1].habit_icon || '⭐' }
-      : DEFAULT_CUSTOM_2)
-  }
-
-  const totalHabitCount = 3 + libraryHabits.length + customHabits.length
+  // Library habits: always all 7 LIBRARY_HABITS (fixed for all users)
+  const libraryHabits = LIBRARY_HABITS
 
   // ── Completion counts ──────────────────────────────────────────────────────
   const coreCompleted = CORE_HABITS.filter(h => habitState[h.key]).length
   const libraryCompleted = libraryHabits.filter(h => habitState[h.key]).length
   const customCompleted = customHabits.filter(h => habitState[h.key]).length
   const totalCompleted = coreCompleted + libraryCompleted + customCompleted
-  const daySuccessful = isDaySuccessful(coreCompleted, totalCompleted)
-  const dayPerfect = isDayPerfect(totalCompleted)
+  const daySuccessful = isDaySuccessful(coreCompleted, libraryCompleted)
+  const dayPerfect = isDayPerfect(coreCompleted, libraryCompleted)
   const isSubmitted = !!todaySummary?.submitted
 
   // ── Streak freeze ──────────────────────────────────────────────────────────
@@ -106,14 +140,22 @@ export default function HomeTab({
   // ── Live points ────────────────────────────────────────────────────────────
   const stepsPoints = calcStepsPoints(stepCount)
   const wakePoints = habitState['wake'] ? 100 : 0
-  const phonePoints = habitState['no_phone'] ? 100 : 0
+  const sleepPoints = habitState['sleep'] ? 100 : 0
   const stepsChecked = !!habitState['steps']
-  const corePoints = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
+  const corePoints = wakePoints + sleepPoints + (stepsChecked ? stepsPoints : 0)
   const libPoints = libraryCompleted * POINTS.library_habit
-  const custPoints = customCompleted * POINTS.library_habit
+  // Custom habit points by tier
+  const customPointsPerHabit = customHabits.map((_, idx) => {
+    if (effectiveTier === 'premium' && idx < 4) return 25
+    if (effectiveTier === 'plus' && idx < 2) return 25
+    return 0
+  })
+  const custPoints = customHabits.reduce((sum, h, idx) => {
+    return sum + (habitState[h.key] ? customPointsPerHabit[idx] : 0)
+  }, 0)
   const successBonus = daySuccessful ? POINTS.successful_day : 0
   const perfectBonus = dayPerfect ? POINTS.perfect_day : 0
-  const todayPoints = Math.min(corePoints + libPoints + custPoints + successBonus + perfectBonus, POINTS.daily_max)
+  const todayPoints = corePoints + libPoints + custPoints + successBonus + perfectBonus
 
   // ── Reward calculations ────────────────────────────────────────────────────
   const memberMonths = getMemberMonths(profile?.created_at)
@@ -136,24 +178,30 @@ export default function HomeTab({
   const capProgress = maxCap > 0 ? Math.min((rewardNum / maxCap) * 100, 100) : 0
   const isFirstTimeUser = (profile?.total_days_logged || 0) === 0 && !isSubmitted
 
-  // ── Celebration ────────────────────────────────────────────────────────────
+  // ── Confetti: fires when daySuccessful becomes true (once per day) ─────────
   useEffect(() => {
-    if (daySuccessful && lastTotalCompleted < 5 && !isSubmitted) {
-      setShowCelebration(true)
-      setTimeout(() => setShowCelebration(false), 3500)
+    if (daySuccessful && !prevDaySuccessful && !isSubmitted) {
+      const confettiKey = `niyama_confetti_${today}`
+      if (!localStorage.getItem(confettiKey)) {
+        localStorage.setItem(confettiKey, '1')
+        setShowCelebration(true)
+        setTimeout(() => setShowCelebration(false), 3500)
+      }
     }
-    setLastTotalCompleted(totalCompleted)
-  }, [totalCompleted])
+    setPrevDaySuccessful(daySuccessful)
+  }, [daySuccessful])
 
   // ── Toggle habit ───────────────────────────────────────────────────────────
-  async function toggleHabit(habitKey, checked) {
+  async function toggleHabit(habitKey, checked, habitType) {
     if (isSubmitted) return
     setHabitState(prev => ({ ...prev, [habitKey]: checked }))
     try {
       const isCore = CORE_HABITS.find(h => h.key === habitKey)
-      const isCustom = habitKey.startsWith('custom')
-      const habitType = isCore ? 'core' : isCustom ? 'custom' : 'library'
-      const pts = checked ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : 50) : 0
+      const isCustom = habitKey.startsWith('custom_habit_')
+      const resolvedType = habitType || (isCore ? 'core' : isCustom ? 'custom' : 'library')
+      const pts = checked
+        ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : isCustom ? (customPointsPerHabit[parseInt(habitKey.split('_')[2])] || 0) : POINTS.library_habit)
+        : 0
       const habitLabel = isCore
         ? CORE_HABITS.find(h => h.key === habitKey)?.label
         : isCustom
@@ -161,10 +209,11 @@ export default function HomeTab({
           : libraryHabits.find(h => h.key === habitKey)?.label
       await supabase.from('habit_logs').upsert({
         user_id: userId, date: today, habit_key: habitKey,
-        habit_type: habitType, habit_label: habitLabel || habitKey,
+        habit_type: resolvedType, habit_label: habitLabel || habitKey,
         completed: checked, points_earned: checked ? pts : 0,
       }, { onConflict: 'user_id,date,habit_key' })
-      window.posthog?.capture('habit_logged', { habit_key: habitKey, habit_type: habitType, completed: checked })
+      trackEvent(supabase, userId, 'habit_checked', { habit_key: habitKey, type: resolvedType })
+      window.posthog?.capture('habit_logged', { habit_key: habitKey, habit_type: resolvedType, completed: checked })
     } catch (e) { console.error('Auto-save failed', e) }
   }
 
@@ -184,9 +233,8 @@ export default function HomeTab({
     try {
       const now = new Date()
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-      const corePointsTotal = wakePoints + phonePoints + (stepsChecked ? stepsPoints : 0)
       const libraryPointsTotal = libraryCompleted * POINTS.library_habit
-      const customPointsTotal = customCompleted * POINTS.library_habit
+      const customPointsTotal = custPoints
       const bonusSuccessful = daySuccessful ? POINTS.successful_day : 0
       const bonusPerfect = dayPerfect ? POINTS.perfect_day : 0
 
@@ -195,9 +243,10 @@ export default function HomeTab({
         core_total: CORE_HABITS.length, core_completed: coreCompleted,
         library_total: libraryHabits.length, library_completed: libraryCompleted,
         custom_total: customHabits.length, custom_completed: customCompleted,
-        total_habits: totalHabitCount, total_completed: totalCompleted,
+        total_habits: 3 + libraryHabits.length + customHabits.length,
+        total_completed: totalCompleted,
         day_successful: daySuccessful, perfect_day: dayPerfect,
-        points_from_core: corePointsTotal, points_from_library: libraryPointsTotal,
+        points_from_core: corePoints, points_from_library: libraryPointsTotal,
         points_from_custom: customPointsTotal,
         bonus_successful_day: bonusSuccessful, bonus_perfect_day: bonusPerfect,
         total_points: todayPoints, submitted: true, submitted_at: now.toISOString(),
@@ -263,10 +312,8 @@ export default function HomeTab({
         }
       }
 
-      trackEvent(supabase, userId, 'habit_submitted', {
-        points: todayPoints, day_successful: daySuccessful, perfect_day: dayPerfect,
-        core_completed: coreCompleted, library_completed: libraryCompleted,
-        custom_completed: customCompleted, hour: now.getHours(),
+      trackEvent(supabase, userId, 'day_submitted', {
+        points: todayPoints, successful: daySuccessful, perfect: dayPerfect,
       })
       window.posthog?.capture('day_submitted', {
         points: todayPoints, day_successful: daySuccessful, perfect_day: dayPerfect, tier: effectiveTier,
@@ -294,9 +341,24 @@ export default function HomeTab({
   const stepsColor = stepCount >= 5000 ? 'var(--theme-primary)' : 'var(--theme-text-muted)'
   const availableStepsPoints = calcStepsPoints(stepCount)
 
+  // Core threshold: 2, Library threshold: 3
+  const coreMetThreshold = coreCompleted >= 2
+  const libraryMetThreshold = libraryCompleted >= 3
+
   return (
     <>
       {showCelebration && <Confetti />}
+      {showPointsModal && (
+        <PointsModal
+          corePoints={corePoints}
+          libPoints={libPoints}
+          custPoints={custPoints}
+          successBonus={successBonus}
+          perfectBonus={perfectBonus}
+          todayPoints={todayPoints}
+          onClose={() => setShowPointsModal(false)}
+        />
+      )}
 
       {showMoodCheckIn && (
         <MoodCheckIn onSelect={handleMoodSelect} onSkip={handleMoodSkip} />
@@ -553,15 +615,41 @@ export default function HomeTab({
         </div>
       )}
 
+      {/* ── Monthly reward earned info card ── */}
+      {!isMinor && !isFreeExpired && !isFirstTimeUser && maxCap > 0 && (
+        <div style={{
+          ...card,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px', marginBottom: '16px',
+        }}>
+          <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Earned this month</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--theme-text)' }}>${reward}</span>
+            <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>of ${maxCap.toFixed(2)} cap</span>
+          </div>
+        </div>
+      )}
+
       {/* ── 3. Today's Habits Card ── */}
       <div style={card}>
         <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Today's Habits</h2>
         <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '4px' }}>
-          {totalCompleted}/{totalHabitCount} completed · {todayPoints} pts
+          {totalCompleted}/{3 + libraryHabits.length + customHabits.length} completed
         </p>
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '20px' }}>
-          Complete 5 of {totalHabitCount} habits (at least 2 core) for a successful day
+        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '12px' }}>
+          Complete 2 core + 3 library for a successful day
         </p>
+
+        {/* Progress indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '600' }}>
+          <span style={{ color: coreMetThreshold ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
+            {coreCompleted}/3 core
+          </span>
+          <span style={{ color: 'var(--theme-border)', fontWeight: '400' }}>·</span>
+          <span style={{ color: libraryMetThreshold ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
+            {libraryCompleted}/7 library
+          </span>
+        </div>
 
         {/* Core habits */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Core Habits</p>
@@ -573,15 +661,28 @@ export default function HomeTab({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-          <HabitRow habit={{ key: 'wake', label: 'Wake Before 7:30 AM', points: 100, icon: '🌅' }} checked={!!habitState['wake']} disabled={isSubmitted} onToggle={toggleHabit} />
-          <HabitRow habit={{ key: 'no_phone', label: 'No Phone After 10:30 PM', points: 100, icon: '📵' }} checked={!!habitState['no_phone']} disabled={isSubmitted} onToggle={toggleHabit} />
+          {/* Wake Consistency */}
+          <HabitRow
+            habit={{ key: 'wake', label: 'Wake Consistency', points: 100, icon: '🌅' }}
+            checked={!!habitState['wake']}
+            disabled={isSubmitted}
+            onToggle={(key, val) => toggleHabit(key, val, 'core')}
+          />
+
+          {/* Sleep Duration */}
+          <HabitRow
+            habit={{ key: 'sleep', label: 'Sleep Duration (7–9 hrs)', points: 100, icon: '🌙' }}
+            checked={!!habitState['sleep']}
+            disabled={isSubmitted}
+            onToggle={(key, val) => toggleHabit(key, val, 'core')}
+          />
 
           {/* Steps */}
           <div>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1 }}>
                 <input type="checkbox" checked={!!habitState['steps']}
-                  onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked) }}
+                  onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked, 'core') }}
                   disabled={isSubmitted}
                   style={{ width: '18px', height: '18px', marginTop: '2px', cursor: isSubmitted ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
@@ -623,34 +724,44 @@ export default function HomeTab({
         <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Library Habits</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: customHabits.length > 0 ? '24px' : '0' }}>
           {libraryHabits.map(habit => (
-            <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
+            <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={(key, val) => toggleHabit(key, val, 'library')} />
           ))}
         </div>
 
-        {/* Custom habits */}
+        {/* Personal habits (custom) */}
         {customHabits.length > 0 && (
           <>
-            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Custom Habits</p>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Personal Habits</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {customHabits.map(habit => (
-                <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={toggleHabit} />
+              {customHabits.map((habit, idx) => (
+                <HabitRow
+                  key={habit.key}
+                  habit={{ ...habit, icon: habit.emoji, points: customPointsPerHabit[idx] || 0 }}
+                  checked={!!habitState[habit.key]}
+                  disabled={isSubmitted}
+                  onToggle={(key, val) => toggleHabit(key, val, 'custom')}
+                />
               ))}
             </div>
           </>
         )}
 
-        {/* Points bar */}
-        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--theme-border)' }}>
+        {/* Points bar — tappable for breakdown modal */}
+        <div
+          style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--theme-border)', cursor: 'pointer' }}
+          onClick={() => setShowPointsModal(true)}
+          title="Tap to see points breakdown"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Today's Points</span>
-            <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>{todayPoints}</span>
+            <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)' }}>{todayPoints} <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)', fontWeight: '400' }}>ⓘ</span></span>
           </div>
           <div style={{ background: 'var(--theme-primary-light)', borderRadius: '4px', height: '8px' }}>
-            <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${(todayPoints / POINTS.daily_max) * 100}%`, transition: 'width 0.3s' }} />
+            <div style={{ background: 'var(--theme-primary)', borderRadius: '4px', height: '8px', width: `${Math.min((todayPoints / 750) * 100, 100)}%`, transition: 'width 0.3s' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>0</span>
-            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>{POINTS.daily_max} max</span>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>750 max</span>
           </div>
         </div>
 
@@ -659,7 +770,7 @@ export default function HomeTab({
           <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', border: '2px solid var(--theme-primary)', borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
             <p style={{ fontSize: '22px', marginBottom: '4px' }}>{dayPerfect ? '🏆' : '✅'}</p>
             <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-primary)', margin: '0 0 4px' }}>
-              {dayPerfect ? `Perfect Day — all ${totalHabitCount} habits!` : 'Successful Day — 5+ habits with 2+ core!'}
+              {dayPerfect ? 'Perfect Day — all habits complete!' : 'Successful Day — 2+ core, 3+ library!'}
             </p>
             <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', margin: 0 }}>Submit before midnight to lock it in</p>
           </div>
@@ -687,9 +798,9 @@ export default function HomeTab({
               width: '100%', marginTop: '16px', color: 'white', fontWeight: '700',
               padding: '14px 14px 10px', borderRadius: '10px', border: 'none',
               cursor: saving || submitSuccess ? 'default' : 'pointer',
-              background: submitSuccess ? '#22c55e' : saving ? 'var(--theme-text-muted)' : 'var(--theme-secondary)',
+              background: submitSuccess ? '#22c55e' : saving ? 'var(--theme-text-muted)' : '#4A7A68',
               transform: submitSuccess ? 'scale(1.02)' : 'scale(1)',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transition: 'background 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
               boxShadow: submitSuccess ? '0 4px 15px rgba(34, 197, 94, 0.4)' : 'none',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
             }}>
@@ -750,7 +861,7 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
         </div>
       </div>
       <span style={{ fontSize: '12px', fontWeight: '700', flexShrink: 0, marginLeft: '8px', color: checked ? 'var(--theme-primary)' : 'var(--theme-text-muted)', transition: 'color 0.2s' }}>
-        +{habit.points}
+        {habit.points > 0 ? `+${habit.points}` : '—'}
       </span>
     </label>
   )

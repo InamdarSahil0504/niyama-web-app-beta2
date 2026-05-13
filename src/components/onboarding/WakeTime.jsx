@@ -1,32 +1,38 @@
 import { useState } from 'react'
 
 export default function WakeTime({ onContinue, onBack }) {
-  // Wake time stored as minutes from midnight. Default 7:30am = 450
-  const [wakeMinutes, setWakeMinutes] = useState(450)
+  const [hour, setHour] = useState(6)
+  const [minute, setMinute] = useState('30')
+  const [ampm, setAmpm] = useState('AM')
 
-  const minMinutes = 270  // 4:30am
-  const maxMinutes = 450  // 7:30am
+  const hourOptions = [4, 5, 6, 7, 8, 9, 10, 11]
+  const minuteOptions = ['00', '15', '30', '45']
 
-  function minutesToLabel(mins) {
-    const h = Math.floor(mins / 60)
-    const m = mins % 60
-    const ampm = h < 12 ? 'AM' : 'PM'
-    const hour = h > 12 ? h - 12 : h === 0 ? 12 : h
-    return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+  const timeLabel = `${hour}:${minute} ${ampm}`
+
+  function handleContinue() {
+    const h24 = ampm === 'PM' && hour !== 12
+      ? hour + 12
+      : ampm === 'AM' && hour === 12
+        ? 0
+        : hour
+    const wakeMinutes = h24 * 60 + parseInt(minute)
+    onContinue(wakeMinutes)
   }
 
-  const timeLabel = minutesToLabel(wakeMinutes)
-
-  // Snap to 15-minute intervals
-  function handleSlider(val) {
-    const raw = parseInt(val)
-    const snapped = Math.round(raw / 15) * 15
-    setWakeMinutes(Math.max(minMinutes, Math.min(maxMinutes, snapped)))
-  }
-
-  const markers = []
-  for (let m = minMinutes; m <= maxMinutes; m += 30) {
-    markers.push(m)
+  const selectStyle = {
+    background: 'var(--theme-bg)',
+    border: '1px solid var(--theme-border)',
+    borderRadius: '12px',
+    padding: '14px 16px',
+    fontSize: '16px',
+    color: 'var(--theme-text)',
+    width: '100%',
+    outline: 'none',
+    cursor: 'pointer',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    textAlign: 'center',
   }
 
   return (
@@ -44,11 +50,11 @@ export default function WakeTime({ onContinue, onBack }) {
       )}
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-        <ProgressBar step={6} total={11} />
+        <ProgressBar step={6} total={9} />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{ width: '80px', height: '80px', background: '#fff8e6', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
               <span style={{ fontSize: '40px' }}>🌅</span>
             </div>
@@ -60,7 +66,7 @@ export default function WakeTime({ onContinue, onBack }) {
             </p>
           </div>
 
-          {/* Time display */}
+          {/* Selected time pill */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{ background: 'var(--theme-primary)', borderRadius: '20px', padding: '20px 32px', display: 'inline-block' }}>
               <p style={{ fontSize: '48px', fontWeight: '800', color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>
@@ -69,29 +75,53 @@ export default function WakeTime({ onContinue, onBack }) {
             </div>
           </div>
 
-          {/* Slider */}
-          <div style={{ marginBottom: '16px', padding: '0 8px' }}>
-            <input
-              type="range"
-              min={minMinutes}
-              max={maxMinutes}
-              step={15}
-              value={wakeMinutes}
-              onChange={e => handleSlider(e.target.value)}
-              style={{ width: '100%', accentColor: 'var(--theme-primary)', height: '6px', cursor: 'pointer' }}
-            />
-            {/* Marker labels */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              {markers.map(m => (
-                <span key={m} style={{ fontSize: '10px', color: m === wakeMinutes ? 'var(--theme-primary)' : 'var(--theme-text-muted)', fontWeight: m === wakeMinutes ? '700' : '400' }}>
-                  {minutesToLabel(m)}
-                </span>
-              ))}
+          {/* Dropdowns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', marginBottom: '6px', textAlign: 'center' }}>
+                Hour
+              </label>
+              <select
+                value={hour}
+                onChange={e => setHour(parseInt(e.target.value))}
+                style={selectStyle}
+              >
+                {hourOptions.map(h => (
+                  <option key={h} value={h}>{h}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', marginBottom: '6px', textAlign: 'center' }}>
+                Minute
+              </label>
+              <select
+                value={minute}
+                onChange={e => setMinute(e.target.value)}
+                style={selectStyle}
+              >
+                {minuteOptions.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--theme-text-secondary)', marginBottom: '6px', textAlign: 'center' }}>
+                AM/PM
+              </label>
+              <select
+                value={ampm}
+                onChange={e => setAmpm(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
             </div>
           </div>
 
           {/* Notification note */}
-          <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '12px', padding: '14px 16px', marginBottom: '32px' }}>
+          <div style={{ background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)', borderRadius: '12px', padding: '14px 16px', marginBottom: '24px' }}>
             <p style={{ fontSize: '12px', color: 'var(--theme-primary)', lineHeight: '1.6' }}>
               🔔 At <strong>{timeLabel}</strong>, Niyama will send: <em>"Good morning! Time to start your day"</em> with <strong>[I'm up]</strong> and <strong>[Snoozing...]</strong> buttons. Tapping "I'm up" verifies your wake habit automatically.
             </p>
@@ -102,7 +132,7 @@ export default function WakeTime({ onContinue, onBack }) {
           </p>
         </div>
 
-        <button onClick={() => onContinue(wakeMinutes)}
+        <button onClick={handleContinue}
           style={{ width: '100%', background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
           Set wake time →
         </button>
