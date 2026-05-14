@@ -1,58 +1,82 @@
-export default function BottomNav({ activeTab, onTabChange }) {
-  const tabs = [
-    {
-      key: 'home',
-      label: 'Home',
-      icon: (active) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'var(--theme-primary)' : 'none'} stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'analytics',
-      label: 'Stats',
-      icon: (active) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6"  y1="20" x2="6"  y2="14"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'rewards',
-      label: 'Rewards',
-      icon: (active) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'var(--theme-primary)' : 'none'} stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="6"/>
-          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'history',
-      label: 'History',
-      icon: (active) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'settings',
-      label: 'Settings',
-      icon: (active) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--theme-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-        </svg>
-      ),
-    },
-  ]
+// Mobile tab order: Rewards | Stats | HOME (center raised) | History | Settings
 
+function RewardsIcon({ active }) {
+  const c = active ? '#4A7A68' : 'rgba(255,255,255,0.4)'
+  const pts = '12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24">
+      <polygon
+        points={pts}
+        fill={active ? c : 'none'}
+        stroke={c}
+        strokeWidth={active ? 0 : 1.6}
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function StatsIcon({ active }) {
+  const c = active ? '#4A7A68' : 'rgba(255,255,255,0.4)'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24">
+      {active ? (
+        <>
+          <rect x="3" y="13" width="4" height="8" rx="1" fill={c} />
+          <rect x="10" y="8" width="4" height="13" rx="1" fill={c} />
+          <rect x="17" y="4" width="4" height="17" rx="1" fill={c} />
+        </>
+      ) : (
+        <>
+          <rect x="3" y="13" width="4" height="8" rx="1" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="10" y="8" width="4" height="13" rx="1" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="17" y="4" width="4" height="17" rx="1" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+function HistoryIcon({ active }) {
+  const c = active ? '#4A7A68' : 'rgba(255,255,255,0.4)'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {active ? (
+        <>
+          <circle cx="12" cy="12" r="10" fill={c} stroke="none" />
+          <path d="M12 6v6l3.5 3.5" stroke="#080D16" strokeWidth="1.8" fill="none" />
+        </>
+      ) : (
+        <>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l3.5 3.5" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+function SettingsIcon({ active }) {
+  const c = active ? '#4A7A68' : 'rgba(255,255,255,0.4)'
+  const gear = 'M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24">
+      <path d={gear} fill={active ? c : 'none'} stroke={active ? 'none' : c} strokeWidth="1.4" strokeLinejoin="round" />
+      {active && <circle cx="12" cy="12" r="3.5" fill="#080D16" />}
+    </svg>
+  )
+}
+
+// Tab order matches mobile: rewards | analytics | home(center) | history | settings
+const TABS = [
+  { key: 'rewards',   label: 'Rewards',  Icon: RewardsIcon },
+  { key: 'analytics', label: 'Stats',    Icon: StatsIcon },
+  { key: 'home',      label: '',         Icon: null },   // center — NiyamaIcon
+  { key: 'history',   label: 'History',  Icon: HistoryIcon },
+  { key: 'settings',  label: 'Settings', Icon: SettingsIcon },
+]
+
+export default function BottomNav({ activeTab, onTabChange }) {
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
@@ -60,50 +84,74 @@ export default function BottomNav({ activeTab, onTabChange }) {
     }}>
       <div style={{
         width: '100%', maxWidth: '448px',
-        background: 'var(--theme-bg)',
-        borderTop: '1px solid var(--theme-border)',
+        background: '#111B2B',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
+        alignItems: 'flex-end',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        paddingTop: '4px',
       }}>
-        {tabs.map(tab => {
+        {TABS.map(tab => {
           const active = activeTab === tab.key
+          const isHome = tab.key === 'home'
+
+          if (isHome) {
+            return (
+              <button
+                key="home"
+                onClick={() => onTabChange('home')}
+                style={{
+                  flex: 1, display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'flex-end',
+                  paddingBottom: '4px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                }}
+              >
+                {/* Raised circle — floats above bar */}
+                <div style={{
+                  width: '56px', height: '56px', borderRadius: '28px',
+                  background: '#111B2B',
+                  border: `3px solid ${active ? '#4A7A68' : 'rgba(255,255,255,0.15)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginTop: '-24px', marginBottom: '4px',
+                  boxShadow: active
+                    ? '0 4px 16px rgba(74,122,104,0.5)'
+                    : '0 4px 12px rgba(0,0,0,0.5)',
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                }}>
+                  <img src="/niyama-icon.svg" alt="Home" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                </div>
+              </button>
+            )
+          }
+
+          const { Icon } = tab
           return (
             <button
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                gap: '4px', padding: '10px 4px 12px',
+                alignItems: 'center', justifyContent: 'flex-start',
+                gap: '3px', paddingBottom: '8px',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: active ? 'var(--theme-primary)' : 'var(--theme-text-muted)',
                 transition: 'all 0.15s ease',
-                position: 'relative',
               }}
             >
-              {/* Active indicator dot */}
-              {active && (
-                <div style={{
-                  position: 'absolute', top: '6px', left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '4px', height: '4px', borderRadius: '50%',
-                  background: 'var(--theme-primary)',
-                }} />
-              )}
-
-              <div style={{
-                transform: active ? 'translateY(2px)' : 'translateY(0)',
-                transition: 'transform 0.15s ease',
-              }}>
-                {tab.icon(active)}
+              {/* Active dot */}
+              <div style={{ height: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
+                {active && (
+                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4A7A68' }} />
+                )}
               </div>
+
+              <Icon active={active} />
 
               <span style={{
                 fontSize: '10px',
-                fontWeight: active ? '700' : '400',
-                letterSpacing: active ? '0.01em' : '0',
+                fontWeight: active ? '600' : '400',
+                color: active ? '#4A7A68' : 'rgba(255,255,255,0.4)',
+                fontFamily: "'DM Sans', sans-serif",
                 transition: 'all 0.15s ease',
               }}>
                 {tab.label}

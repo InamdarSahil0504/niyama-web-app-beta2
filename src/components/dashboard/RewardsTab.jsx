@@ -123,9 +123,9 @@ export default function RewardsTab({ session, profile, isMinor }) {
 
       {/* Free expired */}
       {isFreeExpired && !isMinor && (
-        <div style={{ ...card, background:'#fffbeb', border:'1px solid #fcd34d' }}>
-          <p style={{ fontSize:'14px', fontWeight:'700', color:'#92400e', marginBottom:'6px' }}>Your free trial has ended</p>
-          <p style={{ fontSize:'13px', color:'#78350f', lineHeight:'1.6', marginBottom:'12px' }}>
+        <div style={{ ...card, background:'rgba(201,151,58,0.12)', border:'1px solid rgba(201,151,58,0.4)' }}>
+          <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--theme-accent-gold)', marginBottom:'6px' }}>Your free trial has ended</p>
+          <p style={{ fontSize:'13px', color:'var(--theme-text-secondary)', lineHeight:'1.6', marginBottom:'12px' }}>
             Upgrade to keep earning real financial rewards every month.
           </p>
           <button onClick={() => window.open('https://niyamalife.com/pricing', '_blank')}

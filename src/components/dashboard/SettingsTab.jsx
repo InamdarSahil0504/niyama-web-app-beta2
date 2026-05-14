@@ -23,19 +23,19 @@ function SettingsRow({ icon, label, subtitle, onPress, chevron = true, danger = 
   return (
     <button onClick={onPress} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', borderBottom: '1px solid var(--theme-border)' }}>
       {icon && (
-        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: danger ? '#fef2f2' : 'var(--theme-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: danger ? 'var(--theme-secondary-light)' : 'var(--theme-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
           {icon}
         </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <p style={{ fontSize: '15px', fontWeight: '600', color: danger ? '#dc2626' : 'var(--theme-text)', margin: 0 }}>{label}</p>
+          <p style={{ fontSize: '15px', fontWeight: '600', color: danger ? 'var(--theme-secondary)' : 'var(--theme-text)', margin: 0 }}>{label}</p>
           {badge && <span style={{ fontSize: '10px', fontWeight: '700', background: 'var(--theme-primary)', color: 'white', padding: '2px 7px', borderRadius: '8px' }}>{badge}</span>}
         </div>
         {subtitle && <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', margin: '2px 0 0', lineHeight: '1.4' }}>{subtitle}</p>}
       </div>
       {chevron && (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={danger ? '#dc2626' : 'var(--theme-text-muted)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={danger ? 'var(--theme-secondary)' : 'var(--theme-text-muted)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
           <path d="M9 18l6-6-6-6" />
         </svg>
       )}
@@ -103,8 +103,8 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
 
       {/* Toast */}
       {message && (
-        <div style={{ background: messageType === 'success' ? 'var(--theme-primary-light)' : '#fef2f2', border: `1px solid ${messageType === 'success' ? 'var(--theme-primary)' : '#fecaca'}`, borderRadius: '10px', padding: '10px 14px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '13px', color: messageType === 'success' ? 'var(--theme-primary)' : '#dc2626', fontWeight: '600', margin: 0 }}>
+        <div style={{ background: messageType === 'success' ? 'var(--theme-primary-light)' : 'var(--theme-secondary-light)', border: `1px solid ${messageType === 'success' ? 'var(--theme-primary)' : 'rgba(201,106,82,0.4)'}`, borderRadius: '10px', padding: '10px 14px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: messageType === 'success' ? 'var(--theme-primary)' : 'var(--theme-secondary)', fontWeight: '600', margin: 0 }}>
             {messageType === 'success' ? '✓ ' : '⚠️ '}{message}
           </p>
         </div>
@@ -669,7 +669,7 @@ function BillingSection({ onBack, profile, userId, card, saving, setSaving, show
               {isFree ? 'Free plan' : `$${tierConfig?.price}/month${profile?.billing_cycle === 'annual' ? ' (annual billing)' : ''}`}
             </p>
             {profile?.subscription_status === 'past_due' && (
-              <p style={{ fontSize: '11px', color: '#dc2626', margin: '4px 0 0', fontWeight: '600' }}>⚠️ Payment past due — update your billing details</p>
+              <p style={{ fontSize: '11px', color: 'var(--theme-secondary)', margin: '4px 0 0', fontWeight: '600' }}>⚠️ Payment past due — update your billing details</p>
             )}
           </div>
           <span style={{ background: 'var(--theme-primary)', color: 'white', fontSize: '12px', fontWeight: '700', padding: '5px 12px', borderRadius: '20px' }}>
@@ -1023,54 +1023,54 @@ function AccountSection({ onBack, profile, userId, card, saving, setSaving, show
       )}
 
       {/* Delete */}
-      <div style={{ ...card, border: '1px solid #fecaca' }}>
-        <p style={{ fontSize: '12px', fontWeight: '700', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Delete account</p>
+      <div style={{ ...card, border: '1px solid rgba(201,106,82,0.4)' }}>
+        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--theme-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Delete account</p>
         {deleteStep === 0 && (
           <>
             <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.6', marginBottom: '12px' }}>
               Your account will be deactivated immediately and permanently deleted after 30 days. You can restore it within that window by emailing support@niyamalife.com.
             </p>
-            <button onClick={() => setDeleteStep(1)} style={{ width: '100%', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '11px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
+            <button onClick={() => setDeleteStep(1)} style={{ width: '100%', background: 'var(--theme-secondary-light)', border: '1px solid rgba(201,106,82,0.4)', color: 'var(--theme-secondary)', fontWeight: '600', padding: '11px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
               I want to delete my account
             </button>
           </>
         )}
         {deleteStep === 1 && (
-          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
-            <p style={{ fontSize: '14px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>Before you go...</p>
+          <div style={{ background: 'var(--theme-secondary-light)', borderRadius: '10px', padding: '14px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-secondary)', marginBottom: '8px' }}>Before you go...</p>
             <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>
               You've logged <strong>{profile?.total_days_logged || 0} days</strong> and built a <strong>{streak?.current_streak || 0}-day streak</strong>. That's real progress. Are you sure?
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setDeleteStep(0)} style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', border: 'none' }}>Keep my account</button>
-              <button onClick={() => setDeleteStep(2)} style={{ flex: 1, background: 'none', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Still delete</button>
+              <button onClick={() => setDeleteStep(2)} style={{ flex: 1, background: 'none', border: '1px solid rgba(201,106,82,0.4)', color: 'var(--theme-secondary)', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Still delete</button>
             </div>
           </div>
         )}
         {deleteStep === 2 && (
-          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
-            <p style={{ fontSize: '14px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>Did you know?</p>
+          <div style={{ background: 'var(--theme-secondary-light)', borderRadius: '10px', padding: '14px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--theme-secondary)', marginBottom: '8px' }}>Did you know?</p>
             <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', lineHeight: '1.6', marginBottom: '12px' }}>
               You can <strong>pause your account</strong> for 1 month instead — no billing, streak preserved. Would you like to pause instead?
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setDeleteStep(0)} style={{ flex: 1, background: 'var(--theme-primary)', color: 'white', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', border: 'none' }}>Pause instead</button>
-              <button onClick={() => setDeleteStep(3)} style={{ flex: 1, background: 'none', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>No, delete</button>
+              <button onClick={() => setDeleteStep(3)} style={{ flex: 1, background: 'none', border: '1px solid rgba(201,106,82,0.4)', color: 'var(--theme-secondary)', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>No, delete</button>
             </div>
           </div>
         )}
         {deleteStep === 3 && (
-          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '14px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '600', color: '#dc2626', marginBottom: '6px' }}>Type DELETE to confirm</p>
+          <div style={{ background: 'var(--theme-secondary-light)', borderRadius: '10px', padding: '14px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-secondary)', marginBottom: '6px' }}>Type DELETE to confirm</p>
             <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '10px', lineHeight: '1.5' }}>
               Account deactivated immediately · Data deleted after 30 days · Restore: support@niyamalife.com
             </p>
             <input type="text" value={deleteInput} onChange={e => setDeleteInput(e.target.value)} placeholder="Type DELETE"
-              style={{ background: 'white', border: '1px solid #fecaca', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }} />
+              style={{ background: 'var(--theme-bg)', border: '1px solid rgba(201,106,82,0.4)', color: 'var(--theme-text)', width: '100%', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }} />
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => { setDeleteStep(0); setDeleteInput('') }} style={{ flex: 1, background: 'none', border: '1px solid var(--theme-border)', color: 'var(--theme-text-secondary)', fontWeight: '600', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Cancel</button>
               <button onClick={deleteAccount} disabled={deleteInput !== 'DELETE' || saving}
-                style={{ flex: 1, background: deleteInput === 'DELETE' ? '#dc2626' : 'var(--theme-border)', color: deleteInput === 'DELETE' ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: deleteInput === 'DELETE' ? 'pointer' : 'not-allowed', fontSize: '13px', border: 'none' }}>
+                style={{ flex: 1, background: deleteInput === 'DELETE' ? 'var(--theme-secondary)' : 'var(--theme-border)', color: deleteInput === 'DELETE' ? 'white' : 'var(--theme-text-muted)', fontWeight: '700', padding: '10px', borderRadius: '8px', cursor: deleteInput === 'DELETE' ? 'pointer' : 'not-allowed', fontSize: '13px', border: 'none' }}>
                 {saving ? '...' : 'Delete forever'}
               </button>
             </div>

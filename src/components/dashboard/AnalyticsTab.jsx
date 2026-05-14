@@ -94,7 +94,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
     if (status === 'success') return 'var(--theme-primary)'
     if (status === 'miss') return 'transparent'
     if (status === 'future') return 'transparent'
-    return '#E05C5C' // inactive
+    return 'rgba(201,106,82,0.5)' // inactive (missed day)
   }
 
   function calTextColor(status) {
@@ -497,10 +497,10 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
               <p style={{ fontSize: '11px', color: 'var(--theme-primary)', fontWeight: '600', margin: 0 }}>{bestDay.rate}% success rate</p>
             </div>
             {worstDay && worstDay.name !== bestDay.name && (
-              <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ background: 'var(--theme-secondary-light)', border: '1px solid rgba(201,106,82,0.3)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
                 <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', marginBottom: '4px', margin: '0 0 4px' }}>Needs Attention</p>
-                <p style={{ fontSize: '20px', fontWeight: '800', color: '#dc2626', margin: '0 0 2px' }}>{worstDay.name}</p>
-                <p style={{ fontSize: '11px', color: '#dc2626', fontWeight: '600', margin: 0 }}>{worstDay.rate}% success rate</p>
+                <p style={{ fontSize: '20px', fontWeight: '800', color: 'var(--theme-secondary)', margin: '0 0 2px' }}>{worstDay.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--theme-secondary)', fontWeight: '600', margin: 0 }}>{worstDay.rate}% success rate</p>
               </div>
             )}
           </div>
@@ -539,8 +539,8 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                     <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>{h.label}</span>
                     <span style={{
                       fontSize: '9px', fontWeight: '700', padding: '1px 5px', borderRadius: '6px',
-                      background: h.type === 'core' ? 'var(--theme-primary-light)' : h.type === 'custom' ? '#fef3e2' : '#f0eef7',
-                      color: h.type === 'core' ? 'var(--theme-primary)' : h.type === 'custom' ? '#C9973A' : '#7B6BAA',
+                      background: h.type === 'core' ? 'var(--theme-primary-light)' : h.type === 'custom' ? 'rgba(201,151,58,0.15)' : 'rgba(255,255,255,0.06)',
+                      color: h.type === 'core' ? 'var(--theme-primary)' : h.type === 'custom' ? 'var(--theme-accent-gold)' : 'var(--theme-text-secondary)',
                     }}>
                       {h.type.toUpperCase()}
                     </span>
@@ -640,9 +640,9 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                   <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-primary)', margin: '0 0 2px' }}>{avgSuccessMood.toFixed(1)}/5</p>
                   <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Successful Days</p>
                 </div>
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--theme-secondary-light)', border: '1px solid rgba(201,106,82,0.3)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
                   <p style={{ fontSize: '20px', marginBottom: '4px', margin: '0 0 4px' }}>{MOOD_EMOJIS[Math.round(avgMissedMood) - 1]}</p>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#dc2626', margin: '0 0 2px' }}>{avgMissedMood.toFixed(1)}/5</p>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--theme-secondary)', margin: '0 0 2px' }}>{avgMissedMood.toFixed(1)}/5</p>
                   <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Partial Days</p>
                 </div>
               </div>

@@ -81,8 +81,8 @@ export default function HistoryTab({ session, profile }) {
         </p>
       </div>
 
-      {/* Filter pills */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      {/* Filter segmented control */}
+      <div style={{ display: 'flex', background: 'var(--theme-card)', border: '1px solid var(--theme-border)', borderRadius: '12px', padding: '3px', marginBottom: '16px' }}>
         {[
           { value: 'all', label: 'All Days' },
           { value: 'successful', label: 'Successful' },
@@ -92,11 +92,11 @@ export default function HistoryTab({ session, profile }) {
             key={f.value}
             onClick={() => setFilter(f.value)}
             style={{
-              padding: '7px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-              cursor: 'pointer', border: 'none', transition: 'all 0.2s',
-              background: filter === f.value ? 'var(--theme-primary)' : 'var(--theme-card)',
-              color: filter === f.value ? 'white' : 'var(--theme-text-secondary)',
-              boxShadow: filter === f.value ? '0 2px 8px rgba(74,122,104,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
+              flex: 1, padding: '8px 4px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+              background: filter === f.value ? 'var(--theme-primary)' : 'transparent',
+              color: filter === f.value ? 'white' : 'var(--theme-text-muted)',
+              fontWeight: filter === f.value ? '700' : '400',
+              fontSize: '12px', transition: 'all 0.15s',
             }}
           >
             {f.label}

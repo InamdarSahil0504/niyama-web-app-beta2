@@ -364,21 +364,23 @@ export default function HomeTab({
         <MoodCheckIn onSelect={handleMoodSelect} onSkip={handleMoodSkip} />
       )}
 
-      {/* ── 1. Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/niyama-icon.svg" alt="Niyama" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
-            <h1 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--theme-text)', margin: 0 }}>Niyama</h1>
-            {todayMood && <span style={{ fontSize: '20px' }}>{MOODS[todayMood - 1]}</span>}
-          </div>
-          <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', marginTop: '4px' }}>
+      {/* ── 1. Header strip (matches mobile) ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '12px',
+        background: 'var(--theme-primary-light)', borderRadius: '16px',
+        padding: '14px 16px', marginBottom: '16px',
+        border: '1px solid rgba(74,122,104,0.3)',
+      }}>
+        <img src="/niyama-icon.svg" alt="Niyama" style={{ width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: '17px', fontWeight: '700', color: 'var(--theme-text)', margin: 0 }}>
             Hey, {profile?.full_name?.split(' ')[0] || 'there'} 👋
           </p>
+          <p style={{ fontSize: '13px', color: 'var(--theme-text-secondary)', margin: '2px 0 0' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
         </div>
-        <span style={{ background: 'var(--theme-primary)', color: 'white', fontSize: '12px', fontWeight: '600', padding: '4px 12px', borderRadius: '20px' }}>
-          {tierConfig?.label || 'Free'}
-        </span>
+        {todayMood && <span style={{ fontSize: '24px' }}>{MOODS[todayMood - 1]}</span>}
       </div>
 
       {/* ── First time welcome ── */}
@@ -402,55 +404,33 @@ export default function HomeTab({
         </div>
       )}
 
-      {/* ── 2. Consolidated Streak + Reward Banner ── */}
+      {/* ── 2. Streak Banner (card-based, matches mobile StreakBanner) ── */}
       {!isFirstTimeUser && (
         <div style={{
-          background: (streak?.current_streak || 0) >= 7
-            ? 'linear-gradient(135deg, #3D6B5A 0%, #5A8A78 50%, #4A7A68 100%)'
-            : 'linear-gradient(135deg, #4A7A68 0%, #5A8A78 100%)',
-          borderRadius: '20px', padding: '20px', marginBottom: '16px', color: 'white',
-          boxShadow: '0 4px 15px rgba(74, 122, 104, 0.3)',
+          background: 'var(--theme-card)', borderRadius: '16px',
+          border: '1px solid var(--theme-border)', padding: '16px', marginBottom: '16px',
           position: 'relative', overflow: 'hidden',
         }}>
-          {(streak?.current_streak || 0) >= 14 && (
-            <div style={{
-              position: 'absolute', top: '-20px', right: '-20px',
-              width: '120px', height: '120px', borderRadius: '50%',
-              background: 'rgba(201, 151, 58, 0.2)', filter: 'blur(20px)',
-              pointerEvents: 'none',
-            }} />
-          )}
-
-          {/* Streak top row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span style={{
-                fontSize: (streak?.current_streak || 0) >= 30 ? '52px' : (streak?.current_streak || 0) >= 14 ? '46px' : (streak?.current_streak || 0) >= 7 ? '40px' : '34px',
-                display: 'block', lineHeight: 1,
-                animation: (streak?.current_streak || 0) > 0 ? 'flame-pulse 1.5s ease-in-out infinite' : 'none',
-                filter: (streak?.current_streak || 0) >= 30 ? 'drop-shadow(0 0 8px rgba(255,165,0,0.8))' : 'none',
-              }}>🔥</span>
-              <div>
-                <p style={{ fontSize: '11px', opacity: '0.7', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Current Streak</p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <p style={{ fontSize: '44px', fontWeight: '900', lineHeight: 1, letterSpacing: '-0.02em', margin: 0 }}>
-                    {streak?.current_streak || 0}
+          {/* Streak top row: number left, bar chart right */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+              <p style={{ fontSize: '44px', fontWeight: '800', color: 'var(--theme-text)', lineHeight: 1, margin: 0 }}>
+                {streak?.current_streak || 0}
+              </p>
+              <div style={{ paddingBottom: '6px' }}>
+                <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', margin: 0 }}>
+                  {(streak?.current_streak || 0) === 1 ? '🔥 day streak' : '🔥 day streak'}
+                </p>
+                {(streak?.current_streak || 0) >= 7 && (
+                  <p style={{ fontSize: '11px', fontWeight: '600', color: '#C9973A', margin: '2px 0 0' }}>
+                    {(streak?.current_streak || 0) >= 30 ? '🏆 Legendary!' : (streak?.current_streak || 0) >= 14 ? '⚡ Unstoppable!' : '🌟 Momentum!'}
                   </p>
-                  <p style={{ fontSize: '16px', opacity: '0.75', fontWeight: '500', margin: 0 }}>days</p>
-                </div>
+                )}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '11px', opacity: '0.6', marginBottom: '3px' }}>Best</p>
-              <p style={{ fontSize: '22px', fontWeight: '800', margin: 0 }}>{streak?.longest_streak || 0}</p>
-              <p style={{ fontSize: '10px', opacity: '0.6', margin: 0 }}>days</p>
-            </div>
-          </div>
 
-          {/* 7-day bar chart */}
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '10px', opacity: '0.6', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Last 7 Days</p>
-            <div style={{ display: 'flex', gap: '5px', alignItems: 'flex-end', height: '52px' }}>
+            {/* 7-day bar chart */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px' }}>
               {Array.from({ length: 7 }, (_, i) => {
                 const dayOffset = 6 - i
                 const isToday = dayOffset === 0
@@ -459,208 +439,123 @@ export default function HomeTab({
                 const dateStr = date.toLocaleDateString('en-CA', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
                 const dayLabel = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]
                 const summary = (weekSummaries || []).find(s => s.date === dateStr)
-
-                let barColor, barHeight, barOpacity
+                const BAR_MAX = 40
+                let barColor, barHeight
                 if (isToday) {
-                  barHeight = Math.max((todayPoints / 750) * 52, 4)
-                  barColor = dayPerfect ? '#C9973A' : daySuccessful ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
-                  barOpacity = 1
+                  barHeight = Math.max(todayPoints > 0 ? Math.round((todayPoints / 750) * BAR_MAX) : 4, 4)
+                  barColor = dayPerfect ? '#C9973A' : daySuccessful ? '#4A7A68' : 'rgba(255,255,255,0.2)'
                 } else if (summary?.submitted) {
                   const pts = summary.total_points || 0
-                  barHeight = Math.max((pts / 750) * 52, 4)
-                  barColor = summary.perfect_day ? '#C9973A' : summary.day_successful ? 'rgba(255,255,255,0.92)' : 'transparent'
-                  barOpacity = 1
+                  barHeight = Math.max(pts > 0 ? Math.round((pts / 750) * BAR_MAX) : 4, 4)
+                  barColor = summary.perfect_day ? '#C9973A' : summary.day_successful ? '#4A7A68' : 'rgba(201,106,82,0.5)'
                 } else {
-                  barHeight = 8
-                  barColor = '#E05C5C'
-                  barOpacity = 1
+                  barHeight = 4
+                  barColor = 'rgba(255,255,255,0.1)'
                 }
-
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '52px', gap: '5px' }}>
-                    <div style={{
-                      width: '100%', height: `${barHeight}px`, background: barColor,
-                      borderRadius: '3px 3px 2px 2px', opacity: barOpacity,
-                      transition: 'height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s',
-                      boxShadow: isToday && daySuccessful ? '0 0 6px rgba(255,255,255,0.4)' : 'none',
-                      border: barColor === 'transparent' ? '1px solid rgba(255,255,255,0.30)' : 'none',
-                      boxSizing: 'border-box',
-                    }} />
-                    <p style={{ fontSize: '9px', opacity: isToday ? 1 : 0.55, fontWeight: isToday ? '700' : '400', color: 'white', lineHeight: 1, margin: 0 }}>
-                      {isToday ? '·' : dayLabel}
-                    </p>
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ height: `${BAR_MAX + 4}px`, display: 'flex', alignItems: 'flex-end' }}>
+                      <div style={{
+                        width: '16px', height: `${barHeight}px`, borderRadius: '4px',
+                        background: barColor,
+                        border: isToday ? `1.5px solid #4A7A68` : 'none',
+                        boxSizing: 'border-box',
+                        transition: 'height 0.3s ease',
+                      }} />
+                    </div>
+                    <span style={{ fontSize: '10px', color: isToday ? '#4A7A68' : 'rgba(255,255,255,0.4)', fontWeight: isToday ? '700' : '400' }}>
+                      {dayLabel}
+                    </span>
                   </div>
                 )
               })}
             </div>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
-              {[
-                { color: '#C9973A', label: 'Perfect', border: false },
-                { color: 'rgba(255,255,255,0.92)', label: 'Successful', border: false },
-                { color: 'transparent', label: 'Partial', border: true },
-                { color: '#E05C5C', label: 'Inactive', border: false },
-              ].map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: l.color, border: l.border ? '1px solid rgba(255,255,255,0.30)' : 'none', boxSizing: 'border-box' }} />
-                  <span style={{ fontSize: '9px', opacity: '0.65', color: 'white' }}>{l.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Milestone message */}
-          {(streak?.current_streak || 0) >= 7 && (
-            <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px 12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px' }}>
-                {(streak?.current_streak || 0) >= 30 ? '🏆' : (streak?.current_streak || 0) >= 14 ? '⚡' : '🌟'}
-              </span>
-              <p style={{ fontSize: '12px', fontWeight: '600', opacity: '0.95', margin: 0 }}>
-                {(streak?.current_streak || 0) >= 30 ? `${streak?.current_streak} days — legendary discipline!`
-                  : (streak?.current_streak || 0) >= 14 ? `${streak?.current_streak} days — you're unstoppable!`
-                    : `${streak?.current_streak} days — building real momentum!`}
-              </p>
-            </div>
-          )}
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: '16px', paddingTop: '12px', borderTop: '1px solid var(--theme-border)' }}>
+            {[{ color: '#C9973A', label: 'Perfect' }, { color: '#4A7A68', label: 'Successful' }, { color: 'rgba(201,106,82,0.5)', label: 'Logged' }].map(l => (
+              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '4px', background: l.color }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{l.label}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Streak freeze */}
           {(streak?.current_streak || 0) > 0 && canUseFreeze && (
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px', opacity: freezeUsed ? 0.4 : 1, filter: freezeUsed ? 'grayscale(1)' : 'none' }}>❄️</span>
+                <span style={{ fontSize: '16px', opacity: freezeUsed ? 0.4 : 1 }}>❄️</span>
                 <div>
-                  <p style={{ fontSize: '12px', fontWeight: '600', margin: 0 }}>{freezeUsed ? 'Freeze Used' : 'Freeze Available'}</p>
-                  <p style={{ fontSize: '10px', opacity: '0.7', margin: 0 }}>{freezeUsed ? 'Resets 1st of month' : '1 missed day protection'}</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{freezeUsed ? 'Freeze Used' : 'Freeze Available'}</p>
+                  <p style={{ fontSize: '10px', color: 'var(--theme-text-muted)', margin: 0 }}>{freezeUsed ? 'Resets 1st of month' : '1 missed day protection'}</p>
                 </div>
               </div>
               {!freezeUsed && !isSubmitted && (
                 <button onClick={applyStreakFreeze} style={{
-                  background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
-                  color: 'white', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                  background: 'var(--theme-primary-light)', border: '1px solid var(--theme-primary)',
+                  color: 'var(--theme-primary)', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
                 }}>Use ❄️</button>
               )}
             </div>
           )}
           {!canUseFreeze && (streak?.current_streak || 0) > 0 && (
-            <div style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', opacity: 0.5 }}>❄️</span>
-              <p style={{ fontSize: '11px', opacity: '0.65', margin: 0 }}>Streak freeze available on Plus and Premium</p>
-            </div>
-          )}
-
-          {/* ── Divider ── */}
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 0 16px' }} />
-
-          {/* ── Reward section ── */}
-          {isMinor ? null : isFreeExpired ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '11px', opacity: '0.7', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 3px' }}>Monthly Rewards</p>
-                <p style={{ fontSize: '14px', fontWeight: '600', opacity: '0.85', margin: 0 }}>Upgrade to start earning →</p>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '8px', padding: '6px 12px' }}>
-                <p style={{ fontSize: '11px', fontWeight: '700', margin: 0 }}>From $0.99/mo</p>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <div>
-                  <p style={{ fontSize: '11px', opacity: '0.7', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 3px' }}>
-                    {isFreeTrial ? 'Trial Reward' : 'Monthly Reward'}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                    <p style={{ fontSize: '36px', fontWeight: '900', lineHeight: 1, letterSpacing: '-0.02em', margin: 0, color: rewardNum > 0 ? '#C9973A' : 'white' }}>
-                      ${reward}
-                    </p>
-                    <p style={{ fontSize: '13px', opacity: '0.7', margin: 0 }}>earned</p>
-                  </div>
-                  {isFreeTrial && (
-                    <p style={{ fontSize: '10px', opacity: '0.6', margin: '2px 0 0' }}>
-                      {trialMonthsLeft} month{trialMonthsLeft !== 1 ? 's' : ''} of free trial remaining
-                    </p>
-                  )}
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '11px', opacity: '0.6', margin: '0 0 2px' }}>Cap</p>
-                  <p style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>${maxCap.toFixed(2)}</p>
-                  <p style={{ fontSize: '10px', opacity: '0.6', margin: 0 }}>per month</p>
-                </div>
-              </div>
-
-              {/* Cap progress bar */}
-              <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '4px', height: '6px', marginBottom: '8px' }}>
-                <div style={{
-                  background: rewardNum > 0 ? '#C9973A' : 'rgba(255,255,255,0.5)',
-                  borderRadius: '4px', height: '6px',
-                  width: `${capProgress}%`,
-                  transition: 'width 0.4s ease',
-                  minWidth: rewardNum > 0 ? '4px' : '0',
-                }} />
-              </div>
-
-              {/* Eligibility row */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ fontSize: '11px', opacity: '0.75', margin: 0 }}>
-                  {isEligible
-                    ? `${successfulDays} of ${minDays} days — eligible ✓`
-                    : isInactive
-                      ? '5+ inactive days — ineligible this month'
-                      : `${minDays - successfulDays} more ${minDays - successfulDays === 1 ? 'day' : 'days'} to qualify`
-                  }
-                </p>
-                <p style={{ fontSize: '11px', opacity: '0.6', margin: 0 }}>Paid 1st via gift card</p>
-              </div>
+            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', opacity: 0.4 }}>❄️</span>
+              <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Streak freeze available on Plus and Premium</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Monthly reward earned info card ── */}
+      {/* ── Monthly Reward Card (matches mobile hero card) ── */}
       {!isMinor && !isFreeExpired && !isFirstTimeUser && maxCap > 0 && (
         <div style={{
-          ...card,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 16px', marginBottom: '16px',
+          background: 'var(--theme-primary)', borderRadius: '16px',
+          padding: '20px', marginBottom: '16px', color: 'white',
         }}>
-          <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>Earned this month</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--theme-text)' }}>${reward}</span>
-            <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>of ${maxCap.toFixed(2)} cap</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Earned this month</p>
+              <p style={{ fontSize: '36px', fontWeight: '800', lineHeight: 1, margin: 0 }}>${reward}</p>
+            </div>
+            <div style={{ alignItems: 'flex-end', textAlign: 'right' }}>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', margin: '0 0 4px' }}>of ${maxCap.toFixed(2)} cap</p>
+              <div style={{ width: '100px', height: '5px', background: 'rgba(255,255,255,0.25)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '5px', background: '#C9973A', borderRadius: '4px', width: `${capProgress}%`, transition: 'width 0.4s ease' }} />
+              </div>
+            </div>
           </div>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '10px 0 0' }}>
+            {monthlyPoints.toLocaleString()} pts earned this month
+          </p>
         </div>
       )}
 
-      {/* ── 3. Today's Habits Card ── */}
-      <div style={card}>
-        <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--theme-text)', marginBottom: '4px' }}>Today's Habits</h2>
-        <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', marginBottom: '4px' }}>
-          {totalCompleted}/{3 + libraryHabits.length + customHabits.length} completed
-        </p>
-        <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', marginBottom: '12px' }}>
-          Complete 2 core + 3 library for a successful day
-        </p>
-
-        {/* Progress indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '13px', fontWeight: '600' }}>
+      {/* ── 3. Today's Habits ── */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--theme-text)', margin: 0 }}>Today's Habits</h2>
+          <span style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>
+            {totalCompleted}/{3 + libraryHabits.length + customHabits.length} done
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600' }}>
           <span style={{ color: coreMetThreshold ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
             {coreCompleted}/3 core
           </span>
-          <span style={{ color: 'var(--theme-border)', fontWeight: '400' }}>·</span>
+          <span style={{ color: 'var(--theme-text-muted)', fontWeight: '400' }}>·</span>
           <span style={{ color: libraryMetThreshold ? 'var(--theme-primary)' : 'var(--theme-text-muted)' }}>
             {libraryCompleted}/7 library
           </span>
         </div>
+      </div>
 
         {/* Core habits */}
-        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Core Habits</p>
-        <div style={{ background: 'var(--theme-primary-light)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-          <span style={{ fontSize: '14px', flexShrink: 0 }}>📱</span>
-          <p style={{ fontSize: '11px', color: 'var(--theme-primary)', lineHeight: '1.5', margin: 0 }}>
-            Core habits will be <strong>auto-verified via Apple Health / Google Fit</strong> in the native app. Log manually for now.
-          </p>
-        </div>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px' }}>Core Habits</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
           {/* Wake Consistency */}
           <HabitRow
             habit={{ key: 'wake', label: 'Wake Consistency', points: 100, icon: '🌅' }}
@@ -678,17 +573,35 @@ export default function HomeTab({
           />
 
           {/* Steps */}
-          <div>
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            background: habitState['steps'] ? 'var(--theme-primary-light)' : 'var(--theme-card)',
+            border: `1px solid ${habitState['steps'] ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+            borderRadius: '12px', padding: '12px 16px',
+            transition: 'background 0.2s ease, border-color 0.2s ease',
+          }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1 }}>
-                <input type="checkbox" checked={!!habitState['steps']}
-                  onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked, 'core') }}
-                  disabled={isSubmitted}
-                  style={{ width: '18px', height: '18px', marginTop: '2px', cursor: isSubmitted ? 'default' : 'pointer', accentColor: 'var(--theme-primary)', flexShrink: 0 }} />
+                {/* Visual checkbox matching HabitRow */}
+                <div style={{ position: 'relative', flexShrink: 0, marginTop: '2px' }}>
+                  <input type="checkbox" checked={!!habitState['steps']}
+                    onChange={e => { if (!isSubmitted) toggleHabit('steps', e.target.checked, 'core') }}
+                    disabled={isSubmitted}
+                    style={{ position: 'absolute', opacity: 0, width: '24px', height: '24px', cursor: isSubmitted ? 'default' : 'pointer', zIndex: 1 }} />
+                  <div style={{
+                    width: '24px', height: '24px', borderRadius: '6px',
+                    background: habitState['steps'] ? 'var(--theme-primary)' : 'transparent',
+                    border: `1.5px solid ${habitState['steps'] ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}>
+                    {habitState['steps'] && <span style={{ fontSize: '13px', color: 'white', fontWeight: '800', lineHeight: 1 }}>✓</span>}
+                  </div>
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '14px' }}>👟</span>
-                    <span style={{ fontSize: '14px', color: habitState['steps'] ? 'var(--theme-text)' : 'var(--theme-text-secondary)' }}>
+                    <span style={{ fontSize: '16px' }}>👟</span>
+                    <span style={{ fontSize: '14px', fontWeight: habitState['steps'] ? '600' : '500', color: habitState['steps'] ? 'var(--theme-primary)' : 'var(--theme-text)' }}>
                       Steps or Physical Activity
                     </span>
                   </div>
@@ -721,8 +634,8 @@ export default function HomeTab({
         </div>
 
         {/* Library habits */}
-        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Library Habits</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: customHabits.length > 0 ? '24px' : '0' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px', marginTop: '20px' }}>Library Habits</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: customHabits.length > 0 ? '0' : '0' }}>
           {libraryHabits.map(habit => (
             <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={(key, val) => toggleHabit(key, val, 'library')} />
           ))}
@@ -731,8 +644,8 @@ export default function HomeTab({
         {/* Personal habits (custom) */}
         {customHabits.length > 0 && (
           <>
-            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Personal Habits</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px', marginTop: '20px' }}>Personal Habits</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {customHabits.map((habit, idx) => (
                 <HabitRow
                   key={habit.key}
@@ -748,7 +661,11 @@ export default function HomeTab({
 
         {/* Points bar — tappable for breakdown modal */}
         <div
-          style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--theme-border)', cursor: 'pointer' }}
+          style={{
+            marginTop: '16px', background: 'var(--theme-card)',
+            border: '1px solid var(--theme-border)', borderRadius: '12px',
+            padding: '14px 16px', cursor: 'pointer',
+          }}
           onClick={() => setShowPointsModal(true)}
           title="Tap to see points breakdown"
         >
@@ -815,7 +732,6 @@ export default function HomeTab({
             )}
           </button>
         )}
-      </div>
     </>
   )
 }
@@ -835,34 +751,54 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
 
   return (
     <label style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      cursor: disabled ? 'default' : 'pointer', padding: '4px 0',
+      display: 'flex', alignItems: 'center', gap: '12px',
+      background: checked ? 'var(--theme-primary-light)' : 'var(--theme-card)',
+      border: `1px solid ${checked ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+      borderRadius: '12px', padding: '12px 16px',
+      cursor: disabled ? 'default' : 'pointer',
+      transition: 'background 0.2s ease, border-color 0.2s ease',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <input type="checkbox" checked={checked} onChange={handleChange} disabled={disabled}
-            style={{ position: 'absolute', opacity: 0, width: '22px', height: '22px', cursor: disabled ? 'default' : 'pointer', zIndex: 1 }} />
-          <div style={{
-            width: '22px', height: '22px', borderRadius: '6px',
-            background: checked ? 'var(--theme-primary)' : 'transparent',
-            border: `2px solid ${checked ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            transform: justChecked ? 'scale(1.25)' : 'scale(1)',
-            boxShadow: checked ? '0 2px 6px rgba(74,122,104,0.3)' : 'none',
-          }}>
-            {checked && <span style={{ fontSize: '13px', color: 'white', fontWeight: '800', lineHeight: 1 }}>✓</span>}
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <span style={{ fontSize: '18px', filter: checked ? 'none' : 'grayscale(0.3)', transition: 'filter 0.2s' }}>{habit.icon}</span>
-          <span style={{ fontSize: '14px', color: checked ? 'var(--theme-text)' : 'var(--theme-text-secondary)', fontWeight: checked ? '500' : '400', transition: 'all 0.2s' }}>
-            {habit.label}
-          </span>
-        </div>
+      {/* Hidden real checkbox */}
+      <input type="checkbox" checked={checked} onChange={handleChange} disabled={disabled}
+        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />
+      {/* Visual checkbox */}
+      <div style={{
+        width: '24px', height: '24px', borderRadius: '6px', flexShrink: 0,
+        background: checked ? 'var(--theme-primary)' : 'transparent',
+        border: `1.5px solid ${checked ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transform: justChecked ? 'scale(1.25)' : 'scale(1)',
+        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}>
+        {checked && <span style={{ fontSize: '13px', color: 'white', fontWeight: '800', lineHeight: 1 }}>✓</span>}
       </div>
-      <span style={{ fontSize: '12px', fontWeight: '700', flexShrink: 0, marginLeft: '8px', color: checked ? 'var(--theme-primary)' : 'var(--theme-text-muted)', transition: 'color 0.2s' }}>
-        {habit.points > 0 ? `+${habit.points}` : '—'}
+      {/* Icon + label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: '16px', flexShrink: 0 }}>{habit.icon}</span>
+        <span style={{
+          fontSize: '14px', fontWeight: checked ? '600' : '500',
+          color: checked ? 'var(--theme-primary)' : 'var(--theme-text)',
+          flex: 1, minWidth: 0, transition: 'color 0.2s',
+        }}>
+          {habit.label}
+        </span>
+        {checked && (
+          <div style={{
+            width: '16px', height: '16px', borderRadius: '8px',
+            background: 'var(--theme-primary)', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: '9px', color: 'white', fontWeight: '700', lineHeight: 1 }}>✓</span>
+          </div>
+        )}
+      </div>
+      {/* Points */}
+      <span style={{
+        fontSize: '14px', fontWeight: checked ? '700' : '600', flexShrink: 0,
+        color: checked ? 'var(--theme-primary)' : 'var(--theme-text-muted)',
+        transition: 'color 0.2s',
+      }}>
+        {habit.points > 0 ? `+${habit.points}` : '—'} pts
       </span>
     </label>
   )
