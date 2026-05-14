@@ -1096,7 +1096,10 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
   useEffect(() => { loadHabits() }, [])
 
   async function loadHabits() {
-    const { data } = await supabase.from('custom_habits').select('*').eq('user_id', userId).order('sort_order')
+    const { data } = await supabase
+      .from('custom_habits').select('*')
+      .eq('user_id', userId).eq('is_active', true)
+      .order('created_at', { ascending: true })
     setHabits(data || [])
     setLoading(false)
   }
@@ -1111,14 +1114,14 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
   }
 
   async function deleteHabit(id) {
-    await supabase.from('custom_habits').delete().eq('id', id)
+    await supabase.from('custom_habits').update({ is_active: false }).eq('id', id)
     setHabits(prev => prev.filter(h => h.id !== id))
   }
 
   return (
     <SubScreen title="Custom Habits" onBack={onBack}>
-      <div style={{ ...card, background: slots > 0 ? 'var(--theme-primary-light)' : '#fffbeb', border: `1px solid ${slots > 0 ? 'var(--theme-primary)' : '#fcd34d'}` }}>
-        <p style={{ fontSize: '13px', color: slots > 0 ? 'var(--theme-primary)' : '#92400e', fontWeight: '600', margin: 0, lineHeight: '1.5' }}>
+      <div style={{ ...card, background: slots > 0 ? 'var(--theme-primary-light)' : 'rgba(201,151,58,0.1)', border: `1px solid ${slots > 0 ? 'var(--theme-primary)' : 'rgba(201,151,58,0.4)'}` }}>
+        <p style={{ fontSize: '13px', color: slots > 0 ? 'var(--theme-primary)' : 'var(--theme-accent-gold)', fontWeight: '600', margin: 0, lineHeight: '1.5' }}>
           {slots > 0
             ? `✅ ${tierConfig?.label} plan: up to ${slots} custom habit${slots > 1 ? 's' : ''} earn 25 pts each. You can track unlimited habits — only the first ${slots} earn points.`
             : '🎁 Free/Basic plan: track unlimited custom habits. Upgrade to Plus or Premium to earn 25 pts each.'}
@@ -1145,7 +1148,7 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
                   <p style={{ flex: 1, fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{h.name}</p>
                   {i < slots && <span style={{ fontSize: '10px', fontWeight: '700', background: 'var(--theme-primary)', color: 'white', padding: '2px 7px', borderRadius: '8px', flexShrink: 0 }}>+25 pts</span>}
                   <button onClick={() => deleteHabit(h.id)}
-                    style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '4px 9px', cursor: 'pointer', fontSize: '12px', color: '#dc2626', flexShrink: 0 }}>✕</button>
+                    style={{ background: 'var(--theme-secondary-light)', border: '1px solid rgba(201,106,82,0.3)', borderRadius: '8px', padding: '4px 9px', cursor: 'pointer', fontSize: '12px', color: 'var(--theme-secondary)', flexShrink: 0 }}>✕</button>
                 </div>
               ))}
             </div>

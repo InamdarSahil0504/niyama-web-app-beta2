@@ -88,16 +88,14 @@ export default function HomeTab({
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
-        .order('sort_order')
-      if (!error && data) {
-        setCustomHabits(data.map((row, i) => ({
-          id: row.id,
-          key: `custom_habit_${i}`,
-          label: row.name,
-          emoji: row.emoji || '⭐',
-          sort_order: row.sort_order,
-        })))
-      }
+        .order('created_at', { ascending: true })
+      if (error) { console.error('loadCustomHabits error:', error); return }
+      setCustomHabits((data || []).map((row) => ({
+        id: row.id,
+        key: `custom_habit_${row.id}`,
+        label: row.name,
+        emoji: row.emoji || '⭐',
+      })))
     }
     loadCustomHabits()
   }, [userId])
@@ -198,15 +196,16 @@ export default function HomeTab({
     setHabitState(prev => ({ ...prev, [habitKey]: checked }))
     try {
       const isCore = CORE_HABITS.find(h => h.key === habitKey)
-      const isCustom = habitKey.startsWith('custom_habit_')
+      const customHabitIdx = customHabits.findIndex(h => h.key === habitKey)
+      const isCustom = customHabitIdx >= 0
       const resolvedType = habitType || (isCore ? 'core' : isCustom ? 'custom' : 'library')
       const pts = checked
-        ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : isCustom ? (customPointsPerHabit[parseInt(habitKey.split('_')[2])] || 0) : POINTS.library_habit)
+        ? (isCore ? (habitKey === 'steps' ? stepsPoints : 100) : isCustom ? (customPointsPerHabit[customHabitIdx] || 0) : POINTS.library_habit)
         : 0
       const habitLabel = isCore
         ? CORE_HABITS.find(h => h.key === habitKey)?.label
         : isCustom
-          ? customHabits.find(h => h.key === habitKey)?.label
+          ? customHabits[customHabitIdx]?.label
           : libraryHabits.find(h => h.key === habitKey)?.label
       await supabase.from('habit_logs').upsert({
         user_id: userId, date: today, habit_key: habitKey,
