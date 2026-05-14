@@ -443,14 +443,14 @@ export default function HomeTab({
                 let barColor, barHeight
                 if (isToday) {
                   barHeight = Math.max(todayPoints > 0 ? Math.round((todayPoints / 750) * BAR_MAX) : 4, 4)
-                  barColor = dayPerfect ? '#C9973A' : daySuccessful ? '#4A7A68' : 'rgba(255,255,255,0.2)'
+                  barColor = dayPerfect ? '#C9973A' : daySuccessful ? '#4A7A68' : '#E0E8E4'
                 } else if (summary?.submitted) {
                   const pts = summary.total_points || 0
                   barHeight = Math.max(pts > 0 ? Math.round((pts / 750) * BAR_MAX) : 4, 4)
                   barColor = summary.perfect_day ? '#C9973A' : summary.day_successful ? '#4A7A68' : 'rgba(201,106,82,0.5)'
                 } else {
                   barHeight = 4
-                  barColor = 'rgba(255,255,255,0.1)'
+                  barColor = '#E0E8E4'
                 }
                 return (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -463,7 +463,7 @@ export default function HomeTab({
                         transition: 'height 0.3s ease',
                       }} />
                     </div>
-                    <span style={{ fontSize: '10px', color: isToday ? '#4A7A68' : 'rgba(255,255,255,0.4)', fontWeight: isToday ? '700' : '400' }}>
+                    <span style={{ fontSize: '10px', color: isToday ? '#4A7A68' : '#8A9E96', fontWeight: isToday ? '700' : '400' }}>
                       {dayLabel}
                     </span>
                   </div>
@@ -477,14 +477,14 @@ export default function HomeTab({
             {[{ color: '#C9973A', label: 'Perfect' }, { color: '#4A7A68', label: 'Successful' }, { color: 'rgba(201,106,82,0.5)', label: 'Logged' }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '4px', background: l.color }} />
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{l.label}</span>
+                <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)' }}>{l.label}</span>
               </div>
             ))}
           </div>
 
           {/* Streak freeze */}
           {(streak?.current_streak || 0) > 0 && canUseFreeze && (
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '16px', opacity: freezeUsed ? 0.4 : 1 }}>❄️</span>
                 <div>
@@ -501,7 +501,7 @@ export default function HomeTab({
             </div>
           )}
           {!canUseFreeze && (streak?.current_streak || 0) > 0 && (
-            <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ marginTop: '12px', background: 'var(--theme-primary-light)', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '14px', opacity: 0.4 }}>❄️</span>
               <p style={{ fontSize: '11px', color: 'var(--theme-text-muted)', margin: 0 }}>Streak freeze available on Plus and Premium</p>
             </div>

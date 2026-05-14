@@ -138,8 +138,8 @@ export default function PersonalDetails({ userId, onContinue, onBack }) {
             </div>
 
             {message && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-                    <p style={{ fontSize: '14px', color: '#dc2626', textAlign: 'center' }}>{message}</p>
+                <div style={{ background: 'rgba(224,92,92,0.1)', border: '1px solid rgba(224,92,92,0.3)', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+                    <p style={{ fontSize: '14px', color: 'var(--theme-error)', textAlign: 'center' }}>{message}</p>
                 </div>
             )}
 

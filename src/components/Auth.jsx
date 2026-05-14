@@ -219,7 +219,7 @@ export default function Auth() {
         {/* Full name */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Full name <span style={{ color: '#dc2626' }}>*</span>
+            Full name <span style={{ color: 'var(--theme-error)' }}>*</span>
           </label>
           <input type="text" placeholder="Your full name" value={fullName}
             onChange={e => setFullName(e.target.value)} style={inputStyle} autoFocus />
@@ -228,7 +228,7 @@ export default function Auth() {
         {/* Email */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Email address <span style={{ color: '#dc2626' }}>*</span>
+            Email address <span style={{ color: 'var(--theme-error)' }}>*</span>
           </label>
           <input type="email" placeholder="you@example.com" value={email}
             onChange={e => setEmail(e.target.value)}
@@ -249,8 +249,8 @@ export default function Auth() {
         </div>
 
         {message && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
+          <div style={{ background: 'rgba(224,92,92,0.1)', border: '1px solid rgba(224,92,92,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--theme-error)' }}>{message}</p>
           </div>
         )}
 
@@ -310,8 +310,8 @@ export default function Auth() {
         </div>
 
         {message && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
+          <div style={{ background: 'rgba(224,92,92,0.1)', border: '1px solid rgba(224,92,92,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--theme-error)' }}>{message}</p>
           </div>
         )}
 
@@ -391,8 +391,8 @@ export default function Auth() {
         </div>
 
         {message && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
+          <div style={{ background: 'rgba(224,92,92,0.1)', border: '1px solid rgba(224,92,92,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--theme-error)' }}>{message}</p>
           </div>
         )}
 

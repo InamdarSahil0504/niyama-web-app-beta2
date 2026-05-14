@@ -2,17 +2,18 @@
 @import "tailwindcss";
 
 :root {
-  --theme-bg: #080D16;
+  --theme-bg: #F5F7F4;
   --theme-primary: #4A7A68;
   --theme-secondary: #C96A52;
-  --theme-border: rgba(255,255,255,0.08);
-  --theme-card: #111B2B;
-  --theme-primary-light: rgba(74,122,104,0.18);
-  --theme-secondary-light: rgba(201,106,82,0.15);
-  --theme-text: #FFFFFF;
-  --theme-text-secondary: rgba(255,255,255,0.7);
-  --theme-text-muted: rgba(255,255,255,0.4);
+  --theme-border: #E0E8E4;
+  --theme-card: #FFFFFF;
+  --theme-primary-light: #E8F0EC;
+  --theme-secondary-light: rgba(201,106,82,0.12);
+  --theme-text: #1A2E28;
+  --theme-text-secondary: #4A5E56;
+  --theme-text-muted: #8A9E96;
   --theme-accent-gold: #C9973A;
+  --theme-error: #E05C5C;
 }
 
 * {
@@ -87,7 +88,7 @@ body {
 
 /* Card elevation */
 .card-elevated {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Smooth tab transitions */

@@ -299,8 +299,8 @@ export default function TierSelect({ userId, onComplete, onBack }) {
 
         {/* Error message */}
         {message && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', color: '#dc2626' }}>{message}</p>
+          <div style={{ background: 'rgba(224,92,92,0.1)', border: '1px solid rgba(224,92,92,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--theme-error)' }}>{message}</p>
           </div>
         )}
 

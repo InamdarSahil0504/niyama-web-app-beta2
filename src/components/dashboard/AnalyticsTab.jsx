@@ -539,7 +539,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                     <span style={{ fontSize: '13px', color: 'var(--theme-text-secondary)' }}>{h.label}</span>
                     <span style={{
                       fontSize: '9px', fontWeight: '700', padding: '1px 5px', borderRadius: '6px',
-                      background: h.type === 'core' ? 'var(--theme-primary-light)' : h.type === 'custom' ? 'rgba(201,151,58,0.15)' : 'rgba(255,255,255,0.06)',
+                      background: h.type === 'core' ? 'var(--theme-primary-light)' : h.type === 'custom' ? 'rgba(201,151,58,0.12)' : 'rgba(138,158,150,0.15)',
                       color: h.type === 'core' ? 'var(--theme-primary)' : h.type === 'custom' ? 'var(--theme-accent-gold)' : 'var(--theme-text-secondary)',
                     }}>
                       {h.type.toUpperCase()}

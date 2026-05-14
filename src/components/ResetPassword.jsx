@@ -67,7 +67,7 @@ export default function ResetPassword() {
                     </div>
 
                     {message && (
-                        <p style={{ fontSize: '14px', color: isSuccess ? 'var(--theme-primary)' : '#dc2626', marginBottom: '16px' }}>
+                        <p style={{ fontSize: '14px', color: isSuccess ? 'var(--theme-primary)' : 'var(--theme-error)', marginBottom: '16px' }}>
                             {message}
                         </p>
                     )}
