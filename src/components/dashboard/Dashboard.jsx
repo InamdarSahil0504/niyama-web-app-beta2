@@ -79,8 +79,8 @@ export default function Dashboard({ session }) {
     fetchData()
   }, [])
 
-  async function fetchData() {
-    setLoading(true)
+  async function fetchData(silent = false) {
+    if (!silent) setLoading(true)
 
     const { data: profileData } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -420,7 +420,7 @@ export default function Dashboard({ session }) {
               setStepCount={setStepCount}
               isMinor={isMinor}
               today={today}
-              onRefresh={fetchData}
+              onRefresh={() => fetchData(true)}
             />
           )}
           {activeTab === 'analytics' && (
@@ -450,7 +450,7 @@ export default function Dashboard({ session }) {
               profile={profile}
               streak={streak}
               onSignOut={signOut}
-              onRefresh={fetchData}
+              onRefresh={() => fetchData(true)}
             />
           )}
         </div>

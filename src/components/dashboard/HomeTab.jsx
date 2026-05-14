@@ -778,19 +778,20 @@ export default function HomeTab({
 
         {/* ── 4. Submit / Submitted ── */}
         {isSubmitted ? (
-          <div style={{ marginTop: '16px', background: 'var(--theme-primary-light)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-            <p style={{ fontSize: '22px', marginBottom: '6px' }}>{dayPerfect ? '🏆' : daySuccessful ? '🎉' : '💪'}</p>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--theme-primary)', margin: '0 0 4px' }}>
-              {dayPerfect ? 'Perfect Day!' : daySuccessful ? 'Successful Day!' : 'Day Submitted'}
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', margin: '0 0 4px' }}>
-              {dayPerfect ? 'All habits completed — maximum points earned.' : daySuccessful ? 'You hit your target for today.' : 'Keep going — tomorrow is a fresh start.'}
-            </p>
-            {todayMood && (
-              <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', margin: 0 }}>
-                Mood: {MOODS[todayMood - 1]} · {['Rough Day', 'Not Great', 'Okay', 'Good Day', 'Amazing'][todayMood - 1]}
-              </p>
-            )}
+          <div style={{
+            width: '100%', marginTop: '16px', background: '#C96A52',
+            borderRadius: '10px', padding: '14px 14px 10px',
+            textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+            transition: 'background 0.3s ease',
+          }}>
+            <span style={{ fontSize: '15px', fontWeight: '700', color: 'white' }}>
+              {dayPerfect ? '🏆 Perfect Day!' : daySuccessful ? '🎉 Successful Day!' : '💪 Day Submitted'}
+            </span>
+            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
+              {todayMood
+                ? `Mood: ${MOODS[todayMood - 1]} · ${['Rough Day', 'Not Great', 'Okay', 'Good Day', 'Amazing'][todayMood - 1]}`
+                : dayPerfect ? 'All habits completed — maximum points earned.' : daySuccessful ? 'You hit your target for today.' : 'Keep going — tomorrow is a fresh start.'}
+            </span>
           </div>
         ) : (
           <button onClick={submitDay} disabled={saving || submitSuccess}
