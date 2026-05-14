@@ -169,8 +169,9 @@ export default function HomeTab({
   const isEligible = minDays > 0 && successfulDays >= minDays && !isInactive
   const trialMonthsLeft = Math.max(3 - memberMonths, 0)
   const maxCap = tierConfig?.max_cap || tierConfig?.reward_cap || 0
+  const monthlyPoints = profile?.monthly_points || 0
   const reward = isMinor ? '0.00' : calcReward(
-    profile?.monthly_points || 0, effectiveTier,
+    monthlyPoints, effectiveTier,
     successfulDays, isSuccessfulMonth, isPerfectMonth,
     profile?.consecutive_inactive_days || 0
   )
