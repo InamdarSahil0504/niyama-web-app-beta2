@@ -1104,7 +1104,7 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
   async function addHabit() {
     if (!newLabel.trim()) return
     setAdding(true)
-    await supabase.from('custom_habits').insert({ user_id: userId, label: newLabel.trim(), emoji: newEmoji, sort_order: habits.length, is_active: true })
+    await supabase.from('custom_habits').insert({ user_id: userId, name: newLabel.trim(), emoji: newEmoji, sort_order: habits.length, is_active: true })
     setNewLabel(''); setNewEmoji('⭐'); setShowAdd(false)
     await loadHabits()
     setAdding(false)
@@ -1142,7 +1142,7 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
               {habits.map((h, i) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'var(--theme-bg)', borderRadius: '10px', border: '1px solid var(--theme-border)' }}>
                   <span style={{ fontSize: '18px', flexShrink: 0 }}>{h.emoji || '⭐'}</span>
-                  <p style={{ flex: 1, fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{h.label}</p>
+                  <p style={{ flex: 1, fontSize: '13px', fontWeight: '600', color: 'var(--theme-text)', margin: 0 }}>{h.name}</p>
                   {i < slots && <span style={{ fontSize: '10px', fontWeight: '700', background: 'var(--theme-primary)', color: 'white', padding: '2px 7px', borderRadius: '8px', flexShrink: 0 }}>+25 pts</span>}
                   <button onClick={() => deleteHabit(h.id)}
                     style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '4px 9px', cursor: 'pointer', fontSize: '12px', color: '#dc2626', flexShrink: 0 }}>✕</button>

@@ -93,7 +93,7 @@ export default function HomeTab({
         setCustomHabits(data.map((row, i) => ({
           id: row.id,
           key: `custom_habit_${i}`,
-          label: row.label,
+          label: row.name,
           emoji: row.emoji || '⭐',
           sort_order: row.sort_order,
         })))
