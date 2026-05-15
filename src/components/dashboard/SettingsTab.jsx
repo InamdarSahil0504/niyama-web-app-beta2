@@ -1107,7 +1107,9 @@ function CustomHabitsSection({ onBack, userId, card, effectiveTier, tierConfig }
   async function addHabit() {
     if (!newLabel.trim()) return
     setAdding(true)
-    await supabase.from('custom_habits').insert({ user_id: userId, name: newLabel.trim(), emoji: newEmoji, sort_order: habits.length, is_active: true })
+    await supabase
+      .from('custom_habits')
+      .insert({ user_id: userId, name: newLabel.trim(), emoji: newEmoji, sort_order: habits.length, is_active: true })
     setNewLabel(''); setNewEmoji('⭐'); setShowAdd(false)
     await loadHabits()
     setAdding(false)

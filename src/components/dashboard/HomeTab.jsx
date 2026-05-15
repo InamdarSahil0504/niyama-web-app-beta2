@@ -89,7 +89,7 @@ export default function HomeTab({
         .eq('user_id', userId)
         .eq('is_active', true)
         .order('created_at', { ascending: true })
-      if (error) { console.error('loadCustomHabits error:', error); return }
+      if (error) return
       setCustomHabits((data || []).map((row) => ({
         id: row.id,
         key: `custom_habit_${row.id}`,
