@@ -1451,7 +1451,13 @@ function ReferralsSection({ onBack, profile, userId, card, effectiveTier }) {
 
 // ─── NEW: Data & Research ──────────────────────────────────────────────────────
 function DataResearchSection({ onBack, profile, userId, card, saving, setSaving, showMessage, onRefresh }) {
-  const [consent, setConsent] = useState(profile?.research_consent ?? false)
+  const [consent, setConsent] = useState(null)  // null = loading from DB
+
+  useEffect(() => {
+    supabase.from('profiles').select('research_consent')
+      .eq('id', userId).single()
+      .then(({ data }) => setConsent(data?.research_consent ?? false))
+  }, [userId])
 
   async function toggleConsent() {
     const next = !consent
@@ -1472,8 +1478,8 @@ function DataResearchSection({ onBack, profile, userId, card, saving, setSaving,
             <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--theme-text)', margin: '0 0 4px' }}>Contribute to health research</p>
             <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', lineHeight: '1.5', margin: 0 }}>Allow anonymized habit and health data to be used in longitudinal wellness research. Your identity is never shared.</p>
           </div>
-          <button onClick={toggleConsent} disabled={saving}
-            style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: consent ? 'var(--theme-primary)' : 'var(--theme-border)', position: 'relative', flexShrink: 0, marginTop: '2px', transition: 'background 0.15s' }}>
+          <button onClick={toggleConsent} disabled={saving || consent === null}
+            style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: (saving || consent === null) ? 'default' : 'pointer', background: consent ? 'var(--theme-primary)' : 'var(--theme-border)', position: 'relative', flexShrink: 0, marginTop: '2px', transition: 'background 0.15s', opacity: consent === null ? 0.5 : 1 }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', position: 'absolute', top: '3px', left: consent ? '23px' : '3px', transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
           </button>
         </div>

@@ -115,7 +115,7 @@ export const LIBRARY_HABITS = [
   { key: 'stand',        label: 'Stand Consistency',         points: 50, icon: '🧍', type: 'verified' },
   { key: 'sunlight',     label: 'Morning Sunlight (10+ min)', points: 50, icon: '☀️', type: 'confirmable' },
   { key: 'no_late_food', label: 'No Late Food after 8pm',   points: 50, icon: '🍽️', type: 'confirmable' },
-  { key: 'recovery',     label: 'Recovery Practice',         points: 50, icon: '🧘', type: 'confirmable' },
+  { key: 'recovery',     label: 'Recovery Practice — Yoga/Stretching', points: 50, icon: '🧘', type: 'confirmable' },
   { key: 'meditation',   label: 'Meditation (10+ min)',      points: 50, icon: '🪷', type: 'honour' },
 ]
 

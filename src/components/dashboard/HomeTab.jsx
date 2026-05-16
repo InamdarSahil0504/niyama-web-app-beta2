@@ -224,8 +224,6 @@ export default function HomeTab({
     await supabase.from('daily_summaries').update({ mood: moodValue }).eq('user_id', userId).eq('date', today)
   }
 
-  function handleMoodSkip() { setShowMoodCheckIn(false) }
-
   // ── Submit day ─────────────────────────────────────────────────────────────
   async function submitDay() {
     if (isSubmitted || saving) return
@@ -361,7 +359,7 @@ export default function HomeTab({
       )}
 
       {showMoodCheckIn && (
-        <MoodCheckIn onSelect={handleMoodSelect} onSkip={handleMoodSkip} />
+        <MoodCheckIn onSelect={handleMoodSelect} />
       )}
 
       {/* ── 1. Header strip (matches mobile) ── */}
@@ -558,7 +556,7 @@ export default function HomeTab({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
           {/* Wake Consistency */}
           <HabitRow
-            habit={{ key: 'wake', label: 'Wake Consistency', points: 100, icon: '🌅' }}
+            habit={{ key: 'wake', label: profile?.wake_time_minutes != null ? formatWakeTime(profile.wake_time_minutes) : 'Wake Consistency', points: 100, icon: '🌅' }}
             checked={!!habitState['wake']}
             disabled={isSubmitted}
             onToggle={(key, val) => toggleHabit(key, val, 'core')}
@@ -637,7 +635,13 @@ export default function HomeTab({
         <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px', marginTop: '20px' }}>Library Habits</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: customHabits.length > 0 ? '0' : '0' }}>
           {libraryHabits.map(habit => (
-            <HabitRow key={habit.key} habit={habit} checked={!!habitState[habit.key]} disabled={isSubmitted} onToggle={(key, val) => toggleHabit(key, val, 'library')} />
+            <HabitRow
+              key={habit.key}
+              habit={habit.key === 'stand' ? { ...habit, subtitle: 'Stand at least 1 min every hour' } : habit}
+              checked={!!habitState[habit.key]}
+              disabled={isSubmitted}
+              onToggle={(key, val) => toggleHabit(key, val, 'library')}
+            />
           ))}
         </div>
 
@@ -736,6 +740,14 @@ export default function HomeTab({
   )
 }
 
+function formatWakeTime(minutes) {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  const period = h < 12 ? 'AM' : 'PM'
+  const displayH = h % 12 || 12
+  return `Wake before ${displayH}:${String(m).padStart(2, '0')} ${period}`
+}
+
 function HabitRow({ habit, checked, disabled, onToggle }) {
   const [justChecked, setJustChecked] = useState(false)
 
@@ -773,20 +785,32 @@ function HabitRow({ habit, checked, disabled, onToggle }) {
         {checked && <span style={{ fontSize: '13px', color: 'white', fontWeight: '800', lineHeight: 1 }}>✓</span>}
       </div>
       {/* Icon + label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: '16px', flexShrink: 0 }}>{habit.icon}</span>
-        <span style={{
-          fontSize: '14px', fontWeight: checked ? '600' : '500',
-          color: checked ? 'var(--theme-primary)' : 'var(--theme-text)',
-          flex: 1, minWidth: 0, transition: 'color 0.2s',
-        }}>
-          {habit.label}
-        </span>
+      <div style={{ display: 'flex', alignItems: habit.subtitle ? 'flex-start' : 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: '16px', flexShrink: 0, marginTop: habit.subtitle ? '1px' : 0 }}>{habit.icon}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{
+            fontSize: '14px', fontWeight: checked ? '600' : '500',
+            color: checked ? 'var(--theme-primary)' : 'var(--theme-text)',
+            display: 'block', transition: 'color 0.2s',
+          }}>
+            {habit.label}
+          </span>
+          {habit.subtitle && (
+            <span style={{
+              fontSize: '11px', display: 'block', marginTop: '2px', lineHeight: 1.4,
+              color: checked ? 'var(--theme-primary)' : 'var(--theme-text-muted)',
+              transition: 'color 0.2s',
+            }}>
+              {habit.subtitle}
+            </span>
+          )}
+        </div>
         {checked && (
           <div style={{
             width: '16px', height: '16px', borderRadius: '8px',
             background: 'var(--theme-primary)', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginTop: habit.subtitle ? '1px' : 0,
           }}>
             <span style={{ fontSize: '9px', color: 'white', fontWeight: '700', lineHeight: 1 }}>✓</span>
           </div>

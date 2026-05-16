@@ -8,7 +8,7 @@ const MOODS = [
   { value: 5, emoji: '🔥', label: 'Amazing' },
 ]
 
-export default function MoodCheckIn({ onSelect, onSkip }) {
+export default function MoodCheckIn({ onSelect }) {
   const [selected, setSelected] = useState(null)
   const [animating, setAnimating] = useState(false)
 
@@ -77,21 +77,6 @@ export default function MoodCheckIn({ onSelect, onSkip }) {
             )
           })}
         </div>
-
-        {/* Skip */}
-        {!selected && (
-          <button
-            onClick={onSkip}
-            style={{
-              width: '100%', background: 'none', border: 'none',
-              cursor: 'pointer', fontSize: '14px',
-              color: 'var(--theme-text-muted)', padding: '8px',
-              textAlign: 'center',
-            }}
-          >
-            Skip for today
-          </button>
-        )}
 
         {selected && (
           <div style={{ textAlign: 'center' }}>
