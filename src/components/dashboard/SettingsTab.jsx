@@ -74,6 +74,15 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
     boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   }
 
+  // ── Unread contact messages indicator ─────────────────────────────────────
+  const [hasUnread, setHasUnread] = useState(false)
+  useEffect(() => {
+    supabase.from('contact_messages').select('id')
+      .eq('user_id', userId).eq('sender', 'admin').eq('read_by_user', false)
+      .limit(1)
+      .then(({ data }) => setHasUnread(!!(data?.length)))
+  }, [userId])
+
   // Sub-screen routing
   if (screen === 'profile') return <ProfileSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
   if (screen === 'habits') return <HabitsSection onBack={() => setScreen('main')} profile={profile} userId={userId} card={card} saving={saving} setSaving={setSaving} showMessage={showMessage} onRefresh={onRefresh} />
@@ -93,12 +102,17 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
 
   const isFree = effectiveTier === 'free_trial' || effectiveTier === 'free_expired'
 
+  const gl = {
+    fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)',
+    textTransform: 'uppercase', letterSpacing: '0.8px',
+    marginBottom: '8px', paddingLeft: '4px',
+  }
+
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--theme-text)', marginBottom: '2px' }}>Settings</h1>
-        <p style={{ fontSize: '13px', color: 'var(--theme-text-muted)' }}>{profile?.full_name || 'Your account'}</p>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--theme-text)', margin: 0 }}>Settings</h1>
       </div>
 
       {/* Toast */}
@@ -110,44 +124,126 @@ export default function SettingsTab({ session, profile, streak, onSignOut, onRef
         </div>
       )}
 
-      {/* Personal */}
-      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px' }}>Personal</p>
-      <SectionCard>
-        <SettingsRow icon="👤" label="My Profile" subtitle="Personal info, stats, member since" onPress={() => setScreen('profile')} />
-        <SettingsRow icon="⏰" label="My Habits" subtitle="Wake time goal" onPress={() => setScreen('habits')} />
-        <SettingsRow icon="⭐" label="Custom Habits" subtitle="Add personal habits to track" onPress={() => setScreen('custom-habits')} />
-      </SectionCard>
+      {/* ── Profile card ────────────────────────────────────────────────────────── */}
+      <button
+        onClick={() => setScreen('profile')}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '14px',
+          background: 'var(--theme-card)', border: '1px solid var(--theme-border)',
+          borderRadius: '16px', padding: '16px 20px', marginBottom: '20px',
+          width: '100%', textAlign: 'left', cursor: 'pointer',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        }}
+      >
+        <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'var(--theme-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: '22px', fontWeight: '800', color: 'white' }}>
+            {(profile?.full_name || 'U')[0].toUpperCase()}
+          </span>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: '16px', fontWeight: '700', color: 'var(--theme-text)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {profile?.full_name || '—'}
+          </p>
+          <p style={{ fontSize: '12px', color: 'var(--theme-text-muted)', margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {profile?.email || '—'}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '700', background: 'var(--theme-primary)', color: 'white', padding: '2px 8px', borderRadius: '8px' }}>
+              {tierConfig?.label || 'Free'}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>
+              {profile?.region?.toLowerCase() === 'india' ? '🇮🇳 India' : '🇺🇸 United States'}
+            </span>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
 
-      {/* Niyama */}
-      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Niyama</p>
-      <SectionCard>
-        <SettingsRow icon={<img src="/niyama-icon.svg" alt="" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />} label="How Niyama Works" subtitle="Founder's story, the science, how it works" onPress={() => setScreen('how-niyama-works')} />
-        <SettingsRow icon="🎁" label="Your Plan & Rewards" subtitle={`${tierConfig?.label || 'Free'} · ${isFree ? 'Upgrade to earn rewards' : `Up to $${(tierConfig?.max_cap || tierConfig?.reward_cap || 0).toFixed(2)}/month`}`} onPress={() => setScreen('plan-rewards')} />
-      </SectionCard>
+      {/* ── Group 1: Habits ─────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Habits</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow icon="⏰" label="My Habits" subtitle="Wake time goal" onPress={() => setScreen('habits')} />
+          <SettingsRow icon="⭐" label="Custom Habits" subtitle="Add personal habits to track" onPress={() => setScreen('custom-habits')} />
+        </SectionCard>
+      </div>
 
-      {/* Community */}
-      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Community</p>
-      <SectionCard>
-        <SettingsRow icon="👥" label="Referrals" subtitle="Invite friends · earn $2.50 per referral" onPress={() => setScreen('referrals')} />
-        <SettingsRow icon="💬" label="Contact Us" subtitle="Chat with the Niyama team" onPress={() => setScreen('contact')} />
-      </SectionCard>
+      {/* ── Group 2: Plan ───────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Plan</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow
+            icon="🎁"
+            label="Your Plan & Rewards"
+            subtitle={`${tierConfig?.label || 'Free'} · ${isFree ? 'Upgrade to earn rewards' : `Up to $${(tierConfig?.max_cap || tierConfig?.reward_cap || 0).toFixed(2)}/month`}`}
+            onPress={() => setScreen('plan-rewards')}
+          />
+          <SettingsRow
+            icon="💳"
+            label="Billing"
+            subtitle={isFree ? 'Free plan · Upgrade anytime' : `${tierConfig?.label} · ${profile?.billing_cycle === 'annual' ? 'Annual' : 'Monthly'}`}
+            onPress={() => setScreen('billing')}
+            badge={profile?.subscription_status === 'past_due' ? 'Past due' : null}
+          />
+        </SectionCard>
+      </div>
 
-      {/* App */}
-      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>App</p>
-      <SectionCard>
-        <SettingsRow icon="💳" label="Billing" subtitle={isFree ? 'Free plan · Upgrade anytime' : `${tierConfig?.label} · ${profile?.billing_cycle === 'annual' ? 'Annual' : 'Monthly'}`} onPress={() => setScreen('billing')} badge={profile?.subscription_status === 'past_due' ? 'Past due' : null} />
-        <SettingsRow icon="🔔" label="Preferences" subtitle="Notifications, app version" onPress={() => setScreen('preferences')} />
-        <SettingsRow icon="🔬" label="Data & Research" subtitle="Health data, research consent" onPress={() => setScreen('data-research')} />
-      </SectionCard>
+      {/* ── Group 3: Learn ──────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Learn</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow
+            icon={<img src="/niyama-icon.svg" alt="" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />}
+            label="How Niyama Works"
+            subtitle="Founder's story, the science, how it works"
+            onPress={() => setScreen('how-niyama-works')}
+          />
+        </SectionCard>
+      </div>
 
-      {/* Other */}
-      <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--theme-text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', paddingLeft: '4px', marginTop: '20px' }}>Other</p>
-      <SectionCard>
-        <SettingsRow icon="⚖️" label="Legal & Trust" subtitle="Terms, privacy, about Niyama Life Inc." onPress={() => setScreen('legal')} />
-        <SettingsRow icon="⚙️" label="Account" subtitle="Sign out, pause, delete account" onPress={() => setScreen('account')} />
-      </SectionCard>
+      {/* ── Group 4: Account ────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Account</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow icon="🔔" label="Preferences" subtitle="Notifications, app version" onPress={() => setScreen('preferences')} />
+          <SettingsRow icon="👥" label="Referrals" subtitle="Invite friends · earn $2.50 per referral" onPress={() => setScreen('referrals')} />
+          <SettingsRow icon="🔬" label="Data & Research" subtitle="Health data, research consent" onPress={() => setScreen('data-research')} />
+        </SectionCard>
+      </div>
 
-      <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '28px', marginBottom: '8px' }}>
+      {/* ── Group 5: Support ────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Support</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow
+            icon="💬"
+            label="Contact Us"
+            subtitle="Chat with the Niyama team"
+            onPress={() => setScreen('contact')}
+            badge={hasUnread ? 'New' : null}
+          />
+        </SectionCard>
+      </div>
+
+      {/* ── Group 6: Legal ──────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <p style={gl}>Legal</p>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow icon="⚖️" label="Legal & Trust" subtitle="Terms, privacy, about Niyama Life Inc." onPress={() => setScreen('legal')} />
+        </SectionCard>
+      </div>
+
+      {/* ── Danger zone (no group label) ────────────────────────────────────────── */}
+      <div style={{ marginBottom: '12px' }}>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <SettingsRow label="Sign Out" onPress={onSignOut} chevron={false} danger />
+          <SettingsRow label="Delete Account" onPress={() => setScreen('account')} chevron={false} danger />
+        </SectionCard>
+      </div>
+
+      <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--theme-text-muted)', marginTop: '20px', marginBottom: '8px' }}>
         Niyama Life Inc. · Delaware C-Corp · v2.0.0
       </p>
     </div>
