@@ -306,7 +306,7 @@ export default function Dashboard({ session }) {
 
   function handleTabChange(tab) {
     setActiveTab(tab)
-    trackEvent(supabase, userId, 'page_visit', { page: tab })
+    trackEvent(supabase, userId, 'page_viewed', { page: tab })
   }
 
   if (loading) return (

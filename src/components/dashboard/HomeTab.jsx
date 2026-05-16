@@ -130,7 +130,6 @@ export default function HomeTab({
     try {
       await supabase.rpc('apply_streak_freeze', { p_user_id: userId, p_missed_date: missedDate })
       trackEvent(supabase, userId, 'streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
-      window.posthog?.capture('streak_freeze_used', { streak_saved: streak?.current_streak || 0 })
       await onRefresh()
     } catch (e) { console.error('Freeze failed', e) }
   }
@@ -212,8 +211,7 @@ export default function HomeTab({
         habit_type: resolvedType, habit_label: habitLabel || habitKey,
         completed: checked, points_earned: checked ? pts : 0,
       }, { onConflict: 'user_id,date,habit_key' })
-      trackEvent(supabase, userId, 'habit_checked', { habit_key: habitKey, type: resolvedType })
-      window.posthog?.capture('habit_logged', { habit_key: habitKey, habit_type: resolvedType, completed: checked })
+      trackEvent(supabase, userId, 'habit_checked', { habit_key: habitKey, habit_type: resolvedType, completed: checked })
     } catch (e) { console.error('Auto-save failed', e) }
   }
 
@@ -311,9 +309,6 @@ export default function HomeTab({
       }
 
       trackEvent(supabase, userId, 'day_submitted', {
-        points: todayPoints, successful: daySuccessful, perfect: dayPerfect,
-      })
-      window.posthog?.capture('day_submitted', {
         points: todayPoints, day_successful: daySuccessful, perfect_day: dayPerfect, tier: effectiveTier,
       })
 

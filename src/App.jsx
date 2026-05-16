@@ -4,20 +4,33 @@ import Auth from './components/Auth'
 import Dashboard from './components/dashboard/Dashboard'
 import ResetPassword from './components/ResetPassword'
 import posthog from 'posthog-js'
+import mixpanel from 'mixpanel-browser'
 
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Fire app_opened once per session
+    posthog.capture('app_opened')
+    mixpanel.track('app_opened')
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) posthog.identify(session.user.id)
+      if (session?.user) {
+        posthog.identify(session.user.id)
+        mixpanel.identify(session.user.id)
+      }
       setSession(session)
       setLoading(false)
     })
     supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) posthog.identify(session.user.id)
-      else posthog.reset()
+      if (session?.user) {
+        posthog.identify(session.user.id)
+        mixpanel.identify(session.user.id)
+      } else {
+        posthog.reset()
+        mixpanel.reset()
+      }
       setSession(session)
     })
   }, [])
