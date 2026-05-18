@@ -338,7 +338,7 @@ export default function Auth() {
         justifyContent: 'space-between',
       }}>
 
-        {/* Logo — fills top half */}
+        {/* Logo + tagline — centered together as one unit */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <img
@@ -347,23 +347,19 @@ export default function Auth() {
             />
             <h1 style={{
               fontSize: '36px', fontWeight: '800', color: t.text,
-              letterSpacing: '-0.03em', margin: 0,
+              letterSpacing: '-0.03em', margin: '0 0 32px',
             }}>
               Niyama
             </h1>
+            {['Daily discipline.', 'Backed by science.', 'Rewarded financially.'].map(line => (
+              <p key={line} style={{
+                fontSize: '16px', fontWeight: '500', color: t.textSecondary,
+                lineHeight: '28px', margin: 0,
+              }}>
+                {line}
+              </p>
+            ))}
           </div>
-        </div>
-
-        {/* Tagline */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          {['Daily discipline.', 'Backed by science.', 'Rewarded financially.'].map(line => (
-            <p key={line} style={{
-              fontSize: '16px', fontWeight: '500', color: t.textSecondary,
-              lineHeight: '28px', margin: 0,
-            }}>
-              {line}
-            </p>
-          ))}
         </div>
 
         {/* Buttons */}
