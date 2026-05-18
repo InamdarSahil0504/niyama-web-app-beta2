@@ -227,6 +227,7 @@ export default function Auth() {
         full_name: fullName.trim(),
         phone: phone.trim() || null,
         tier: 'free', monthly_points: 0, onboarding_complete: false,
+        research_consent: true, research_consent_at: new Date().toISOString(),
       }, { onConflict: 'id' })
 
       const { data: existingStreak } = await supabase

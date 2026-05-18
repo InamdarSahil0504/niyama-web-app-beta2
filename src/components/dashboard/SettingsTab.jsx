@@ -1464,6 +1464,15 @@ function DataResearchSection({ onBack, profile, userId, card, saving, setSaving,
     setConsent(next)
     setSaving(true)
     await supabase.from('profiles').update({ research_consent: next }).eq('id', userId)
+    supabase.from('app_events').insert({
+      user_id: userId,
+      event_type: 'research_consent_changed',
+      event_data: {
+        consent: next,
+        source: 'settings',
+        timestamp: new Date().toISOString(),
+      },
+    })
     showMessage(next ? 'Research consent enabled.' : 'Research consent withdrawn.')
     onRefresh()
     setSaving(false)

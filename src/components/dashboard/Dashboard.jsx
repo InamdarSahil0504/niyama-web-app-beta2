@@ -170,6 +170,8 @@ export default function Dashboard({ session }) {
         tier: 'free',
         monthly_points: 0,
         onboarding_complete: false,
+        research_consent: true,
+        research_consent_at: new Date().toISOString(),
       })
       await supabase.from('streaks').insert({
         user_id: userId,
