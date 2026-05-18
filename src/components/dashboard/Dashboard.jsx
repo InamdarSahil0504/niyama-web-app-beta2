@@ -150,20 +150,9 @@ export default function Dashboard({ session }) {
       } else {
         await supabase.from('daily_summaries').insert(autoPayload)
       }
-    } else if (!yesterdaySummary && (!yesterdayLogs || yesterdayLogs.length === 0)) {
-      await supabase.from('daily_summaries').upsert({
-        user_id: userId, date: yesterdayStr,
-        core_completed: 0, library_completed: 0, custom_completed: 0,
-        total_completed: 0, total_habits: 9,
-        day_successful: false, perfect_day: false,
-        total_points: 0,
-        submitted: true, auto_submitted: true,
-        submitted_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,date' })
-      await supabase.from('profiles').update({
-        consecutive_inactive_days: (profileData?.consecutive_inactive_days || 0) + 1
-      }).eq('id', userId)
     }
+    // No else-if: if there are no habit_logs for yesterday, do NOT create a daily_summaries
+    // row. Brand-new accounts must not get phantom days before their first real submission.
 
     const { data: updatedProfile } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()

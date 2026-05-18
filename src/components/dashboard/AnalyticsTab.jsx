@@ -92,15 +92,15 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
   function calColor(status) {
     if (status === 'perfect') return '#C9973A'
     if (status === 'success') return 'var(--theme-primary)'
-    if (status === 'miss') return 'transparent'
+    if (status === 'miss') return 'rgba(201,106,82,0.5)' // partial — logged but not successful
     if (status === 'future') return 'transparent'
-    return 'rgba(201,106,82,0.5)' // inactive (missed day)
+    return 'transparent' // inactive — no submission at all
   }
 
   function calTextColor(status) {
     if (status === 'future') return 'var(--theme-text-muted)'
-    if (status === 'miss') return 'var(--theme-text-secondary)'
-    if (status === 'inactive') return 'white'
+    if (status === 'miss') return 'white'
+    if (status === 'inactive') return 'var(--theme-text-secondary)'
     if (status === 'success') return 'white'
     if (status === 'perfect') return 'white'
     return 'var(--theme-text-muted)'
@@ -342,7 +342,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
               background: day ? calColor(day.status) : 'transparent',
               border: day?.date === today
                 ? '2px solid var(--theme-primary)'
-                : day?.status === 'miss'
+                : day?.status === 'inactive'
                   ? '1px solid var(--theme-secondary)'
                   : day?.status === 'future' || !day
                     ? '1px solid transparent'
@@ -367,7 +367,7 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
                     <div style={{
                       position: 'absolute', bottom: '4px',
                       width: '4px', height: '4px', borderRadius: '50%',
-                      background: day.status === 'success' || day.status === 'perfect' ? 'white' : 'var(--theme-primary)',
+                      background: day.status === 'success' || day.status === 'perfect' || day.status === 'miss' ? 'white' : 'var(--theme-primary)',
                     }} />
                   )}
                 </>
@@ -381,8 +381,8 @@ export default function AnalyticsTab({ session, profile, streak, userHabits }) {
           {[
             { color: '#C9973A', label: 'Perfect', border: false },
             { color: 'var(--theme-primary)', label: 'Successful', border: false },
-            { color: 'transparent', label: 'Partial', border: true },
-            { color: '#E05C5C', label: 'Inactive', border: false },
+            { color: 'rgba(201,106,82,0.5)', label: 'Partial', border: false },
+            { color: 'transparent', label: 'Inactive', border: true },
           ].map(l => (
             <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <div style={{
