@@ -20,6 +20,7 @@ import RewardsTab from './RewardsTab'
 import SettingsTab from './SettingsTab'
 import BottomNav from './BottomNav'
 import HistoryTab from './HistoryTab'
+import HealthTab from './HealthTab'
 
 const STEPS = [
   'founder-story',
@@ -427,6 +428,11 @@ export default function Dashboard({ session }) {
               session={session}
               profile={profile}
               isMinor={isMinor}
+            />
+          )}
+          {activeTab === 'health' && (
+            <HealthTab
+              session={session}
             />
           )}
           {activeTab === 'history' && (

@@ -67,11 +67,31 @@ function SettingsIcon({ active }) {
   )
 }
 
-// Tab order matches mobile: rewards | analytics | home(center) | history | settings
+function HealthIcon({ active }) {
+  const c = active ? '#4A7A68' : '#8A9E96'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      {active ? (
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+          fill={c}
+        />
+      ) : (
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+          stroke={c} strokeWidth="1.6" strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  )
+}
+
+// Tab order: rewards | analytics | home(center) | health | history | settings
 const TABS = [
   { key: 'rewards',   label: 'Rewards',  Icon: RewardsIcon },
   { key: 'analytics', label: 'Stats',    Icon: StatsIcon },
   { key: 'home',      label: '',         Icon: null },   // center — NiyamaIcon
+  { key: 'health',    label: 'Health',   Icon: HealthIcon },
   { key: 'history',   label: 'History',  Icon: HistoryIcon },
   { key: 'settings',  label: 'Settings', Icon: SettingsIcon },
 ]
